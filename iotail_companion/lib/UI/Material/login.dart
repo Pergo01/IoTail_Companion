@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:go_router/go_router.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -60,7 +61,7 @@ class _LoginState extends State<Login> {
             accentColor: Theme.of(context).colorScheme.secondary,
             cardTheme: CardTheme(
                 color: Theme.of(context).colorScheme.background,
-                surfaceTintColor: Theme.of(context).colorScheme.surface,
+                surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
                 shadowColor: Theme.of(context).colorScheme.shadow,
                 elevation: 1),
             buttonTheme: LoginButtonTheme(
@@ -77,6 +78,71 @@ class _LoginState extends State<Login> {
         onSubmitAnimationCompleted: () {
           context.go("/Home");
         },
+        loginProviders: [
+          LoginProvider(
+            icon: FontAwesomeIcons.google,
+            label: 'Google',
+            callback: () async {
+              return null;
+            },
+          ),
+          LoginProvider(
+            icon: FontAwesomeIcons.apple,
+            label: 'Apple',
+            callback: () async {
+              return null;
+            },
+          ),
+          LoginProvider(
+            icon: FontAwesomeIcons.faceAngry,
+            label: 'Polito',
+            callback: () async {
+              debugPrint('start Polito sign in');
+              await Future.delayed(loginTime);
+              debugPrint('stop Polito sign in');
+              return null;
+            },
+          ),
+        ],
+        termsOfService: [
+          TermOfService(
+            id: 'newsletter',
+            mandatory: false,
+            text: 'Newsletter subscription',
+          ),
+          TermOfService(
+            id: 'general-term',
+            mandatory: true,
+            text: 'Term of services',
+            linkUrl:
+                'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUIcmlja3JvbGw%3D',
+          ),
+        ],
+        additionalSignupFields: [
+          const UserFormField(
+            keyName: 'Username',
+            icon: Icon(FontAwesomeIcons.userLarge),
+          ),
+          const UserFormField(keyName: 'Name'),
+          const UserFormField(keyName: 'Surname'),
+          UserFormField(
+            keyName: 'phone_number',
+            icon: const Icon(FontAwesomeIcons.phone),
+            displayName: 'Phone Number',
+            userType: LoginUserType.phone,
+            fieldValidator: (value) {
+              final phoneRegExp = RegExp(
+                '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\$',
+              );
+              if (value != null &&
+                  value.length < 7 &&
+                  !phoneRegExp.hasMatch(value)) {
+                return "This isn't a valid phone number";
+              }
+              return null;
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
