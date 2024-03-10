@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iotail_companion/UI/Material/home.dart';
 
 import 'UI/Material/login.dart';
+import 'theme/color_schemes.g.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,12 +24,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'IoTail',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+        colorScheme: lightColorScheme,
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.lightBlue, brightness: Brightness.dark),
+        colorScheme: darkColorScheme,
         useMaterial3: true,
       ),
       routerConfig: materialRouter,
