@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
-import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -11,6 +11,7 @@ class Login extends StatefulWidget {
 }
 
 const users = {
+  'ale@gmail.com': '1234',
   'dribbble@gmail.com': '12345',
   'hunter@gmail.com': 'hunter',
 };
@@ -71,6 +72,7 @@ class _LoginState extends State<Login> {
                 color: Theme.of(context).colorScheme.onPrimaryContainer),
             bodyStyle:
                 TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        logo: "assets/IoTail.gif",
         title: "Benvenuto",
         onLogin: _authUser,
         onSignup: _signupUser,
@@ -143,6 +145,7 @@ class _LoginState extends State<Login> {
             },
           ),
         ],
+        //messages: LoginMessages(userHint: "SIUUUUUUUUM"),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},

@@ -8,6 +8,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  Map<String, String> cani = {"Fido": "Golden Retriever"};
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,10 +16,46 @@ class _HomeState extends State<Home> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text("IoTail"),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[],
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              "Cani:",
+              style: TextStyle(fontSize: 40),
+            ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset(
+                      "assets/default_cane.jpeg",
+                      fit: BoxFit.contain,
+                      height: 100,
+                      width: 100,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          cani.keys.elementAt(0),
+                          style: const TextStyle(fontSize: 40),
+                        ),
+                        Text(
+                          cani.values.elementAt(0),
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            )
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
