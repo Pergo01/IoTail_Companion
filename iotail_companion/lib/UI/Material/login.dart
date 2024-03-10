@@ -50,14 +50,38 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("IoTail")),
-        body: FlutterLogin(
-          title: "Benvenuto",
-          onLogin: _authUser,
-          onRecoverPassword: _recoverPassword,
-          onSubmitAnimationCompleted: () {
-            context.go("/Home");
-          },
-        ));
+      appBar: AppBar(title: const Text("IoTail")),
+      body: FlutterLogin(
+        theme: LoginTheme(
+            pageColorLight: Theme.of(context).colorScheme.background,
+            pageColorDark: Theme.of(context).colorScheme.background,
+            primaryColor: Theme.of(context).colorScheme.primary,
+            errorColor: Theme.of(context).colorScheme.error,
+            accentColor: Theme.of(context).colorScheme.secondary,
+            cardTheme: CardTheme(
+                color: Theme.of(context).colorScheme.background,
+                surfaceTintColor: Theme.of(context).colorScheme.surface,
+                shadowColor: Theme.of(context).colorScheme.shadow,
+                elevation: 1),
+            buttonTheme: LoginButtonTheme(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                elevation: 1),
+            buttonStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimaryContainer),
+            bodyStyle:
+                TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        title: "Benvenuto",
+        onLogin: _authUser,
+        onSignup: _signupUser,
+        onRecoverPassword: _recoverPassword,
+        onSubmitAnimationCompleted: () {
+          context.go("/Home");
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }
