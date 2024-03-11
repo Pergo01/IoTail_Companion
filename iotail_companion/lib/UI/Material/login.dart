@@ -72,7 +72,9 @@ class _LoginState extends State<Login> {
                 color: Theme.of(context).colorScheme.onPrimaryContainer),
             bodyStyle:
                 TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        logo: "assets/IoTail.gif",
+        logo: Image.asset(
+          "assets/IoTail.gif",
+        ).image,
         title: "Benvenuto",
         onLogin: _authUser,
         onSignup: _signupUser,
