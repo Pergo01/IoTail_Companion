@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
         onSignup: _signupUser,
         onRecoverPassword: _recoverPassword,
         onSubmitAnimationCompleted: () {
-          context.go("/Home");
+          context.go("/Navigation");
         },
         loginProviders: [
           LoginProvider(
@@ -148,10 +148,6 @@ class _LoginState extends State<Login> {
           ),
         ],
         //messages: LoginMessages(userHint: "SIUUUUUUUUM"),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.add),
       ),
     );
   }

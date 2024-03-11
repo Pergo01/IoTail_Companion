@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iotail_companion/UI/Material/home.dart';
 
 import 'UI/Material/login.dart';
+import 'UI/Material/navigation.dart';
 import 'theme/color_schemes.g.dart';
 
 void main() {
@@ -10,9 +10,14 @@ void main() {
 }
 
 final materialRouter = GoRouter(initialLocation: "/", routes: [
-  GoRoute(name: "Login", path: "/", builder: (build, context) => Login()),
+  GoRoute(name: "Login", path: "/", builder: (build, context) => const Login()),
+  //GoRoute(
+  //name: "Home", path: "/Home", builder: (context, state) => const Home()),
+  //GoRoute(name: "Map", path: "/Map", builder: (context, state) => const Map()),
   GoRoute(
-      name: "Home", path: "/Home", builder: (context, state) => const Home())
+      name: "Navigation",
+      path: "/Navigation",
+      builder: (build, context) => const Navigation())
 ]);
 
 class MyApp extends StatelessWidget {
