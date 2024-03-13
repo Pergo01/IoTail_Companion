@@ -101,7 +101,11 @@ class _HomeState extends State<Home> {
                     child: SizedBox(
                       height: 100,
                       width: double.infinity,
-                      child: Text(prenotazioni[index]),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Text(prenotazioni[index],
+                            style: const TextStyle(fontSize: 40)),
+                      ),
                     ),
                   );
                 },

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/iotail_companion/iotail_companion.iml" filepath="$PROJECT_DIR$/iotail_companion/iotail_companion.iml" />
+      <module fileurl="file://$PROJECT_DIR$/iotail_companion/android/iotail_companion_android.iml" filepath="$PROJECT_DIR$/iotail_companion/android/iotail_companion_android.iml" />
     </modules>
   </component>
 </project>
