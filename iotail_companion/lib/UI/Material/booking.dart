@@ -10,6 +10,12 @@ class Booking extends StatefulWidget {
 class _BookingState extends State<Booking> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text("IoTail"),
+      ),
+      body: const Center(child: Text("Ciao")),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'home.dart';
 import 'map.dart';
 
 class Navigation extends StatefulWidget {
+  //final MqttServerClient client;
   const Navigation({Key? key}) : super(key: key);
 
   @override

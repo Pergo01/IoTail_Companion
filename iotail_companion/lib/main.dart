@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iotail_companion/UI/Material/booking.dart';
+import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'UI/Material/login.dart';
 import 'UI/Material/navigation.dart';
 import 'theme/color_schemes.g.dart';
 
 void main() {
-  runApp(const MyApp());
+  final client = MqttServerClient("mqtt.eclipseprojects.io", "");
+  client.connect('IoTail_client');
+  runApp(MyApp(client: client));
 }
 
 final materialRouter = GoRouter(initialLocation: "/", routes: [
@@ -17,11 +21,16 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
-      builder: (build, context) => const Navigation())
+      builder: (build, context) => const Navigation()),
+  GoRoute(
+      name: "Booking",
+      path: "/Booking",
+      builder: (build, context) => const Booking())
 ]);
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final MqttServerClient client;
+  const MyApp({super.key, required this.client});
 
   // This widget is the root of your application.
   @override
