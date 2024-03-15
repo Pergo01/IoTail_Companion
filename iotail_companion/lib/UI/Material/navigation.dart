@@ -10,8 +10,24 @@ class Navigation extends StatefulWidget {
   _NavigationState createState() => _NavigationState();
 }
 
-class _NavigationState extends State<Navigation> {
+class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   int currentPageIndex = 0;
+  AnimationController buildFaderController() {
+    final AnimationController controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      //animationBehavior:
+    );
+    controller.addStatusListener(
+      (AnimationStatus status) {
+        if (status == AnimationStatus.dismissed) {
+          setState(() {}); // Rebuild unselected destinations offstage.
+        }
+      },
+    );
+    return controller;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
