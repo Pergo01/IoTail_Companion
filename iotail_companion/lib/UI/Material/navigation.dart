@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'home.dart';
 import 'map.dart';
 
 class Navigation extends StatefulWidget {
-  //final MqttServerClient client;
-  const Navigation({Key? key}) : super(key: key);
+  final MqttServerClient client;
+  const Navigation({super.key, required this.client});
 
   @override
   _NavigationState createState() => _NavigationState();
@@ -18,22 +19,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     "assets/default_cane.jpeg",
     "assets/default_cane_2.jpeg"
   ];
-
-  AnimationController buildFaderController() {
-    final AnimationController controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-      //animationBehavior:
-    );
-    controller.addStatusListener(
-      (AnimationStatus status) {
-        if (status == AnimationStatus.dismissed) {
-          setState(() {}); // Rebuild unselected destinations offstage.
-        }
-      },
-    );
-    return controller;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +116,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             onDogSelected: (int index) => setState(() {
                   selectedDog = index;
                 })),
-        const Map(),
+        Map(
+          client: widget.client,
+        ),
       ][currentPageIndex],
     );
   }

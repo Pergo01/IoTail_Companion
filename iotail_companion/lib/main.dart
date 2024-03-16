@@ -8,9 +8,7 @@ import 'UI/Material/navigation.dart';
 import 'theme/color_schemes.g.dart';
 
 void main() {
-  final client = MqttServerClient("mqtt.eclipseprojects.io", "");
-  client.connect('IoTail_client');
-  runApp(MyApp(client: client));
+  runApp(MyApp());
 }
 
 final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
@@ -21,16 +19,27 @@ final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
-      builder: (build, context) => const Navigation()),
+      builder: (build, context) {
+        final MqttServerClient client =
+            MqttServerClient("mqtt.eclipseprojects.io", "");
+        client.connect('IoTail_client');
+        return Navigation(
+          client: client,
+        );
+      }),
   GoRoute(
       name: "Booking",
       path: "/Booking",
-      builder: (build, context) => const Booking())
+      builder: (build, context) {
+        final MqttServerClient client = context.extra as MqttServerClient;
+        return Booking(
+          client: client,
+        );
+      })
 ]);
 
 class MyApp extends StatelessWidget {
-  final MqttServerClient client;
-  const MyApp({super.key, required this.client});
+  const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
