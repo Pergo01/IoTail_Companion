@@ -4,7 +4,7 @@ import 'package:iotail_companion/UI/Material/booking.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'UI/Material/login.dart';
-import 'UI/Material/navigation.dart';
+import 'UI/Material/navigation_copy.dart';
 import 'theme/color_schemes.g.dart';
 
 void main() {

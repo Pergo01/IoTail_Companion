@@ -39,6 +39,7 @@ dependencies:
   flutter_login: ^5.0.0
   lottie: ^3.1.0
   mqtt5_client: ^4.2.2
+  floating_bottom_bar: ^0.0.3
 
 dev_dependencies:
   flutter_test:
