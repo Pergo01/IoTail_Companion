@@ -8,7 +8,7 @@ import 'UI/Material/navigation.dart';
 import 'theme/color_schemes.g.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
@@ -19,14 +19,7 @@ final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
-      builder: (build, context) {
-        final MqttServerClient client =
-            MqttServerClient("mqtt.eclipseprojects.io", "");
-        client.connect('IoTail_client');
-        return Navigation(
-          client: client,
-        );
-      }),
+      builder: (build, context) => const Navigation()),
   GoRoute(
       name: "Booking",
       path: "/Booking",

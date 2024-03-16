@@ -5,8 +5,7 @@ import 'home.dart';
 import 'map.dart';
 
 class Navigation extends StatefulWidget {
-  final MqttServerClient client;
-  const Navigation({super.key, required this.client});
+  const Navigation({super.key});
 
   @override
   _NavigationState createState() => _NavigationState();
@@ -19,6 +18,20 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     "assets/default_cane.jpeg",
     "assets/default_cane_2.jpeg"
   ];
+  final MqttServerClient client =
+      MqttServerClient("mqtt.eclipseprojects.io", "");
+
+  @override
+  void initState() {
+    client.connect('IoTail_client');
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    client.disconnect();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +130,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   selectedDog = index;
                 })),
         Map(
-          client: widget.client,
+          client: client,
         ),
       ][currentPageIndex],
     );
