@@ -73,57 +73,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         ],
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
-      /*BottomAppBar(
-        notchMargin: 5,
-        shape: const CircularNotchedRectangle(),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                direction: Axis.vertical,
-                children: [
-                  IconButton(
-                    onPressed: () => setState(() {
-                      currentPageIndex = 0;
-                    }),
-                    icon: Icon(currentPageIndex == 0
-                        ? Icons.home
-                        : Icons.home_outlined),
-                  ),
-                  const Text("Home")
-                ]),
-            Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                direction: Axis.vertical,
-                children: [
-                  IconButton(
-                      onPressed: () => setState(() {
-                            currentPageIndex = 1;
-                          }),
-                      icon: Icon(currentPageIndex == 1
-                          ? Icons.map
-                          : Icons.map_outlined)),
-                  const Text("Map")
-                ]),
-          ],
-        ),
-      ),*/
-      /*floatingActionButton: FloatingActionButton(
-        elevation: 0,
-        onPressed: () {},
-        shape: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: Image.asset(dogPicture[currentPageIndex])),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,*/
       body: <Widget>[
         Home(
             onDogSelected: (int index) => setState(() {

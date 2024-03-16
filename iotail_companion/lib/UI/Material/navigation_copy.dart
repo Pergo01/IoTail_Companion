@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:floating_bottom_bar/animated_bottom_navigation_bar.dart';
+import 'package:flutter/material.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'home.dart';
@@ -86,7 +86,10 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ), */
       bottomNavigationBar: AnimatedBottomNavigationBar(
-        barColor: Theme.of(context).colorScheme.primaryContainer,
+        barColor: ElevationOverlay.applySurfaceTint(
+            Theme.of(context).colorScheme.background,
+            Theme.of(context).colorScheme.surfaceTint,
+            3),
         bottomBar: [
           BottomBarItem(
             icon: const Icon(Icons.home),
@@ -170,6 +173,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           ],
         ),
       ),
+      floatingActionButton: const SizedBox(
+        width: 50,
+        height: 50,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       /* BottomAppBar(
         notchMargin: 5,
         shape: const CircularNotchedRectangle(),
