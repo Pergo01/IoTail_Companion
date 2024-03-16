@@ -13,7 +13,7 @@ void main() {
   runApp(MyApp(client: client));
 }
 
-final materialRouter = GoRouter(initialLocation: "/", routes: [
+final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
   GoRoute(name: "Login", path: "/", builder: (build, context) => const Login()),
   //GoRoute(
   //name: "Home", path: "/Home", builder: (context, state) => const Home()),

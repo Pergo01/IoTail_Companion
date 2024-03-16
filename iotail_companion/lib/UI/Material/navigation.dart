@@ -13,6 +13,12 @@ class Navigation extends StatefulWidget {
 
 class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   int currentPageIndex = 0;
+  int selectedDog = 0;
+  List<String> dogPicture = [
+    "assets/default_cane.jpeg",
+    "assets/default_cane_2.jpeg"
+  ];
+
   AnimationController buildFaderController() {
     final AnimationController controller = AnimationController(
       vsync: this,
@@ -35,6 +41,31 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text("IoTail"),
+        actions: [
+          Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          width: 2,
+                          color: Theme.of(context).colorScheme.primary)),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.transparent,
+                    foregroundImage: AssetImage(dogPicture[selectedDog]),
+                  ))) /*CircleAvatar(
+                backgroundColor: Colors.transparent,
+                foregroundImage: AssetImage(dogPicture[selectedDog]),
+                /*child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(),
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Image.asset(dogPicture[selectedDog],
+                        fit: BoxFit.cover)*/
+              )),*/
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
@@ -55,9 +86,63 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         ],
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
-      body: const <Widget>[
-        Home(),
-        Map(),
+      /*BottomAppBar(
+        notchMargin: 5,
+        shape: const CircularNotchedRectangle(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                direction: Axis.vertical,
+                children: [
+                  IconButton(
+                    onPressed: () => setState(() {
+                      currentPageIndex = 0;
+                    }),
+                    icon: Icon(currentPageIndex == 0
+                        ? Icons.home
+                        : Icons.home_outlined),
+                  ),
+                  const Text("Home")
+                ]),
+            Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                direction: Axis.vertical,
+                children: [
+                  IconButton(
+                      onPressed: () => setState(() {
+                            currentPageIndex = 1;
+                          }),
+                      icon: Icon(currentPageIndex == 1
+                          ? Icons.map
+                          : Icons.map_outlined)),
+                  const Text("Map")
+                ]),
+          ],
+        ),
+      ),*/
+      /*floatingActionButton: FloatingActionButton(
+        elevation: 0,
+        onPressed: () {},
+        shape: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: Image.asset(dogPicture[currentPageIndex])),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,*/
+      body: <Widget>[
+        Home(
+            onDogSelected: (int index) => setState(() {
+                  selectedDog = index;
+                })),
+        const Map(),
       ][currentPageIndex],
     );
   }

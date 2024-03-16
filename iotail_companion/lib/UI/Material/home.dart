@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  final Function(int) onDogSelected;
+  const Home({super.key, required this.onDogSelected});
 
   @override
   _HomeState createState() => _HomeState();
@@ -10,8 +11,14 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Map<String, String> cani = {
     "Fido": "Golden Retriever",
-    "Fuffi": "Dobbermann"
+    "Fuffi": "Dobbermann",
   };
+  List<String> dogPicture = [
+    "assets/default_cane.jpeg",
+    "assets/default_cane_2.jpeg"
+  ];
+
+  int selectedDog = 0;
 
   List<String> prenotazioni = ["Casa 1", "Casa 2"];
 
@@ -34,44 +41,54 @@ class _HomeState extends State<Home> {
               itemCount: cani.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: SizedBox(
-                      width: 300,
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: const BoxDecoration(
-                                shape: BoxShape.rectangle,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5))),
-                            clipBehavior: Clip.hardEdge,
-                            child: Image.asset(
-                              "assets/default_cane.jpeg",
-                              height: 100,
-                              width: 100,
+                return InkWell(
+                  radius: 5,
+                  onTap: () {
+                    widget.onDogSelected(index);
+                    setState(() {
+                      selectedDog = index;
+                    });
+                  },
+                  child: Card(
+                    elevation: selectedDog == index ? 5 : 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 300,
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(5))),
+                              clipBehavior: Clip.hardEdge,
+                              child: Image.asset(
+                                dogPicture[index],
+                                height: 100,
+                                width: 100,
+                              ),
                             ),
-                          ),
-                          const SizedBox(
-                            width: 8,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(cani.keys.elementAt(index),
-                                    style: const TextStyle(
-                                        fontSize: 40,
-                                        fontWeight: FontWeight.bold)),
-                                Text(
-                                  cani.values.elementAt(index),
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ],
+                            const SizedBox(
+                              width: 8,
                             ),
-                          )
-                        ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(cani.keys.elementAt(index),
+                                      style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold)),
+                                  Text(
+                                    cani.values.elementAt(index),
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
