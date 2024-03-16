@@ -53,18 +53,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   child: CircleAvatar(
                     backgroundColor: Colors.transparent,
                     foregroundImage: AssetImage(dogPicture[selectedDog]),
-                  ))) /*CircleAvatar(
-                backgroundColor: Colors.transparent,
-                foregroundImage: AssetImage(dogPicture[selectedDog]),
-                /*child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(),
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    child: Image.asset(dogPicture[selectedDog],
-                        fit: BoxFit.cover)*/
-              )),*/
+                  )))
         ],
       ),
       bottomNavigationBar: NavigationBar(
