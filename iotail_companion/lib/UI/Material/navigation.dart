@@ -69,7 +69,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: currentPageIndex == 0
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.secondaryContainer
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -107,7 +107,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: currentPageIndex == 1
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.secondaryContainer
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
