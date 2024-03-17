@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'home.dart';
@@ -148,6 +149,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           ),
         ],
       ),
+      floatingActionButton: currentPageIndex == 1
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push("/Booking", extra: client),
+              label: const Text("Vai a Booking"))
+          : null,
     );
   }
 }

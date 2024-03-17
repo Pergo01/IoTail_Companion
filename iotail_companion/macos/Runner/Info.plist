@@ -28,5 +28,14 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationUsageDescription</key>
+        <string>This app needs access to location.</string>
+        <key>com.apple.security.personal-information.location</key>
+        <true/>
+        <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+        <dict>
+          <key>NSLocationWhenInUseUsageDescription</key>
+          <string>This app requires temporary access to the device&apos;s precise location.</string>
+        </dict>
 </dict>
 </plist>
