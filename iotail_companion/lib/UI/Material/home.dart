@@ -9,8 +9,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  static const Duration duration = Duration(milliseconds: 300);
-  late final AnimationController controller;
   Map<String, String> cani = {
     "Fido": "Golden Retriever",
     "Fuffi": "Dobbermann",
@@ -25,142 +23,117 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   List<String> prenotazioni = ["Casa 1", "Casa 2"];
 
   @override
-  void initState() {
-    super.initState();
-    controller = AnimationController(
-      duration: duration,
-      vsync: this,
-    );
-    controller.forward();
-  }
-
-  @override
-  void dispose() {
-    controller.reverse();
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: controller.drive(
-        Tween<Offset>(
-          begin: const Offset(-1, 0),
-          end: Offset.zero, // Out of view on the left.
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            "Cani:",
+            style: TextStyle(fontSize: 40),
+          ),
+          SizedBox(
+            height: 150,
+            child: ListView.separated(
+              padding: const EdgeInsets.all(8),
+              itemCount: cani.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (BuildContext context, int index) {
+                return InkWell(
+                  radius: 5,
+                  onTap: () {
+                    widget.onDogSelected(index);
+                    setState(() {
+                      selectedDog = index;
+                    });
+                  },
+                  child: Card(
+                    elevation: selectedDog == index ? 5 : 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 300,
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(5))),
+                              clipBehavior: Clip.hardEdge,
+                              child: Image.asset(
+                                dogPicture[index],
+                                height: 100,
+                                width: 100,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(cani.keys.elementAt(index),
+                                      style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold)),
+                                  Text(
+                                    cani.values.elementAt(index),
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) {
+                return const SizedBox(
+                  width: 8,
+                );
+              },
+            ),
+          ),
+          if (prenotazioni.isNotEmpty)
+            Divider(
+              color: Theme.of(context).colorScheme.primary,
+              thickness: 2,
+            ),
+          if (prenotazioni.isNotEmpty)
             const Text(
-              "Cani:",
+              "Prenotazioni:",
               style: TextStyle(fontSize: 40),
             ),
-            SizedBox(
-              height: 150,
-              child: ListView.separated(
-                padding: const EdgeInsets.all(8),
-                itemCount: cani.length,
-                scrollDirection: Axis.horizontal,
+          Expanded(
+            child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
-                  return InkWell(
-                    radius: 5,
-                    onTap: () {
-                      widget.onDogSelected(index);
-                      setState(() {
-                        selectedDog = index;
-                      });
-                    },
-                    child: Card(
-                      elevation: selectedDog == index ? 5 : 1,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: SizedBox(
-                          width: 300,
-                          child: Row(
-                            children: [
-                              Container(
-                                decoration: const BoxDecoration(
-                                    shape: BoxShape.rectangle,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(5))),
-                                clipBehavior: Clip.hardEdge,
-                                child: Image.asset(
-                                  dogPicture[index],
-                                  height: 100,
-                                  width: 100,
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(cani.keys.elementAt(index),
-                                        style: const TextStyle(
-                                            fontSize: 40,
-                                            fontWeight: FontWeight.bold)),
-                                    Text(
-                                      cani.values.elementAt(index),
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
+                  return Card(
+                    child: SizedBox(
+                      height: 100,
+                      width: double.infinity,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Text(prenotazioni[index],
+                            style: const TextStyle(fontSize: 40)),
                       ),
                     ),
                   );
                 },
                 separatorBuilder: (BuildContext context, int index) {
                   return const SizedBox(
-                    width: 8,
+                    height: 8,
                   );
                 },
-              ),
-            ),
-            if (prenotazioni.isNotEmpty)
-              Divider(
-                color: Theme.of(context).colorScheme.primary,
-                thickness: 2,
-              ),
-            if (prenotazioni.isNotEmpty)
-              const Text(
-                "Prenotazioni:",
-                style: TextStyle(fontSize: 40),
-              ),
-            Expanded(
-              child: ListView.separated(
-                  itemBuilder: (BuildContext context, int index) {
-                    return Card(
-                      child: SizedBox(
-                        height: 100,
-                        width: double.infinity,
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Text(prenotazioni[index],
-                              style: const TextStyle(fontSize: 40)),
-                        ),
-                      ),
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) {
-                    return const SizedBox(
-                      height: 8,
-                    );
-                  },
-                  itemCount: prenotazioni.length),
-            )
-          ],
-        ),
+                itemCount: prenotazioni.length),
+          )
+        ],
       ),
     );
   }

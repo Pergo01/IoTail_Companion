@@ -5,13 +5,15 @@ import 'home.dart';
 import 'map.dart';
 
 class Navigation extends StatefulWidget {
-  const Navigation({super.key});
+  const Navigation({Key? key}) : super(key: key);
 
   @override
   _NavigationState createState() => _NavigationState();
 }
 
 class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
+  static const Duration duration = Duration(milliseconds: 300);
+  late final AnimationController controller;
   int currentPageIndex = 0;
   int selectedDog = 0;
   List<String> dogPicture = [
@@ -24,64 +26,128 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   @override
   void initState() {
     client.connect('IoTail_client');
+    controller = AnimationController(
+      duration: duration,
+      vsync: this,
+    );
     super.initState();
   }
 
   @override
   void dispose() {
     client.disconnect();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text("IoTail"),
-        actions: [
-          Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          width: 2,
-                          color: Theme.of(context).colorScheme.primary)),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    foregroundImage: AssetImage(dogPicture[selectedDog]),
-                  )))
-        ],
       ),
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        selectedIndex: currentPageIndex,
-        destinations: const [
-          NavigationDestination(
-              selectedIcon: Icon(Icons.home),
-              icon: Icon(Icons.home_outlined),
-              label: "Home"),
-          NavigationDestination(
-              selectedIcon: Icon(Icons.map),
-              icon: Icon(Icons.map_outlined),
-              label: "Map"),
-        ],
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      ),
-      body: <Widget>[
-        Home(
-            onDogSelected: (int index) => setState(() {
-                  selectedDog = index;
-                })),
-        Map(
-          client: client,
+      bottomNavigationBar: Card(
+        margin: const EdgeInsets.only(left: 128, right: 128, bottom: 20),
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () {
+                if (currentPageIndex == 1) {
+                  setState(() {
+                    controller.reverse();
+                    currentPageIndex = 0;
+                  });
+                }
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: currentPageIndex == 0
+                      ? Theme.of(context).colorScheme.surfaceVariant
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  currentPageIndex == 0 ? Icons.home : Icons.home_outlined,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => {},
+              icon: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    width: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  foregroundImage: AssetImage(dogPicture[selectedDog]),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                if (currentPageIndex == 0) {
+                  setState(() {
+                    controller.forward();
+                    currentPageIndex = 1;
+                  });
+                }
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: currentPageIndex == 1
+                      ? Theme.of(context).colorScheme.surfaceVariant
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  currentPageIndex == 1 ? Icons.map : Icons.map_outlined,
+                ),
+              ),
+            ),
+          ],
         ),
-      ][currentPageIndex],
+      ),
+      body: Stack(
+        children: [
+          SlideTransition(
+            position: controller.drive(
+              Tween<Offset>(
+                begin: Offset.zero,
+                end: const Offset(-1, 0),
+              ),
+            ),
+            child: Home(
+              onDogSelected: (int index) {
+                setState(() {
+                  selectedDog = index;
+                });
+              },
+            ),
+          ),
+          SlideTransition(
+            position: controller.drive(
+              Tween<Offset>(
+                begin: const Offset(1, 0),
+                end: Offset.zero,
+              ),
+            ),
+            child: Map(
+              client: client,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
