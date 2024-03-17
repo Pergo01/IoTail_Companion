@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
   final Function(int) onDogSelected;
-  const Home({super.key, required this.onDogSelected});
+  int selectedDog;
+  Home({super.key, required this.selectedDog, required this.onDogSelected});
 
   @override
   _HomeState createState() => _HomeState();
@@ -17,8 +18,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     "assets/default_cane.jpeg",
     "assets/default_cane_2.jpeg"
   ];
-
-  int selectedDog = 0;
 
   List<String> prenotazioni = ["Casa 1", "Casa 2"];
 
@@ -46,11 +45,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   onTap: () {
                     widget.onDogSelected(index);
                     setState(() {
-                      selectedDog = index;
+                      widget.selectedDog = index;
+                      widget.onDogSelected(index);
                     });
                   },
                   child: Card(
-                    elevation: selectedDog == index ? 5 : 1,
+                    elevation: widget.selectedDog == index ? 5 : 1,
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: SizedBox(

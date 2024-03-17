@@ -232,6 +232,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked, */
       body: <Widget>[
         Home(
+            selectedDog: selectedDog,
             onDogSelected: (int index) => setState(() {
                   selectedDog = index;
                 })),

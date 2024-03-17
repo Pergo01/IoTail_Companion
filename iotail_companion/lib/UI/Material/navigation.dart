@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
-import '../../center_button/model/bottom_bar_center_model.dart';
-import '../../center_button/widgets/animated_button.dart';
-import '../../center_button/widgets/floating_center_button.dart';
-import '../../center_button/widgets/floating_center_button_child.dart';
 import 'home.dart';
 import 'map.dart';
 
@@ -19,8 +15,10 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   static const Duration duration = Duration(milliseconds: 300);
   late final AnimationController controller;
+  late final MenuController menuController = MenuController();
   int currentPageIndex = 0;
   int selectedDog = 0;
+  bool isExpanded = false;
   List<String> dogPicture = [
     "assets/default_cane.jpeg",
     "assets/default_cane_2.jpeg"
@@ -92,7 +90,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 ),
                 IconButton(
                   iconSize: 24,
-                  onPressed: () => {},
+                  onPressed: null,
                   icon: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -134,62 +132,69 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-            top: 5,
-            child: AnimatedButton(
-              bottomBarCenterModel: BottomBarCenterModel(
-                centerBackgroundColor: Theme.of(context).colorScheme.primary,
-                centerIcon: FloatingCenterButton(
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: Image.asset(dogPicture[selectedDog])),
-                  ),
-                ),
-                centerIconChild: [
-                  FloatingCenterButtonChild(
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                          ),
-                          clipBehavior: Clip.hardEdge,
-                          child: Image.asset(dogPicture[0])),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        selectedDog = 0;
-                      });
-                    },
-                  ),
-                  FloatingCenterButtonChild(
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                          ),
-                          clipBehavior: Clip.hardEdge,
-                          child: Image.asset(dogPicture[1])),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        selectedDog = 1;
-                      });
-                    },
-                  ),
-                  const FloatingCenterButtonChild(
-                    child: Icon(
-                      Icons.add,
-                      color: Colors.white,
+            top: 0,
+            child: MenuAnchor(
+              controller: menuController,
+              alignmentOffset: const Offset(0, -60),
+              style: MenuStyle(
+                  elevation: MaterialStateProperty.all(1),
+                  backgroundColor: MaterialStateProperty.all(
+                      Theme.of(context).colorScheme.primary),
+                  visualDensity: VisualDensity.compact,
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)))),
+              menuChildren: [
+                for (var i = dogPicture.length - 1; i >= 0; i--)
+                  IconButton(
+                    iconSize: 24,
+                    onPressed: () => setState(() {
+                      selectedDog = i;
+                      menuController.close();
+                    }),
+                    icon: CircleAvatar(
+                      backgroundColor: Colors.transparent,
+                      foregroundImage: AssetImage(dogPicture[i]),
                     ),
                   ),
-                ],
-              ),
+                Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.only(bottom: 2),
+                  child: IconButton(
+                      iconSize: 24,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      alignment: Alignment.center,
+                      onPressed: () => setState(() {
+                            menuController.close();
+                          }),
+                      icon: const Icon(Icons.add)),
+                )
+              ],
+              builder: (BuildContext context, MenuController menuController,
+                  Widget? child) {
+                return IconButton(
+                  iconSize: 24,
+                  onPressed: () {
+                    if (menuController.isOpen) {
+                      menuController.close();
+                    } else {
+                      menuController.open();
+                    }
+                  },
+                  icon: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        width: 2,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.transparent,
+                      foregroundImage: AssetImage(dogPicture[selectedDog]),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ]),
@@ -204,6 +209,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
               ),
             ),
             child: Home(
+              selectedDog: selectedDog,
               onDogSelected: (int index) {
                 setState(() {
                   selectedDog = index;
