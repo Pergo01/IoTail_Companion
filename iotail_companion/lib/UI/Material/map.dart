@@ -26,7 +26,7 @@ class _MapState extends State<Map> {
               urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             ),
             CurrentLocationLayer(
-              alignPositionOnUpdate: AlignOnUpdate.always,
+              alignPositionOnUpdate: AlignOnUpdate.never,
               alignDirectionOnUpdate: AlignOnUpdate.never,
             )
           ]),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iotail_companion/UI/Material/booking.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
@@ -37,6 +38,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     return MaterialApp.router(
       title: 'IoTail',
       theme: ThemeData(
