@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/dimens.dart';
 
 /// [FloatingCenterButton] class shows a
@@ -10,16 +11,16 @@ class FloatingCenterButton extends StatefulWidget {
   final VoidCallback? onAnimationComplete;
 
   @override
-  State<FloatingCenterButton> createState() => _FloatingCenterButtonState();
+  State<FloatingCenterButton> createState() => FloatingCenterButtonState();
 }
 
-class _FloatingCenterButtonState extends State<FloatingCenterButton>
+class FloatingCenterButtonState extends State<FloatingCenterButton>
     with TickerProviderStateMixin {
-  late AnimationController _animationController;
+  late AnimationController animationController;
 
   @override
   void dispose() {
-    _animationController.dispose();
+    animationController.dispose();
     super.dispose();
   }
 
@@ -33,30 +34,30 @@ class _FloatingCenterButtonState extends State<FloatingCenterButton>
   Widget build(BuildContext context) {
     return Center(
       child: RotationTransition(
-        turns: Tween(begin: 0.0, end: 1.0).animate(_animationController),
+        turns: Tween(begin: 0.0, end: 1.0).animate(animationController),
         child: widget.child,
       ),
     );
   }
 
   void _initialize() {
-    _animationController = AnimationController(
+    animationController = AnimationController(
       duration: const Duration(milliseconds: Dimens.animationDurationHigh),
       vsync: this,
       upperBound: 0.5,
     );
-    _animationController.addListener(() {
-      if (_animationController.isCompleted) {
+    animationController.addListener(() {
+      if (animationController.isCompleted) {
         widget.onAnimationComplete?.call();
       }
     });
   }
 
   void reverseAnimation() {
-    _animationController.reverse(from: .5);
+    animationController.reverse(from: .5);
   }
 
   void forwardAnimation() {
-    _animationController.forward(from: .0);
+    animationController.forward(from: .0);
   }
 }

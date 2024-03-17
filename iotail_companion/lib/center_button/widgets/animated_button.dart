@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 
-import 'floating_center_button.dart';
-import 'center_buttons.dart';
-import '../util/event_bus.dart';
 import '../constants/dimens.dart';
 import '../constants/enums.dart';
 import '../model/bottom_bar_center_model.dart';
+import '../util/event_bus.dart';
+import 'center_buttons.dart';
+import 'floating_center_button.dart';
 
 /// [AnimatedButton] is docked button in center.
 /// We have created animations using [AnimatedList].
@@ -24,10 +24,10 @@ class AnimatedButton extends StatefulWidget {
 }
 
 class AnimatedButtonState extends State<AnimatedButton> {
-  final GlobalKey<_FloatingCenterButtonState> _floatingCenterButtonStateKey =
-      GlobalKey<_FloatingCenterButtonState>();
-  final GlobalKey<_CenterButtonsState> _centerButtonsState =
-      GlobalKey<_CenterButtonsState>();
+  final GlobalKey<FloatingCenterButtonState> _floatingCenterButtonStateKey =
+      GlobalKey<FloatingCenterButtonState>();
+  final GlobalKey<CenterButtonsState> _centerButtonsState =
+      GlobalKey<CenterButtonsState>();
   OverlayState? _overlayState;
   OverlayEntry? _overlayEntry;
   CircleButtonAnimationState _circleButtonAnimationState =
@@ -138,7 +138,7 @@ class AnimatedButtonState extends State<AnimatedButton> {
   }
 
   void _updateAnimation(bool isOverlayVisible) {
-    _floatingCenterButtonStateKey.currentState?._animationController
+    _floatingCenterButtonStateKey.currentState?.animationController
         .addListener(() {});
     (isOverlayVisible)
         ? _floatingCenterButtonStateKey.currentState?.forwardAnimation()

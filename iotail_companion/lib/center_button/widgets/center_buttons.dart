@@ -6,8 +6,6 @@ import '../model/bottom_bar_center_model.dart';
 import 'center_button_child_animation.dart';
 import 'floating_center_button_child.dart';
 
-
-
 class CenterButtons extends StatefulWidget {
   const CenterButtons({
     required this.bottomBarCenter,
@@ -21,12 +19,12 @@ class CenterButtons extends StatefulWidget {
   final Offset position;
 
   @override
-  State<CenterButtons> createState() => _CenterButtonsState();
+  State<CenterButtons> createState() => CenterButtonsState();
 }
 
 bool isCloseBtnAdded = false;
 
-class _CenterButtonsState extends State<CenterButtons> {
+class CenterButtonsState extends State<CenterButtons> {
   final GlobalKey<AnimatedListState> _listOfWidgetsKey =
       GlobalKey<AnimatedListState>();
   final ValueNotifier<double> _opacity = ValueNotifier(Dimens.opacitySmall);
