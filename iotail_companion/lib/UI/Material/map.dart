@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 class Map extends StatefulWidget {
@@ -33,11 +32,12 @@ class _MapState extends State<Map> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Center(
       child: FlutterMap(
           options: const MapOptions(
-            initialCenter: LatLng(44.890014050623655, 7.356047819388321),
+            //initialCenter: LatLng(44.890014050623655, 7.356047819388321),
             initialZoom: 16.5,
           ),
           children: [
@@ -51,13 +51,22 @@ class _MapState extends State<Map> {
               alignDirectionOnUpdate: AlignOnUpdate.never,
               style: LocationMarkerStyle(
                 showHeadingSector: false,
-                marker: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  radius: 10,
+                marker: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      width: 2,
+                      color: Colors.white,
+                    ),
                   ),
-                accuracyCircleColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  child: CircleAvatar(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    radius: 10,
+                  ),
                 ),
-                
+                accuracyCircleColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              ),
             ),
             Align(
               alignment: Alignment.bottomRight,
@@ -69,7 +78,7 @@ class _MapState extends State<Map> {
                     setState(
                       () => _alignPositionOnUpdate = AlignOnUpdate.once,
                     );
-                    _alignPositionStreamController.add(18);
+                    _alignPositionStreamController.add(16.5);
                   },
                   child: Icon(
                     Icons.my_location,

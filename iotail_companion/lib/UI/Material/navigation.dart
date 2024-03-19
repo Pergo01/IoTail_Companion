@@ -178,7 +178,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             menuChildren: [
               SizeTransition(
                 sizeFactor: CurvedAnimation(
-                    parent: animateMenuController, curve: Curves.easeInOut),
+                  parent: animateMenuController,
+                  curve: Curves.easeInOut,
+                ),
                 child: Column(
                   children: [
                     for (var i = dogPicture.length - 1; i >= 0; i--)
