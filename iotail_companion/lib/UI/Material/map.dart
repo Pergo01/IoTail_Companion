@@ -49,25 +49,31 @@ class _MapState extends State<Map> {
               alignPositionStream: _alignPositionStreamController.stream,
               alignPositionOnUpdate: _alignPositionOnUpdate,
               alignDirectionOnUpdate: AlignOnUpdate.never,
+              style: LocationMarkerStyle(
+                showHeadingSector: false,
+                marker: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  radius: 10,
+                  ),
+                accuracyCircleColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                ),
+                
             ),
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: FloatingActionButton(
+                  shape: const CircleBorder(),
                   onPressed: () {
-                    // Align the location marker to the center of the map widget
-                    // on location update until user interact with the map.
                     setState(
                       () => _alignPositionOnUpdate = AlignOnUpdate.once,
                     );
-                    // Align the location marker to the center of the map widget
-                    // and zoom the map to level 18.
                     _alignPositionStreamController.add(18);
                   },
-                  child: const Icon(
+                  child: Icon(
                     Icons.my_location,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
