@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import 'home.dart';
 import 'map.dart';
@@ -16,6 +16,7 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   static const Duration duration = Duration(milliseconds: 300);
   late final AnimationController controller;
+  late final AnimationController animateMenuController;
   late final MenuController menuController = MenuController();
   int currentPageIndex = 0;
   int selectedDog = 0;
@@ -34,6 +35,21 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       duration: duration,
       vsync: this,
     );
+    animateMenuController = AnimationController(
+      duration: duration,
+      vsync: this,
+      value: 0.0,
+    )..addStatusListener((AnimationStatus status) {
+        if (status == AnimationStatus.dismissed) {
+          // The moment the menu is closed, it will no longer be on the screen or animatable.
+          // To allow for a closing animation, we wait until our closing animation is finished before
+          // we close the menu anchor.
+          menuController.close();
+        } else if (!menuController.isOpen) {
+          // The menu should be open while the animation status is forward, completed, or reverse
+          menuController.open();
+        }
+      });
     super.initState();
   }
 
@@ -41,6 +57,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   void dispose() {
     client.disconnect();
     controller.dispose();
+    animateMenuController.dispose();
     super.dispose();
   }
 
@@ -90,6 +107,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                         currentPageIndex == 0
                             ? Icons.home
                             : Icons.home_outlined,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
                       ),
                     ),
                   ),
@@ -130,6 +149,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       ),
                       child: Icon(
                         currentPageIndex == 1 ? Icons.map : Icons.map_outlined,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
                       ),
                     ),
                   ),
@@ -139,112 +160,151 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           ),
         ),
         Positioned(
-          top: 20,
-          child: Animate(                       //////non va(?)
-            effects: const [SlideEffect(
-                      begin: Offset(0, 2),
-                      duration: duration,
-                      curve: Curves.easeIn,
-                    )],
-            child: MenuAnchor(
-              controller: menuController,
-              alignmentOffset: const Offset(0, -57.5),
-              style: MenuStyle(
-                  maximumSize:
-                      MaterialStateProperty.all(const Size(double.infinity, 200)),
-                  elevation: MaterialStateProperty.all(1),
-                  backgroundColor: MaterialStateProperty.all(
+          top: 18,
+          child: MenuAnchor(
+            onOpen: animateMenuController.forward,
+            onClose: animateMenuController.reset,
+            controller: menuController,
+            alignmentOffset: const Offset(0, -56.5),
+            style: MenuStyle(
+                maximumSize:
+                    MaterialStateProperty.all(const Size(double.infinity, 200)),
+                elevation: MaterialStateProperty.all(1),
+                backgroundColor: MaterialStateProperty.all(
                     Theme.of(context).colorScheme.primary.withOpacity(0.5)),
-                  visualDensity: VisualDensity.compact,
-                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)))),
-              menuChildren: [
-                for (var i = dogPicture.length - 1; i >= 0; i--)
-                  Animate(
-                    effects: [SlideEffect(
-                      begin: const Offset(0, 2),
-                      end: const Offset(0, 0),
-                      duration: duration,
-                      curve: Curves.bounceInOut,
-                      delay: Duration(milliseconds: (dogPicture.length-i)*100)
-                    )],
-                    child: IconButton(
-                      iconSize: 24,
-                      onPressed: () => setState(() {
-                        selectedDog = i;
-                        menuController.close();
-                        isOpen = false;
-                      }),
-                      icon: Container(
-                        decoration: BoxDecoration(
+                visualDensity: VisualDensity.compact,
+                shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)))),
+            menuChildren: [
+              SizeTransition(
+                sizeFactor: CurvedAnimation(
+                    parent: animateMenuController, curve: Curves.easeInOut),
+                child: Column(
+                  children: [
+                    for (var i = dogPicture.length - 1; i >= 0; i--)
+                      Animate(
+                        effects: [
+                          SlideEffect(
+                              begin: const Offset(0, 1),
+                              end: const Offset(0, 0),
+                              duration: duration,
+                              curve: Curves.bounceInOut,
+                              delay: Duration(
+                                  milliseconds: (dogPicture.length - i) * 100)),
+                        ],
+                        child: IconButton(
+                          iconSize: 24,
+                          onPressed: () {
+                            if (animateMenuController.status
+                                case AnimationStatus.forward ||
+                                    AnimationStatus.completed) {
+                              animateMenuController.reverse();
+                              setState(() {
+                                isOpen = false;
+                              });
+                              setState(() {
+                                selectedDog = i;
+                                isOpen = false;
+                              });
+                            }
+                          },
+                          icon: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                width: 2,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              foregroundImage: AssetImage(dogPicture[i]),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Container(
+                      height: 45,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            width: 2),
+                      ),
+                      child: IconButton(
+                          iconSize: 24,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          alignment: Alignment.center,
+                          onPressed: () {
+                            if (animateMenuController.status
+                                case AnimationStatus.forward ||
+                                    AnimationStatus.completed) {
+                              animateMenuController.reverse();
+                              setState(() {
+                                isOpen = false;
+                              });
+                              setState(() {
+                                isOpen = false;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.add)),
+                    )
+                  ],
+                ),
+              ),
+            ],
+            builder: (BuildContext context, MenuController menuController,
+                Widget? child) {
+              return IconButton(
+                iconSize: 24,
+                onPressed: () {
+                  if (animateMenuController.status
+                      case AnimationStatus.forward ||
+                          AnimationStatus.completed) {
+                    animateMenuController.reverse();
+                    setState(() {
+                      isOpen = false;
+                    });
+                  } else {
+                    animateMenuController.forward();
+                    setState(() {
+                      isOpen = true;
+                    });
+                  }
+                  /*if (menuController.isOpen) {
+                    //menuController.close();
+                    setState(() {
+                      isOpen = false;
+                    });
+                  } else {
+                    //menuController.open();
+                    setState(() {
+                      isOpen = true;
+                    });
+                  }*/
+                },
+                icon: Container(
+                  decoration: !isOpen || !menuController.isOpen
+                      ? BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
                             width: 2,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                        ),
-                        child: CircleAvatar(
+                        )
+                      : const BoxDecoration(shape: BoxShape.circle),
+                  child: !isOpen || !menuController.isOpen
+                      ? CircleAvatar(
                           backgroundColor: Colors.transparent,
-                          foregroundImage: AssetImage(dogPicture[i]),
-                        ),
-                      ),
-                    ),
-                  ),
-                Container(
-                  height: 45,
-                  alignment: Alignment.center,
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.onPrimary, width: 2),
-                  ),
-                  child: IconButton(
-                      iconSize: 24,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      alignment: Alignment.center,
-                      onPressed: () => setState(() {
-                            menuController.close();
-                            isOpen = false;
-                          }),
-                      icon: const Icon(Icons.add)),
-                )
-              ],
-              builder: (BuildContext context, MenuController menuController,
-                  Widget? child) {
-                return IconButton(
-                  iconSize: 24,
-                  onPressed: () {
-                    if (menuController.isOpen) {
-                      menuController.close();
-                      setState(() {
-                        isOpen = false;
-                      });
-                    } else {
-                      menuController.open();
-                      setState(() {
-                        isOpen = true;
-                      });
-                    }
-                    
-                  },
-                  icon: Container(
-                    decoration: !isOpen || !menuController.isOpen ? BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        width: 2,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ) : const BoxDecoration(shape: BoxShape.circle),
-                    child: !isOpen || !menuController.isOpen ? CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      foregroundImage: AssetImage(dogPicture[selectedDog]),
-                    ) : const CircleAvatar(
-                      backgroundColor: Colors.transparent),
-                  ),
-                );
-              },
-            ),
+                          foregroundImage: AssetImage(dogPicture[selectedDog]),
+                        )
+                      : const CircleAvatar(backgroundColor: Colors.transparent),
+                ),
+              );
+            },
           ),
         ),
       ]),

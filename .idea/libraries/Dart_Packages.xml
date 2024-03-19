@@ -142,6 +142,13 @@
             </list>
           </value>
         </entry>
+        <entry key="flutter_animate">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_animate-4.5.0/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flutter_compass">
           <value>
             <list>
@@ -174,6 +181,13 @@
           <value>
             <list>
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_map_location_marker-8.0.8/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="flutter_shaders">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_shaders-0.1.2/lib" />
             </list>
           </value>
         </entry>
@@ -724,11 +738,13 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fake_async-1.3.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fixnum-1.1.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/floating_bottom_bar-0.0.3/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_animate-4.5.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_compass-0.8.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_lints-3.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_login-5.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_map-6.1.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_map_location_marker-8.0.8/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_shaders-0.1.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_svg-2.0.10+1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/font_awesome_flutter-10.7.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator-11.0.0/lib" />
