@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'home.dart';
 import 'map.dart';
@@ -18,7 +19,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late final MenuController menuController = MenuController();
   int currentPageIndex = 0;
   int selectedDog = 0;
-  bool isExpanded = false;
+  bool isOpen = false;
   List<String> dogPicture = [
     "assets/default_cane.jpeg",
     "assets/default_cane_2.jpeg"
@@ -56,8 +57,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 172),
           child: Card(
-            /* margin: EdgeInsets.only(
-                  left: (width / 4) + 10, right: (width / 4) + 10, bottom: 20), */
             margin:
                 EdgeInsets.symmetric(vertical: 20, horizontal: (width / 4) + 4),
             elevation: 1,
@@ -98,16 +97,16 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                     iconSize: 24,
                     onPressed: null,
                     icon: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
+                        /* border: Border.all(
                           width: 2,
                           color: Theme.of(context).colorScheme.primary,
-                        ),
+                        ), */
                       ),
-                      child: CircleAvatar(
+                      child: const CircleAvatar(
                         backgroundColor: Colors.transparent,
-                        foregroundImage: AssetImage(dogPicture[selectedDog]),
+                        //foregroundImage: AssetImage(dogPicture[selectedDog]),
                       ),
                     ),
                   ),
@@ -141,87 +140,111 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         ),
         Positioned(
           top: 20,
-          //left: (width / 2) - 24,
-          //right: (width / 2) + 24,
-          child: MenuAnchor(
-            controller: menuController,
-            alignmentOffset: const Offset(0, -57.5),
-            style: MenuStyle(
-                maximumSize:
-                    MaterialStateProperty.all(const Size(double.infinity, 200)),
-                elevation: MaterialStateProperty.all(1),
-                backgroundColor: MaterialStateProperty.all(
-                    Theme.of(context).colorScheme.primary),
-                visualDensity: VisualDensity.compact,
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)))),
-            menuChildren: [
-              for (var i = dogPicture.length - 1; i >= 0; i--)
-                IconButton(
-                  iconSize: 24,
-                  onPressed: () => setState(() {
-                    selectedDog = i;
-                    menuController.close();
-                  }),
-                  icon: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        width: 2,
-                        color: Theme.of(context).colorScheme.onPrimary,
+          child: Animate(                       //////non va(?)
+            effects: const [SlideEffect(
+                      begin: Offset(0, 2),
+                      duration: duration,
+                      curve: Curves.easeIn,
+                    )],
+            child: MenuAnchor(
+              controller: menuController,
+              alignmentOffset: const Offset(0, -57.5),
+              style: MenuStyle(
+                  maximumSize:
+                      MaterialStateProperty.all(const Size(double.infinity, 200)),
+                  elevation: MaterialStateProperty.all(1),
+                  backgroundColor: MaterialStateProperty.all(
+                    Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                  visualDensity: VisualDensity.compact,
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)))),
+              menuChildren: [
+                for (var i = dogPicture.length - 1; i >= 0; i--)
+                  Animate(
+                    effects: [SlideEffect(
+                      begin: const Offset(0, 2),
+                      end: const Offset(0, 0),
+                      duration: duration,
+                      curve: Curves.bounceInOut,
+                      delay: Duration(milliseconds: (dogPicture.length-i)*100)
+                    )],
+                    child: IconButton(
+                      iconSize: 24,
+                      onPressed: () => setState(() {
+                        selectedDog = i;
+                        menuController.close();
+                        isOpen = false;
+                      }),
+                      icon: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            width: 2,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.transparent,
+                          foregroundImage: AssetImage(dogPicture[i]),
+                        ),
                       ),
                     ),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      foregroundImage: AssetImage(dogPicture[i]),
-                    ),
                   ),
-                ),
-              Container(
-                height: 45,
-                alignment: Alignment.center,
-                margin: const EdgeInsets.symmetric(vertical: 5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).colorScheme.onPrimary, width: 2),
-                ),
-                child: IconButton(
-                    iconSize: 24,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    alignment: Alignment.center,
-                    onPressed: () => setState(() {
-                          menuController.close();
-                        }),
-                    icon: const Icon(Icons.add)),
-              )
-            ],
-            builder: (BuildContext context, MenuController menuController,
-                Widget? child) {
-              return IconButton(
-                iconSize: 24,
-                onPressed: () {
-                  if (menuController.isOpen) {
-                    menuController.close();
-                  } else {
-                    menuController.open();
-                  }
-                },
-                icon: Container(
+                Container(
+                  height: 45,
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(vertical: 5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      width: 2,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                        color: Theme.of(context).colorScheme.onPrimary, width: 2),
                   ),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    foregroundImage: AssetImage(dogPicture[selectedDog]),
+                  child: IconButton(
+                      iconSize: 24,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      alignment: Alignment.center,
+                      onPressed: () => setState(() {
+                            menuController.close();
+                            isOpen = false;
+                          }),
+                      icon: const Icon(Icons.add)),
+                )
+              ],
+              builder: (BuildContext context, MenuController menuController,
+                  Widget? child) {
+                return IconButton(
+                  iconSize: 24,
+                  onPressed: () {
+                    if (menuController.isOpen) {
+                      menuController.close();
+                      setState(() {
+                        isOpen = false;
+                      });
+                    } else {
+                      menuController.open();
+                      setState(() {
+                        isOpen = true;
+                      });
+                    }
+                    
+                  },
+                  icon: Container(
+                    decoration: !isOpen || !menuController.isOpen ? BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        width: 2,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ) : const BoxDecoration(shape: BoxShape.circle),
+                    child: !isOpen || !menuController.isOpen ? CircleAvatar(
+                      backgroundColor: Colors.transparent,
+                      foregroundImage: AssetImage(dogPicture[selectedDog]),
+                    ) : const CircleAvatar(
+                      backgroundColor: Colors.transparent),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ]),
