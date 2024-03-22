@@ -176,11 +176,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 shape: MaterialStateProperty.all(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30)))),
             menuChildren: [
-              SizeTransition(
-                sizeFactor: CurvedAnimation(
-                  parent: animateMenuController,
-                  curve: Curves.easeInOut,
-                ),
+              FadeTransition(
+                opacity: animateMenuController,
                 child: Column(
                   children: [
                     for (var i = dogPicture.length - 1; i >= 0; i--)
