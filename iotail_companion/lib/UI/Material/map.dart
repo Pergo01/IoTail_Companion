@@ -22,6 +22,17 @@ class _MapState extends State<Map> {
   late AlignOnUpdate _alignPositionOnUpdate;
   late final StreamController<double?> _alignPositionStreamController;
   late List<Marker> markers;
+  final List<IconData> _icons = [
+    Icons.home_outlined,
+    Icons.home_filled
+  ];
+  int _currentIcon = 0;
+  final supermarkets = <String>[
+    'Conad',
+    'Crai',
+    'Lidl',
+  ];
+  //int _currentSupermarket = 0;
 
   final MapController mapController = MapController();
 
@@ -43,47 +54,25 @@ class _MapState extends State<Map> {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
     markers = [
-      Marker(
-        alignment: Alignment.center,
-        height: 30,
-        width: 30,
-        point: const LatLng(44.88635, 7.33861),
-        child: Icon(
-          Icons.pets,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-      Marker(
-        alignment: Alignment.center,
-        height: 30,
-        width: 30,
-        point: const LatLng(44.88487, 7.33523),
-        child: Icon(
-          Icons.pets,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-      Marker(
-        alignment: Alignment.center,
-        height: 30,
-        width: 30,
-        point: const LatLng(44.881874, 7.331156),
-        child: Icon(
-          Icons.pets,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-      Marker(
-        alignment: Alignment.center,
-        height: 30,
-        width: 30,
-        point: const LatLng(44.88601, 7.33707),
-        child: Icon(
-          Icons.pets,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    ];
+      const LatLng(44.88635, 7.33861),
+      const LatLng(44.88487, 7.33523),
+      const LatLng(44.881874, 7.331156),
+      const LatLng(44.88601, 7.33707),
+    ]
+        .map(
+          (markerPosition) => Marker(
+            alignment: Alignment.center,
+            height: 30,
+            width: 30,
+            point: markerPosition,
+            child: Icon(
+              Icons.pets,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        )
+        .toList();
+        
     return Center(
       child: PopupScope(
         popupController: _popupController,
@@ -113,6 +102,19 @@ class _MapState extends State<Map> {
                   padding: const EdgeInsets.all(50),
                   maxZoom: 15,
                   markers: markers,
+                  /* onMarkerTap: (marker) {
+                    marker = Marker(
+                      alignment: Alignment.center,
+                      height: 30,
+                      width: 30,
+                      point: marker.point,
+                      child: Icon(
+                        Icons.pets,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    );
+                    _popupController.togglePopup(marker);
+                  }, */
                   onClusterTap: (cluster) {
                     final latLngs =
                         cluster.markers.map((m) => m.point).toList();
@@ -129,8 +131,7 @@ class _MapState extends State<Map> {
                   popupOptions: PopupOptions(
                       popupSnap: PopupSnap.markerTop,
                       popupAnimation: const PopupAnimation.fade(),
-                      //provare qua a riposizionare i popup
-                      markerTapBehavior: MarkerTapBehavior.custom(
+                      /* markerTapBehavior: MarkerTapBehavior.custom(
                         (popupSpec, popupState, popupController) {
                           if (popupState.selectedPopupSpecs
                               .contains(popupSpec)) {
@@ -139,7 +140,7 @@ class _MapState extends State<Map> {
                             popupController.showPopupsOnlyForSpecs([popupSpec]);
                           }
                         },
-                      ),
+                      ), */
                       popupController: _popupController,
                       popupBuilder: (_, marker) => Animate(
                             effects: const [
@@ -152,21 +153,57 @@ class _MapState extends State<Map> {
                             ],
                             child: Card(
                               elevation: 3,
-                              child: Container(
-                                width: 200,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: GestureDetector(
-                                  onTap: () => _popupController.hideAllPopups(),
-                                  child: const Text(
-                                    'Container popup for marker',
-                                  ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  //_popupController.togglePopup(marker);
+                                  setState(() {
+                                    _currentIcon = (_currentIcon + 1) % _icons.length;
+                                  });
+                                }, 
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 20, right: 10),
+                                      child: Icon(_icons[_currentIcon]),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Container(
+                                        constraints: const BoxConstraints(minWidth: 100, maxWidth: 200),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            const Text(
+                                              'Popup for a marker!',
+                                              overflow: TextOverflow.fade,
+                                              softWrap: false,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 14.0,
+                                              ),
+                                            ),
+                                            const Padding(padding: EdgeInsets.symmetric(vertical: 4.0)),
+                                            Text(
+                                              'Position: ${marker.point.latitude}, ${marker.point.longitude}',
+                                              style: const TextStyle(fontSize: 12.0),
+                                            ),
+                                            Text(
+                                              'Marker size: ${marker.width}, ${marker.height}',
+                                              style: const TextStyle(fontSize: 12.0),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          )),
+                          ),
+                        ),
                   builder: (context, markers) {
                     return Container(
                       decoration: BoxDecoration(
