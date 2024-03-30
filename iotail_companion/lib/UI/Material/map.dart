@@ -10,6 +10,8 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
+import '/util/shop.dart';
+
 class Map extends StatefulWidget {
   final MqttServerClient client;
   const Map({Key? key, required this.client});
@@ -279,12 +281,4 @@ class _MapState extends State<Map> {
       ),
     );
   }
-}
-
-class Shop {
-  final String name;
-  final LatLng position;
-  final List kennels;
-
-  Shop(this.name, this.position, this.kennels);
 }
