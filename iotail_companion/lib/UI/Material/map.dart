@@ -38,11 +38,13 @@ class _MapState extends State<Map> {
   Future loadMarkers() async {
     var s = await rootBundle.loadString("assets/Shops.json");
     var json = jsonDecode(s);
-    final markersPos = [];
-    json.values.forEach((element) {
-      element.forEach((item) => markersPos.add(item["position"]));
+    final markersList = [];
+    json.forEach((key, value) {
+      //print(element);
+      value.forEach((item) => markersList.add(Shop(key,
+          LatLng(item["position"][0], item["position"][1]), item["kennels"])));
     });
-    return markersPos;
+    return markersList;
   }
 
   @override
@@ -63,14 +65,14 @@ class _MapState extends State<Map> {
   Widget build(BuildContext context) {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
-    List<Marker> markersShow;
-    markersShow = markers
+    List<Marker> markersList;
+    markersList = markers
         .map(
-          (markerPosition) => Marker(
+          (shop) => Marker(
             alignment: Alignment.center,
             height: 30,
             width: 30,
-            point: LatLng(markerPosition[0], markerPosition[1]),
+            point: shop.position,
             child: Icon(
               Icons.pets,
               color: Theme.of(context).colorScheme.primary,
@@ -107,7 +109,7 @@ class _MapState extends State<Map> {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(50),
                   maxZoom: 15,
-                  markers: markersShow,
+                  markers: markersList,
                   /* onMarkerTap: (marker) {
                     marker = Marker(
                       alignment: Alignment.center,
@@ -277,4 +279,12 @@ class _MapState extends State<Map> {
       ),
     );
   }
+}
+
+class Shop {
+  final String name;
+  final LatLng position;
+  final List kennels;
+
+  Shop(this.name, this.position, this.kennels);
 }
