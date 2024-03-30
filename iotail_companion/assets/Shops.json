@@ -1,0 +1,18 @@
+{
+  "Conad": [
+    {
+      "position": [44.88635, 7.33861],
+      "kennels": ["Kennel 1", "Kennel 2", "Kennel 3"]
+    }
+  ],
+  "Carrefour": [
+    {
+      "position": [44.88364830182337, 7.30019856738366],
+      "kennels": ["Kennel 1", "Kennel 2", "Kennel 3", "Kennel 4", "Kennel 5"]
+    },
+    {
+      "position": [44.885008692728285, 7.335188227794905],
+      "kennels": ["Kennel 1"]
+    }
+  ]
+}

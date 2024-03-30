@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
@@ -21,11 +23,8 @@ class _MapState extends State<Map> {
 
   late AlignOnUpdate _alignPositionOnUpdate;
   late final StreamController<double?> _alignPositionStreamController;
-  late List<Marker> markers;
-  final List<IconData> _icons = [
-    Icons.home_outlined,
-    Icons.home_filled
-  ];
+  late final markers = [];
+  final List<IconData> _icons = [Icons.home_outlined, Icons.home_filled];
   int _currentIcon = 0;
   final supermarkets = <String>[
     'Conad',
@@ -36,11 +35,22 @@ class _MapState extends State<Map> {
 
   final MapController mapController = MapController();
 
+  Future loadMarkers() async {
+    var s = await rootBundle.loadString("assets/Shops.json");
+    var json = jsonDecode(s);
+    final markersPos = [];
+    json.values.forEach((element) {
+      element.forEach((item) => markersPos.add(item["position"]));
+    });
+    return markersPos;
+  }
+
   @override
   void initState() {
     super.initState();
     _alignPositionOnUpdate = AlignOnUpdate.once;
     _alignPositionStreamController = StreamController<double?>();
+    loadMarkers().then((value) => markers.addAll(value));
   }
 
   @override
@@ -53,18 +63,14 @@ class _MapState extends State<Map> {
   Widget build(BuildContext context) {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
-    markers = [
-      const LatLng(44.88635, 7.33861),
-      const LatLng(44.88487, 7.33523),
-      const LatLng(44.881874, 7.331156),
-      const LatLng(44.88601, 7.33707),
-    ]
+    List<Marker> markersShow;
+    markersShow = markers
         .map(
           (markerPosition) => Marker(
             alignment: Alignment.center,
             height: 30,
             width: 30,
-            point: markerPosition,
+            point: LatLng(markerPosition[0], markerPosition[1]),
             child: Icon(
               Icons.pets,
               color: Theme.of(context).colorScheme.primary,
@@ -72,7 +78,7 @@ class _MapState extends State<Map> {
           ),
         )
         .toList();
-        
+
     return Center(
       child: PopupScope(
         popupController: _popupController,
@@ -101,7 +107,7 @@ class _MapState extends State<Map> {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(50),
                   maxZoom: 15,
-                  markers: markers,
+                  markers: markersShow,
                   /* onMarkerTap: (marker) {
                     marker = Marker(
                       alignment: Alignment.center,
@@ -129,9 +135,9 @@ class _MapState extends State<Map> {
                       color: Colors.black12,
                       borderStrokeWidth: 3),
                   popupOptions: PopupOptions(
-                      popupSnap: PopupSnap.markerTop,
-                      popupAnimation: const PopupAnimation.fade(),
-                      /* markerTapBehavior: MarkerTapBehavior.custom(
+                    popupSnap: PopupSnap.markerTop,
+                    popupAnimation: const PopupAnimation.fade(),
+                    /* markerTapBehavior: MarkerTapBehavior.custom(
                         (popupSpec, popupState, popupController) {
                           if (popupState.selectedPopupSpecs
                               .contains(popupSpec)) {
@@ -141,69 +147,74 @@ class _MapState extends State<Map> {
                           }
                         },
                       ), */
-                      popupController: _popupController,
-                      popupBuilder: (_, marker) => Animate(
-                            effects: const [
-                              SlideEffect(
-                                begin: Offset(0, 0.2),
-                                end: Offset(0, 0),
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeIn,
+                    popupController: _popupController,
+                    popupBuilder: (_, marker) => Animate(
+                      effects: const [
+                        SlideEffect(
+                          begin: Offset(0, 0.2),
+                          end: Offset(0, 0),
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        ),
+                      ],
+                      child: Card(
+                        elevation: 3,
+                        child: GestureDetector(
+                          onTap: () {
+                            //_popupController.togglePopup(marker);
+                            setState(() {
+                              _currentIcon = (_currentIcon + 1) % _icons.length;
+                            });
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 20, right: 10),
+                                child: Icon(_icons[_currentIcon]),
                               ),
-                            ],
-                            child: Card(
-                              elevation: 3,
-                              child: GestureDetector(
-                                onTap: () {
-                                  //_popupController.togglePopup(marker);
-                                  setState(() {
-                                    _currentIcon = (_currentIcon + 1) % _icons.length;
-                                  });
-                                }, 
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 20, right: 10),
-                                      child: Icon(_icons[_currentIcon]),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Container(
-                                        constraints: const BoxConstraints(minWidth: 100, maxWidth: 200),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            const Text(
-                                              'Popup for a marker!',
-                                              overflow: TextOverflow.fade,
-                                              softWrap: false,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 14.0,
-                                              ),
-                                            ),
-                                            const Padding(padding: EdgeInsets.symmetric(vertical: 4.0)),
-                                            Text(
-                                              'Position: ${marker.point.latitude}, ${marker.point.longitude}',
-                                              style: const TextStyle(fontSize: 12.0),
-                                            ),
-                                            Text(
-                                              'Marker size: ${marker.width}, ${marker.height}',
-                                              style: const TextStyle(fontSize: 12.0),
-                                            ),
-                                          ],
+                              Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                      minWidth: 100, maxWidth: 200),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      const Text(
+                                        'Popup for a marker!',
+                                        overflow: TextOverflow.fade,
+                                        softWrap: false,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14.0,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 4.0)),
+                                      Text(
+                                        'Position: ${marker.point.latitude}, ${marker.point.longitude}',
+                                        style: const TextStyle(fontSize: 12.0),
+                                      ),
+                                      Text(
+                                        'Marker size: ${marker.width}, ${marker.height}',
+                                        style: const TextStyle(fontSize: 12.0),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
+                      ),
+                    ),
+                  ),
                   builder: (context, markers) {
                     return Container(
                       decoration: BoxDecoration(
