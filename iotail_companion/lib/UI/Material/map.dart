@@ -263,6 +263,7 @@ class _MapState extends State<Map> {
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: FloatingActionButton(
+                    key: const Key("Center Position"),
                     shape: const CircleBorder(),
                     onPressed: () {
                       setState(
