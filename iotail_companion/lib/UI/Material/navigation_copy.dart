@@ -87,7 +87,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       ), */
       bottomNavigationBar: AnimatedBottomNavigationBar(
         barColor: ElevationOverlay.applySurfaceTint(
-            Theme.of(context).colorScheme.background,
+            Theme.of(context).colorScheme.surface,
             Theme.of(context).colorScheme.surfaceTint,
             3),
         bottomBar: [

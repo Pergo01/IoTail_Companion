@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_compass/flutter_map_compass.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:iotail_companion/UI/Material/DataMarker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
@@ -14,7 +16,7 @@ import '/util/shop.dart';
 
 class Map extends StatefulWidget {
   final MqttServerClient client;
-  const Map({Key? key, required this.client});
+  const Map({super.key, required this.client});
 
   @override
   _MapState createState() => _MapState();
@@ -26,8 +28,6 @@ class _MapState extends State<Map> {
   late AlignOnUpdate _alignPositionOnUpdate;
   late final StreamController<double?> _alignPositionStreamController;
   late final markers = [];
-  final List<IconData> _icons = [Icons.home_outlined, Icons.home_filled];
-  int _currentIcon = 0;
   final supermarkets = <String>[
     'Conad',
     'Crai',
@@ -161,62 +161,13 @@ class _MapState extends State<Map> {
                           curve: Curves.easeIn,
                         ),
                       ],
-                      child: Card(
-                        elevation: 3,
-                        child: GestureDetector(
-                          onTap: () {
-                            //_popupController.togglePopup(marker);
-                            setState(() {
-                              _currentIcon = (_currentIcon + 1) % _icons.length;
-                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 20, right: 10),
-                                child: Icon(_icons[_currentIcon]),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Container(
-                                  constraints: const BoxConstraints(
-                                      minWidth: 100, maxWidth: 200),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      const Text(
-                                        'Popup for a marker!',
-                                        overflow: TextOverflow.fade,
-                                        softWrap: false,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14.0,
-                                        ),
-                                      ),
-                                      const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 4.0)),
-                                      Text(
-                                        'Position: ${marker.point.latitude}, ${marker.point.longitude}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      ),
-                                      Text(
-                                        'Marker size: ${marker.width}, ${marker.height}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      child: const DataMarkerPopup(data: {
+                        "category": {
+                          "subCategory": {"name": "Kennel"}
+                        },
+                        "floor": {"name": "Ground Floor"},
+                        "room": {"name": "Kennel"},
+                      }),
                     ),
                   ),
                   builder: (context, markers) {
@@ -278,6 +229,10 @@ class _MapState extends State<Map> {
                   ),
                 ),
               ),
+              const MapCompass.cupertino(
+                hideIfRotatedNorth:
+                    true, // Hide the compass if the map is rotated north
+              ), // Add a compass to the map
             ]),
       ),
     );

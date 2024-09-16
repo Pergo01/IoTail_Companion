@@ -5,8 +5,7 @@ import '../constants/dimens.dart';
 /// [FloatingCenterButton] class shows a
 class FloatingCenterButton extends StatefulWidget {
   const FloatingCenterButton(
-      {required this.child, this.onAnimationComplete, Key? key})
-      : super(key: key);
+      {required this.child, this.onAnimationComplete, super.key});
   final Widget child;
   final VoidCallback? onAnimationComplete;
 

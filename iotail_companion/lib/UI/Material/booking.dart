@@ -7,7 +7,7 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 class Booking extends StatefulWidget {
   final MqttServerClient client;
-  const Booking({Key? key, required this.client}) : super(key: key);
+  const Booking({super.key, required this.client});
 
   @override
   _BookingState createState() => _BookingState();

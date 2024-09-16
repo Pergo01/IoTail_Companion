@@ -11,8 +11,8 @@ class CenterButtons extends StatefulWidget {
     required this.bottomBarCenter,
     required this.onTap,
     required this.position,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final BottomBarCenterModel bottomBarCenter;
   final VoidCallback onTap;

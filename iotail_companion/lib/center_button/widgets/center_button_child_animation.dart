@@ -6,8 +6,7 @@ import 'floating_center_button.dart';
 class CenterButtonChildAnimation extends StatefulWidget {
   /// [CenterButtonChildAnimation] class constructor takes [child],[animation] as a parameters.
   const CenterButtonChildAnimation(
-      {required this.child, required this.animation, Key? key})
-      : super(key: key);
+      {required this.child, required this.animation, super.key});
 
   final Widget child;
   final Animation<double> animation;

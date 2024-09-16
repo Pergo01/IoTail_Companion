@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+  const Login({super.key});
 
   @override
   _LoginState createState() => _LoginState();
@@ -55,13 +55,13 @@ class _LoginState extends State<Login> {
       appBar: AppBar(title: const Text("IoTail")),
       body: FlutterLogin(
         theme: LoginTheme(
-            pageColorLight: Theme.of(context).colorScheme.background,
-            pageColorDark: Theme.of(context).colorScheme.background,
+            pageColorLight: Theme.of(context).colorScheme.surface,
+            pageColorDark: Theme.of(context).colorScheme.surface,
             primaryColor: Theme.of(context).colorScheme.primary,
             errorColor: Theme.of(context).colorScheme.error,
             accentColor: Theme.of(context).colorScheme.secondary,
             cardTheme: CardTheme(
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.surface,
                 surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
                 shadowColor: Theme.of(context).colorScheme.shadow,
                 elevation: 1),

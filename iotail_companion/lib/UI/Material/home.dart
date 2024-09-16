@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class Home extends StatefulWidget {
   final Function(int) onDogSelected;
-  int selectedDog;
-  Home({super.key, required this.selectedDog, required this.onDogSelected});
+  final int selectedDog;
+
+  const Home(
+      {super.key, required this.selectedDog, required this.onDogSelected});
 
   @override
   _HomeState createState() => _HomeState();
@@ -20,6 +23,33 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   ];
 
   List<String> prenotazioni = ["Casa 1", "Casa 2"];
+  late List<bool> isExpanded;
+  WebViewController webController = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onProgress: (int progress) {
+          // Update loading bar.
+        },
+        onPageStarted: (String url) {},
+        onPageFinished: (String url) {},
+        onHttpError: (HttpResponseError error) {},
+        onWebResourceError: (WebResourceError error) {},
+        onNavigationRequest: (NavigationRequest request) {
+          if (request.url.startsWith('https://www.youtube.com/')) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
+      ),
+    )
+    ..loadRequest(Uri.parse('http:192.168.0.202:8090/camera_0'));
+
+  @override
+  void initState() {
+    isExpanded = List.filled(prenotazioni.length, false);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +66,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           SizedBox(
             height: 150,
             child: ListView.separated(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: cani.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
@@ -44,10 +74,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   radius: 5,
                   onTap: () {
                     widget.onDogSelected(index);
-                    setState(() {
-                      widget.selectedDog = index;
-                      widget.onDogSelected(index);
-                    });
                   },
                   child: Card(
                     elevation: widget.selectedDog == index ? 5 : 1,
@@ -114,14 +140,74 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           Expanded(
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
-                  return Card(
-                    child: SizedBox(
-                      height: 100,
-                      width: double.infinity,
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: Text(prenotazioni[index],
-                            style: const TextStyle(fontSize: 40)),
+                  return InkWell(
+                    splashFactory: InkRipple.splashFactory,
+                    customBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        if (isExpanded[index] == true) {
+                          isExpanded[index] = false;
+                        } else {
+                          isExpanded.where((e) => e == true).forEach((element) {
+                            isExpanded[isExpanded.indexOf(element)] = false;
+                          });
+                          isExpanded[index] = true;
+                          webController.reload();
+                        }
+                      });
+                    },
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(prenotazioni[index],
+                                style: const TextStyle(fontSize: 40)),
+                            if (isExpanded[index])
+                              SizedBox(
+                                height: 200,
+                                // Set a fixed height for the WebView
+                                child: WebViewWidget(controller: webController),
+                              ),
+                            if (isExpanded[index])
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              WidgetStateProperty.all(
+                                                  Colors.yellow.shade600),
+                                          shape: WidgetStateProperty.all(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5)))),
+                                      color: Colors.white,
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.edit)),
+                                  IconButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              WidgetStateProperty.all(
+                                                  Colors.red),
+                                          shape: WidgetStateProperty.all(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5)))),
+                                      color: Colors.white,
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.delete)),
+                                ],
+                              )
+                          ],
+                        ),
                       ),
                     ),
                   );

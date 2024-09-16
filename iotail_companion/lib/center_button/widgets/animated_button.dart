@@ -1,7 +1,4 @@
-//////////MAIN BUTTON///////////
-
 import 'package:flutter/material.dart';
-
 import '../constants/dimens.dart';
 import '../constants/enums.dart';
 import '../model/bottom_bar_center_model.dart';
@@ -14,8 +11,8 @@ import 'floating_center_button.dart';
 class AnimatedButton extends StatefulWidget {
   const AnimatedButton({
     required this.bottomBarCenterModel,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final BottomBarCenterModel bottomBarCenterModel;
 

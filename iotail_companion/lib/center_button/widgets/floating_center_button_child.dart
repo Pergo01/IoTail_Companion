@@ -5,8 +5,7 @@ import 'animated_button.dart';
 import '../util/event_bus.dart';
 
 class FloatingCenterButtonChild extends StatelessWidget {
-  const FloatingCenterButtonChild({required this.child, this.onTap, Key? key})
-      : super(key: key);
+  const FloatingCenterButtonChild({required this.child, this.onTap, super.key});
   final Widget child;
   final VoidCallback? onTap;
 

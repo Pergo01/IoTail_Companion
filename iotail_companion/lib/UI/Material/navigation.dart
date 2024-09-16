@@ -30,7 +30,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    client.connect('IoTail_client');
+    client.connect('IoTail_app');
     controller = AnimationController(
       duration: duration,
       vsync: this,
@@ -168,12 +168,12 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             alignmentOffset: const Offset(0, -56.5),
             style: MenuStyle(
                 maximumSize:
-                    MaterialStateProperty.all(const Size(double.infinity, 200)),
-                elevation: MaterialStateProperty.all(1),
-                backgroundColor: MaterialStateProperty.all(
+                    WidgetStateProperty.all(const Size(double.infinity, 200)),
+                elevation: WidgetStateProperty.all(1),
+                backgroundColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.primary.withOpacity(0.5)),
                 visualDensity: VisualDensity.compact,
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                shape: WidgetStateProperty.all(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30)))),
             menuChildren: [
               FadeTransition(
