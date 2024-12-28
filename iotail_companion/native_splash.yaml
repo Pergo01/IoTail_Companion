@@ -1,0 +1,14 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  color: "#ffb596"
+  image: assets/IoTail.png
+
+  color_dark: "#a33e00"
+
+  android_12:
+    color: "#ffb596"
+    color_dark: "#a33e00"
+    image: assets/IoTail.png

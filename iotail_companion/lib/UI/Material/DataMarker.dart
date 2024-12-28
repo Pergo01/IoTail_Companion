@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:iotail_companion/UI/Material/reservation_dialog.dart';
 
 class DataMarker extends Marker {
   const DataMarker({
@@ -35,14 +36,30 @@ class DataMarkerPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-                onPressed: () {},
+                onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: const Text(
+                            "Book a kennel",
+                            textAlign: TextAlign.center,
+                          ),
+                          content: SizedBox(
+                              width: double.maxFinite,
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              child: const ReservationDialog()),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text("Chiudi"))
+                          ],
+                        )),
                 icon: Icon(
-                  Icons.pets,
+                  Icons.calendar_month,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 )),
-            const SizedBox(
-              width: 10,
-            ),
+            // const SizedBox(
+            //   width: 5,
+            // ),
             Flexible(
               child: Column(
                 // Add a column to show the data

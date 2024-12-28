@@ -3,17 +3,35 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iotail_companion/UI/Material/booking.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
+import 'package:rive/rive.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'UI/Material/login.dart';
+import 'UI/Material/splash_screen.dart';
 import 'UI/Material/navigation.dart';
+import 'UI/Material/login_new.dart';
 import 'theme/color_schemes.g.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await RiveFile.initialize();
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
+  await FlutterSecureStorage(aOptions: _getAndroidOptions())
+      .write(key: "ip", value: "192.168.0.243");
   runApp(const MyApp());
 }
 
-final materialRouter = GoRouter(initialLocation: "/Navigation", routes: [
-  GoRoute(name: "Login", path: "/", builder: (build, context) => const Login()),
+final materialRouter = GoRouter(initialLocation: "/", routes: [
+  GoRoute(
+      name: "Login",
+      path: "/Login",
+      builder: (build, context) => const LoginNew()),
+  GoRoute(
+      name: "SplashScreen",
+      path: "/",
+      builder: (build, context) => const SplashScreen()),
   //GoRoute(
   //name: "Home", path: "/Home", builder: (context, state) => const Home()),
   //GoRoute(name: "Map", path: "/Map", builder: (context, state) => const Map()),

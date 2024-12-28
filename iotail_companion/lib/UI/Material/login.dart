@@ -82,32 +82,32 @@ class _LoginState extends State<Login> {
         onSubmitAnimationCompleted: () {
           context.go("/Navigation");
         },
-        loginProviders: [
-          LoginProvider(
-            icon: FontAwesomeIcons.google,
-            label: 'Google',
-            callback: () async {
-              return null;
-            },
-          ),
-          LoginProvider(
-            icon: FontAwesomeIcons.apple,
-            label: 'Apple',
-            callback: () async {
-              return null;
-            },
-          ),
-          LoginProvider(
-            icon: FontAwesomeIcons.faceAngry,
-            label: 'Polito',
-            callback: () async {
-              debugPrint('start Polito sign in');
-              await Future.delayed(loginTime);
-              debugPrint('stop Polito sign in');
-              return null;
-            },
-          ),
-        ],
+        // loginProviders: [
+        //   LoginProvider(
+        //     icon: FontAwesomeIcons.google,
+        //     label: 'Google',
+        //     callback: () async {
+        //       return null;
+        //     },
+        //   ),
+        //   LoginProvider(
+        //     icon: FontAwesomeIcons.apple,
+        //     label: 'Apple',
+        //     callback: () async {
+        //       return null;
+        //     },
+        //   ),
+        //   LoginProvider(
+        //     icon: FontAwesomeIcons.faceAngry,
+        //     label: 'Polito',
+        //     callback: () async {
+        //       debugPrint('start Polito sign in');
+        //       await Future.delayed(loginTime);
+        //       debugPrint('stop Polito sign in');
+        //       return null;
+        //     },
+        //   ),
+        // ],
         termsOfService: [
           TermOfService(
             id: 'newsletter',
