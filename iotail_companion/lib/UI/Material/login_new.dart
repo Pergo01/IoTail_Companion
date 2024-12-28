@@ -157,7 +157,7 @@ class _LoginNewState extends State<LoginNew> {
                             if (isSignup) {
                               // signup
                             } else {
-                              await login(ip!, email, password);
+                              await login(ip, email, password);
                               if (context.mounted) context.go("/Navigation");
                             }
                           },

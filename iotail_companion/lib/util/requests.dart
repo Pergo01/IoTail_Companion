@@ -40,6 +40,21 @@ Future<List> getReservations(
   return tmp; // return the response
 }
 
+Future<List> getStores(String ip, String token) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "stores"); // url for request
+  final response = await http.get(url, headers: headers); // get request
+  if (response.statusCode != 200) {
+    throw Exception(
+        "Failed to get stores"); // throw exception if status code is not 200
+  }
+  List tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
 Future<Map> getUser(String ip, String userID, String token) async {
   final headers = {
     'Content-Type': 'application/json',

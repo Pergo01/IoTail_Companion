@@ -4,23 +4,22 @@ import 'package:iotail_companion/UI/Material/reservation_dialog.dart';
 
 class DataMarker extends Marker {
   const DataMarker({
-    required this.data,
+    required this.name,
     required super.point,
     required super.child,
     super.height,
     super.width,
   });
 
-  final Map data;
+  final String name;
 }
 
 class DataMarkerPopup extends StatelessWidget {
-  const DataMarkerPopup({super.key, required this.data});
-  final Map data; // Data to show in the popup
+  const DataMarkerPopup({super.key, required this.name});
+  final String name; // Name to show in the popup
 
   @override
   Widget build(BuildContext context) {
-    String title = "Supermercato";
     return Card(
       // Return a card with the data
       color: Theme.of(context).colorScheme.primaryContainer,
@@ -68,7 +67,7 @@ class DataMarkerPopup extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    title,
+                    name,
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold,

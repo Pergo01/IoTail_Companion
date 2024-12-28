@@ -30,6 +30,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   late String? userID;
   late String name;
   late String phone;
+  List stores = [];
   late FlutterSecureStorage storage;
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
