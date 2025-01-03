@@ -199,9 +199,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                     AnimationStatus.completed) {
                               animateMenuController.reverse();
                               setState(() {
-                                isOpen = false;
-                              });
-                              setState(() {
                                 selectedDog = i;
                                 isOpen = false;
                               });
@@ -241,9 +238,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 case AnimationStatus.forward ||
                                     AnimationStatus.completed) {
                               animateMenuController.reverse();
-                              setState(() {
-                                isOpen = false;
-                              });
                               setState(() {
                                 isOpen = false;
                               });
