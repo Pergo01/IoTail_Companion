@@ -15,15 +15,15 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 import '/util/shop.dart';
 import '../../util/requests.dart' as requests;
 
-class Map extends StatefulWidget {
+class OSMMap extends StatefulWidget {
   final MqttServerClient client;
-  const Map({super.key, required this.client});
+  const OSMMap({super.key, required this.client});
 
   @override
-  _MapState createState() => _MapState();
+  _OSMMapState createState() => _OSMMapState();
 }
 
-class _MapState extends State<Map> {
+class _OSMMapState extends State<OSMMap> {
   final PopupController _popupController = PopupController();
 
   late AlignOnUpdate _alignPositionOnUpdate;
@@ -32,6 +32,8 @@ class _MapState extends State<Map> {
   late String? ip;
   late String? token;
   List stores = [];
+  List prenotazioni = [];
+  late List<bool> isExpanded;
   late FlutterSecureStorage storage;
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,

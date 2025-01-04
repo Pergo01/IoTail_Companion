@@ -19,6 +19,8 @@ class _SplashScreenState extends State<SplashScreen>
         encryptedSharedPreferences: true,
       );
   late String? userID;
+  late String token;
+  late String ip;
 
   @override
   void initState() {
@@ -27,17 +29,24 @@ class _SplashScreenState extends State<SplashScreen>
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
 
     getID();
+    refreshToken().then((value) {
+      token = value[0];
+      ip = value[1];
+    });
     Future.delayed(const Duration(seconds: 6), () {
       if (userID == null) {
         context.go("/Login");
       } else {
-        refreshToken();
-        context.go("/Navigation");
+        context.go("/Navigation", extra: {
+          "userID": userID,
+          "ip": ip,
+          "token": token,
+        });
       }
     });
   }
 
-  Future<void> refreshToken() async {
+  Future<List<String>> refreshToken() async {
     String? ip = await storage.read(key: "ip");
     String? email = await storage.read(key: "email");
     String? password = await storage.read(key: "password");
@@ -45,6 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
     final options =
         IOSOptions(accessibility: KeychainAccessibility.first_unlock);
     storage.write(key: "token", value: tmp["token"], iOptions: options);
+    return [tmp["token"], ip];
   }
 
   Future<void> getID() async {

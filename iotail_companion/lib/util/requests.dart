@@ -55,7 +55,8 @@ Future<List> getStores(String ip, String token) async {
   return tmp; // return the response
 }
 
-Future<Map> getUser(String ip, String userID, String token) async {
+Future<Map<String, dynamic>> getUser(
+    String ip, String userID, String token) async {
   final headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer $token',
@@ -66,7 +67,7 @@ Future<Map> getUser(String ip, String userID, String token) async {
     throw Exception(
         "Failed to get user"); // throw exception if status code is not 200
   }
-  Map tmp = jsonDecode(response.body); // decode the response
+  Map<String, dynamic> tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response
 }
 

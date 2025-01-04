@@ -6,7 +6,7 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'UI/Material/login.dart';
+// import 'UI/Material/login_copy.dart';
 import 'UI/Material/splash_screen.dart';
 import 'UI/Material/navigation.dart';
 import 'UI/Material/login_new.dart';
@@ -38,7 +38,11 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
-      builder: (build, context) => const Navigation()),
+      builder: (build, context) {
+        Map extra = context.extra as Map;
+        return Navigation(
+            ip: extra["ip"], token: extra["token"], userID: extra["userID"]);
+      }),
   GoRoute(
       name: "Booking",
       path: "/Booking",

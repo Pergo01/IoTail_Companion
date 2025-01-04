@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'home.dart';
 import 'map.dart';
+import '../../util/requests.dart' as requests;
+import '../../util/user.dart';
 
 class Navigation extends StatefulWidget {
-  const Navigation({super.key});
+  final String? ip;
+  final String? token;
+  final String? userID;
+  const Navigation(
+      {super.key, required this.ip, required this.token, required this.userID});
 
   @override
   _NavigationState createState() => _NavigationState();
@@ -28,8 +35,35 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   final MqttServerClient client =
       MqttServerClient("mqtt.eclipseprojects.io", "");
 
+  List cani = [];
+  late Future<User> user;
+  late FlutterSecureStorage storage;
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
+  late List<bool> isExpanded;
+  late Future<List> prenotazioni;
+
+  Future<User> getUser() async {
+    Map<String, dynamic> data =
+        await requests.getUser(widget.ip!, widget.userID!, widget.token!);
+    return User.fromJson(data);
+  }
+
+  Future<List> getReservations() async {
+    var data = await requests.getReservations(
+        widget.ip!, widget.userID!, widget.token!);
+    isExpanded = List.filled(data.length, false);
+    return data;
+  }
+
   @override
   void initState() {
+    super.initState();
+    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
+    user = getUser();
+    user.then((value) => print(value));
+    prenotazioni = getReservations();
     client.connect('IoTail_app');
     controller = AnimationController(
       duration: duration,
@@ -50,7 +84,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           menuController.open();
         }
       });
-    super.initState();
   }
 
   @override
@@ -64,279 +97,316 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text("IoTail"),
-      ),
-      bottomNavigationBar: Stack(alignment: Alignment.bottomCenter, children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 172),
-          child: Card(
-            margin:
-                EdgeInsets.symmetric(vertical: 20, horizontal: (width / 4) + 4),
-            elevation: 1,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 172),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    iconSize: 24,
-                    onPressed: () {
-                      if (currentPageIndex == 1) {
-                        setState(() {
-                          controller.reverse();
-                          currentPageIndex = 0;
-                        });
-                      }
-                    },
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: currentPageIndex == 0
-                            ? Theme.of(context).colorScheme.secondaryContainer
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        currentPageIndex == 0
-                            ? Icons.home
-                            : Icons.home_outlined,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    iconSize: 24,
-                    onPressed: null,
-                    icon: Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        /* border: Border.all(
-                          width: 2,
-                          color: Theme.of(context).colorScheme.primary,
-                        ), */
-                      ),
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.transparent,
-                        //foregroundImage: AssetImage(dogPicture[selectedDog]),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    iconSize: 24,
-                    onPressed: () {
-                      if (currentPageIndex == 0) {
-                        setState(() {
-                          controller.forward();
-                          currentPageIndex = 1;
-                        });
-                      }
-                    },
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: currentPageIndex == 1
-                            ? Theme.of(context).colorScheme.secondaryContainer
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        currentPageIndex == 1 ? Icons.map : Icons.map_outlined,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+    return FutureBuilder(
+      future: Future.wait([user, prenotazioni]),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Scaffold(
+            extendBody: true,
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              title: const Text("IoTail"),
             ),
-          ),
-        ),
-        Positioned(
-          top: 18,
-          child: MenuAnchor(
-            onOpen: animateMenuController.forward,
-            onClose: animateMenuController.reset,
-            controller: menuController,
-            alignmentOffset: const Offset(0, -56.5),
-            style: MenuStyle(
-                maximumSize:
-                    WidgetStateProperty.all(const Size(double.infinity, 200)),
-                elevation: WidgetStateProperty.all(1),
-                backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.primary.withOpacity(0.5)),
-                visualDensity: VisualDensity.compact,
-                shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)))),
-            menuChildren: [
-              FadeTransition(
-                opacity: animateMenuController,
-                child: Column(
-                  children: [
-                    for (var i = dogPicture.length - 1; i >= 0; i--)
-                      Animate(
-                        effects: [
-                          SlideEffect(
-                              begin: const Offset(0, 1),
-                              end: const Offset(0, 0),
-                              duration: duration,
-                              curve: Curves.bounceInOut,
-                              delay: Duration(
-                                  milliseconds: (dogPicture.length - i) * 100)),
-                        ],
-                        child: IconButton(
+            bottomNavigationBar:
+                Stack(alignment: Alignment.bottomCenter, children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 172),
+                child: Card(
+                  margin: EdgeInsets.symmetric(
+                      vertical: 20, horizontal: (width / 4) + 4),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: isDarkTheme
+                          ? BorderSide(
+                              color: Theme.of(context).colorScheme.primary)
+                          : BorderSide.none),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 172),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
                           iconSize: 24,
                           onPressed: () {
-                            if (animateMenuController.status
-                                case AnimationStatus.forward ||
-                                    AnimationStatus.completed) {
-                              animateMenuController.reverse();
+                            if (currentPageIndex == 1) {
                               setState(() {
-                                selectedDog = i;
-                                isOpen = false;
+                                controller.reverse();
+                                currentPageIndex = 0;
                               });
                             }
                           },
                           icon: Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
+                              color: currentPageIndex == 0
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer
+                                  : Colors.transparent,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                width: 2,
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
                             ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.transparent,
-                              foregroundImage: AssetImage(dogPicture[i]),
+                            child: Icon(
+                              currentPageIndex == 0
+                                  ? Icons.home
+                                  : Icons.home_outlined,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer,
                             ),
                           ),
                         ),
-                      ),
-                    Container(
-                      height: 45,
-                      alignment: Alignment.center,
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            width: 2),
-                      ),
-                      child: IconButton(
+                        IconButton(
                           iconSize: 24,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          alignment: Alignment.center,
+                          onPressed: null,
+                          icon: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              /* border: Border.all(
+                            width: 2,
+                            color: Theme.of(context).colorScheme.primary,
+                          ), */
+                            ),
+                            child: const CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              //foregroundImage: AssetImage(dogPicture[selectedDog]),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          iconSize: 24,
                           onPressed: () {
-                            if (animateMenuController.status
-                                case AnimationStatus.forward ||
-                                    AnimationStatus.completed) {
-                              animateMenuController.reverse();
+                            if (currentPageIndex == 0) {
                               setState(() {
-                                isOpen = false;
+                                controller.forward();
+                                currentPageIndex = 1;
                               });
                             }
                           },
-                          icon: const Icon(Icons.add)),
-                    )
-                  ],
-                ),
-              ),
-            ],
-            builder: (BuildContext context, MenuController menuController,
-                Widget? child) {
-              return IconButton(
-                iconSize: 24,
-                onPressed: () {
-                  if (animateMenuController.status
-                      case AnimationStatus.forward ||
-                          AnimationStatus.completed) {
-                    animateMenuController.reverse();
-                    setState(() {
-                      isOpen = false;
-                    });
-                  } else {
-                    animateMenuController.forward();
-                    setState(() {
-                      isOpen = true;
-                    });
-                  }
-                  /*if (menuController.isOpen) {
-                    //menuController.close();
-                    setState(() {
-                      isOpen = false;
-                    });
-                  } else {
-                    //menuController.open();
-                    setState(() {
-                      isOpen = true;
-                    });
-                  }*/
-                },
-                icon: Container(
-                  decoration: !isOpen || !menuController.isOpen
-                      ? BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            width: 2,
-                            color: Theme.of(context).colorScheme.primary,
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: currentPageIndex == 1
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              currentPageIndex == 1
+                                  ? Icons.map
+                                  : Icons.map_outlined,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer,
+                            ),
                           ),
-                        )
-                      : const BoxDecoration(shape: BoxShape.circle),
-                  child: !isOpen || !menuController.isOpen
-                      ? CircleAvatar(
-                          backgroundColor: Colors.transparent,
-                          foregroundImage: AssetImage(dogPicture[selectedDog]),
-                        )
-                      : const CircleAvatar(backgroundColor: Colors.transparent),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            },
-          ),
-        ),
-      ]),
-      body: Stack(
-        children: [
-          SlideTransition(
-            position: controller.drive(
-              Tween<Offset>(
-                begin: Offset.zero,
-                end: const Offset(-1, 0),
               ),
-            ),
-            child: Home(
-              selectedDog: selectedDog,
-              onDogSelected: (int index) {
-                setState(() {
-                  selectedDog = index;
-                });
-              },
-            ),
-          ),
-          SlideTransition(
-            position: controller.drive(
-              Tween<Offset>(
-                begin: const Offset(1, 0),
-                end: Offset.zero,
+              Positioned(
+                top: 18,
+                child: MenuAnchor(
+                  onOpen: animateMenuController.forward,
+                  onClose: animateMenuController.reset,
+                  controller: menuController,
+                  alignmentOffset: const Offset(0, -56.5),
+                  style: MenuStyle(
+                      maximumSize: WidgetStateProperty.all(
+                          const Size(double.infinity, 200)),
+                      elevation: WidgetStateProperty.all(1),
+                      backgroundColor: WidgetStateProperty.all(Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.5)),
+                      visualDensity: VisualDensity.compact,
+                      shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)))),
+                  menuChildren: [
+                    FadeTransition(
+                      opacity: animateMenuController,
+                      child: Column(
+                        children: [
+                          for (var i = dogPicture.length - 1; i >= 0; i--)
+                            Animate(
+                              effects: [
+                                SlideEffect(
+                                    begin: const Offset(0, 1),
+                                    end: const Offset(0, 0),
+                                    duration: duration,
+                                    curve: Curves.bounceInOut,
+                                    delay: Duration(
+                                        milliseconds:
+                                            (dogPicture.length - i) * 100)),
+                              ],
+                              child: IconButton(
+                                iconSize: 24,
+                                onPressed: () {
+                                  if (animateMenuController.status
+                                      case AnimationStatus.forward ||
+                                          AnimationStatus.completed) {
+                                    animateMenuController.reverse();
+                                    setState(() {
+                                      selectedDog = i;
+                                      isOpen = false;
+                                    });
+                                  }
+                                },
+                                icon: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      width: 2,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundImage: AssetImage(dogPicture[i]),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Container(
+                            height: 45,
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.symmetric(vertical: 5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  width: 2),
+                            ),
+                            child: IconButton(
+                                iconSize: 24,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                alignment: Alignment.center,
+                                onPressed: () {
+                                  if (animateMenuController.status
+                                      case AnimationStatus.forward ||
+                                          AnimationStatus.completed) {
+                                    animateMenuController.reverse();
+                                    setState(() {
+                                      isOpen = false;
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.add)),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                  builder: (BuildContext context, MenuController menuController,
+                      Widget? child) {
+                    return IconButton(
+                      iconSize: 24,
+                      onPressed: () {
+                        if (animateMenuController.status
+                            case AnimationStatus.forward ||
+                                AnimationStatus.completed) {
+                          animateMenuController.reverse();
+                          setState(() {
+                            isOpen = false;
+                          });
+                        } else {
+                          animateMenuController.forward();
+                          setState(() {
+                            isOpen = true;
+                          });
+                        }
+                        /*if (menuController.isOpen) {
+                      //menuController.close();
+                      setState(() {
+                        isOpen = false;
+                      });
+                    } else {
+                      //menuController.open();
+                      setState(() {
+                        isOpen = true;
+                      });
+                    }*/
+                      },
+                      icon: Container(
+                        decoration: !isOpen || !menuController.isOpen
+                            ? BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: 2,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              )
+                            : const BoxDecoration(shape: BoxShape.circle),
+                        child: !isOpen || !menuController.isOpen
+                            ? CircleAvatar(
+                                backgroundColor: Colors.transparent,
+                                foregroundImage:
+                                    AssetImage(dogPicture[selectedDog]),
+                              )
+                            : const CircleAvatar(
+                                backgroundColor: Colors.transparent),
+                      ),
+                    );
+                  },
+                ),
               ),
+            ]),
+            body: Stack(
+              children: [
+                SlideTransition(
+                  position: controller.drive(
+                    Tween<Offset>(
+                      begin: Offset.zero,
+                      end: const Offset(-1, 0),
+                    ),
+                  ),
+                  child: Home(
+                    selectedDog: selectedDog,
+                    onDogSelected: (int index) {
+                      setState(() {
+                        selectedDog = index;
+                      });
+                    },
+                    user: snapshot.data![0] as User,
+                    reservations: snapshot.data![1] as List,
+                  ),
+                ),
+                SlideTransition(
+                  position: controller.drive(
+                    Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ),
+                  ),
+                  child: OSMMap(
+                    client: client,
+                  ),
+                ),
+              ],
             ),
-            child: Map(
-              client: client,
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: currentPageIndex == 1
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push("/Booking", extra: client),
-              label: const Text("Vai a Booking"))
-          : null,
+            floatingActionButton: currentPageIndex == 1
+                ? FloatingActionButton.extended(
+                    onPressed: () => context.push("/Booking", extra: client),
+                    label: const Text("Vai a Booking"))
+                : null,
+          );
+        } else if (snapshot.hasError) {
+          return const Text("Error fetching data");
+        }
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }
