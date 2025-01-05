@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
+import '../../util/store.dart';
 import 'home.dart';
 import 'map.dart';
 import '../../util/requests.dart' as requests;
@@ -37,6 +38,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
 
   List cani = [];
   late Future<User> user;
+  late Future<List<Store>> stores;
   late FlutterSecureStorage storage;
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
@@ -57,13 +59,22 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return data;
   }
 
+  Future<List<Store>> getStores() async {
+    var data = await requests.getStores(widget.ip!, widget.token!);
+    List<Store> tmp = [];
+    for (var store in data) {
+      tmp.add(Store.fromJson(store));
+    }
+    return tmp;
+  }
+
   @override
   void initState() {
     super.initState();
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
     user = getUser();
-    user.then((value) => print(value));
     prenotazioni = getReservations();
+    stores = getStores();
     client.connect('IoTail_app');
     controller = AnimationController(
       duration: duration,
@@ -100,7 +111,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
     return FutureBuilder(
-      future: Future.wait([user, prenotazioni]),
+      future: Future.wait([user, prenotazioni, stores]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return Scaffold(
@@ -390,6 +401,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   ),
                   child: OSMMap(
                     client: client,
+                    stores: snapshot.data![2] as List<Store>,
                   ),
                 ),
               ],
