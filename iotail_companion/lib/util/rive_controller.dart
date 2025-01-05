@@ -76,6 +76,8 @@ class RiveAnimationControllerHelper {
         currentController = _controllerFail;
       } else if (methods[index] == addIdle2Controller) {
         currentController = _controllerIdle2;
+      } else if (methods[index] == addDownLeftController) {
+        currentController = _controllerLookDownLeft;
       }
       // Aggiungi altri casi se necessario
 

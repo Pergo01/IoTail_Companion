@@ -236,14 +236,20 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                   },
                   additionalSignupFields: const [
                     UserFormField(
-                      keyName: 'Username',
+                      keyName: 'Name',
+                      userType: LoginUserType.firstName,
                       icon: Icon(FontAwesomeIcons.userLarge),
                     ),
-                    UserFormField(keyName: 'Name'),
-                    UserFormField(keyName: 'phone'),
-                    UserFormField(keyName: 'codicefiscale'),
-                    UserFormField(keyName: 'address'),
-                    UserFormField(keyName: 'cap'),
+                    UserFormField(
+                      keyName: 'Surname',
+                      userType: LoginUserType.lastName,
+                      icon: Icon(FontAwesomeIcons.userLarge),
+                    ),
+                    UserFormField(
+                      keyName: 'Phone Number',
+                      userType: LoginUserType.phone,
+                      icon: Icon(FontAwesomeIcons.phone),
+                    ),
                   ],
                   loginAfterSignUp: false,
                   scrollable: true,
