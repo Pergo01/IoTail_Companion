@@ -15,50 +15,31 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late FlutterSecureStorage storage;
+
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );
-  late String? userID;
-  late String token;
-  late String ip;
+  late Future<String?> userID;
+  late Future<String?> ip;
+  late Future<String> token;
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-
-    getID();
-    refreshToken().then((value) {
-      token = value[0];
-      ip = value[1];
-    });
-    Future.delayed(const Duration(seconds: 6), () {
-      if (userID == null) {
-        context.go("/Login");
-      } else {
-        context.go("/Navigation", extra: {
-          "userID": userID,
-          "ip": ip,
-          "token": token,
-        });
-      }
-    });
+    userID = storage.read(key: "userID");
+    ip = storage.read(key: "ip");
   }
 
-  Future<List<String>> refreshToken() async {
-    String? ip = await storage.read(key: "ip");
+  Future<String> refreshToken(String ip) async {
     String? email = await storage.read(key: "email");
     String? password = await storage.read(key: "password");
-    Map tmp = await requests.login(ip!, email!, password!);
+    Map tmp = await requests.login(ip, email!, password!);
     final options =
         IOSOptions(accessibility: KeychainAccessibility.first_unlock);
     storage.write(key: "token", value: tmp["token"], iOptions: options);
-    return [tmp["token"], ip];
-  }
-
-  Future<void> getID() async {
-    userID = await storage.read(key: "userID");
+    return tmp["token"];
   }
 
   @override
@@ -70,6 +51,43 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: Future.wait([userID, ip]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data![0] == null) {
+              Future.delayed(const Duration(seconds: 6),
+                  () => context.go("/Login", extra: snapshot.data![1]));
+              return _buildSplashScreen(context);
+            }
+            String userID_val = snapshot.data![0]!;
+            String ip_val = snapshot.data![1]!;
+            token = refreshToken(ip_val);
+            return FutureBuilder(
+              future: token,
+              builder: (context, tokenSnapshot) {
+                if (tokenSnapshot.hasError) {
+                  return Center(child: Text('Error: ${tokenSnapshot.error}'));
+                } else {
+                  String token_val = tokenSnapshot.data!;
+                  Future.delayed(const Duration(seconds: 6), () {
+                    context.go("/Navigation", extra: {
+                      "userID": userID_val,
+                      "ip": ip_val,
+                      "token": token_val,
+                    });
+                  });
+                  return _buildSplashScreen(context);
+                }
+              },
+            );
+          } else {
+            return _buildSplashScreen(context);
+          }
+        });
+  }
+
+  Widget _buildSplashScreen(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

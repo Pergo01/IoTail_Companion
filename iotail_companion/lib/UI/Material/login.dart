@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:rive/rive.dart' hide LinearGradient, Image;
 import 'package:go_router/go_router.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+import 'terms_and_conditions.dart';
+import '/util/rive_controller.dart';
+import '../../util/requests.dart' as requests;
+
+class LoginWithRive extends StatefulWidget {
+  final String ip;
+  const LoginWithRive({super.key, required this.ip});
 
   @override
-  _LoginState createState() => _LoginState();
+  _LoginWithRiveState createState() => _LoginWithRiveState();
 }
 
 const users = {
@@ -16,34 +23,167 @@ const users = {
   'hunter@gmail.com': 'hunter',
 };
 
-class _LoginState extends State<Login> {
-  Duration get loginTime => const Duration(milliseconds: 2250);
+class _LoginWithRiveState extends State<LoginWithRive> {
+  final RiveAnimationControllerHelper riveHelper =
+      RiveAnimationControllerHelper();
 
-  Future<String?> _authUser(LoginData data) {
-    debugPrint('Name: ${data.name}, Password: ${data.password}');
-    return Future.delayed(loginTime).then((_) {
-      if (!users.containsKey(data.name)) {
-        return 'User not exists';
-      }
-      if (users[data.name] != data.password) {
-        return 'Password does not match';
-      }
-      return null;
+  final FocusNode emailFocusNode = FocusNode();
+  final FocusNode passwordFocusNode = FocusNode();
+  final FocusNode confirmPasswordFocusNode = FocusNode();
+
+  bool _isAnimating = false;
+  bool _passwordFieldFocused = false;
+
+  late FlutterSecureStorage storage;
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
+
+  late final String token;
+  late final String userID;
+
+  @override
+  void initState() {
+    super.initState();
+    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
+    // Carica il file Rive all'avvio
+    riveHelper.loadRiveFile('assets/doggo.riv').then((_) {
+      setState(() {});
     });
+
+    emailFocusNode.addListener(_handleUsernameFocus);
+    passwordFocusNode.addListener(_handlePasswordFocus);
+    confirmPasswordFocusNode.addListener(_handlePasswordFocus);
   }
 
-  Future<String?> _signupUser(SignupData data) {
+  @override
+  void dispose() {
+    super.dispose();
+
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    confirmPasswordFocusNode.dispose();
+  }
+
+  void _handleUsernameFocus() {
+    if (_isAnimating) return;
+    if (emailFocusNode.hasFocus) {
+      riveHelper.addIdle2Controller();
+      Future.delayed(const Duration(seconds: 1), () {
+        riveHelper.addDownLeftController();
+      });
+    } else {
+      riveHelper.addIdle2Controller();
+    }
+  }
+
+  void _handlePasswordFocus() {
+    if (_isAnimating) return;
+    if (passwordFocusNode.hasFocus || confirmPasswordFocusNode.hasFocus) {
+      _passwordFieldFocused = true;
+      riveHelper.addHandsUpController();
+    } else if (_passwordFieldFocused) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addHandsDownController,
+        riveHelper.addIdle2Controller,
+      ]);
+      _passwordFieldFocused = false;
+    }
+  }
+
+  Future<String?> _authUser(LoginData data) async {
+    if (_isAnimating) {
+      return null; // Evita di riattivare l'animazione se già in corso
+    }
+
+    setState(() {
+      _isAnimating = true; // Blocca i listener
+    });
+
+    Map tmp = await requests.login(widget.ip, data.name, data.password);
+    if (tmp.containsKey("error")) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addFailController,
+        riveHelper.addIdle2Controller,
+      ]);
+      return tmp["error"];
+    }
+    userID = tmp["userID"];
+    storage.write(key: "userID", value: tmp["userID"]);
+    storage.write(key: "email", value: data.name);
+    storage.write(key: "password", value: data.password);
+    token = tmp["token"];
+    storage.write(key: "token", value: tmp["token"]);
+    riveHelper.addSuccessController();
+    setState(() {
+      _isAnimating = false; // Riattiva i listener dopo l'animazione
+    });
+    return null;
+
+    // debugPrint('Name: ${data.name}, Password: ${data.password}');
+    // return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
+    //   if (!users.containsKey(data.name)) {
+    //     riveHelper.playSequentialAnimationControllers([
+    //       riveHelper.addFailController,
+    //       riveHelper.addIdle2Controller,
+    //     ]);
+    //     return 'User does not exist';
+    //   }
+    //   if (users[data.name] != data.password) {
+    //     riveHelper.playSequentialAnimationControllers([
+    //       riveHelper.addFailController,
+    //       riveHelper.addIdle2Controller,
+    //     ]);
+    //     return 'Password does not match';
+    //   } else {
+    //     riveHelper.addSuccessController();
+    //   }
+    //   return null;
+    // }).whenComplete(() {
+    //   setState(() {
+    //     _isAnimating = false; // Riattiva i listener dopo l'animazione
+    //   });
+    // });
+  }
+
+  Future<String?> _signupUser(SignupData data) async {
+    // if (_isAnimating)
+    //   return null; // Evita di riattivare l'animazione se già in corso
+
+    setState(() {
+      _isAnimating = true; // Blocca i listener
+    });
+
     debugPrint('Signup Name: ${data.name}, Password: ${data.password}');
-    return Future.delayed(loginTime).then((_) {
+    return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
+      if (users.containsKey(data.name)) {
+        riveHelper.playSequentialAnimationControllers([
+          riveHelper.addFailController,
+          riveHelper.addIdle2Controller,
+        ]);
+        return 'User already exists';
+      } else {
+        riveHelper.addIdle2Controller();
+      }
       return null;
+    }).whenComplete(() {
+      setState(() {
+        _isAnimating = false; // Riattiva i listener dopo l'animazione
+      });
     });
   }
 
   Future<String?> _recoverPassword(String name) {
     debugPrint('Name: $name');
-    return Future.delayed(loginTime).then((_) {
+    return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
       if (!users.containsKey(name)) {
-        return 'User not exists';
+        riveHelper.playSequentialAnimationControllers([
+          riveHelper.addFailController,
+          riveHelper.addIdle2Controller,
+        ]);
+        return 'User does not exist';
+      } else {
+        riveHelper.addIdle2Controller();
       }
       return null;
     });
@@ -52,102 +192,129 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("IoTail")),
-      body: FlutterLogin(
-        theme: LoginTheme(
-            pageColorLight: Theme.of(context).colorScheme.surface,
-            pageColorDark: Theme.of(context).colorScheme.surface,
-            primaryColor: Theme.of(context).colorScheme.primary,
-            errorColor: Theme.of(context).colorScheme.error,
-            accentColor: Theme.of(context).colorScheme.secondary,
-            cardTheme: CardTheme(
-                color: Theme.of(context).colorScheme.surface,
-                surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-                shadowColor: Theme.of(context).colorScheme.shadow,
-                elevation: 1),
-            buttonTheme: LoginButtonTheme(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                elevation: 1),
-            buttonStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer),
-            bodyStyle:
-                TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        logo: Image.asset(
-          "assets/IoTail.gif",
-        ).image,
-        title: "Benvenuto",
-        onLogin: _authUser,
-        onSignup: _signupUser,
-        onRecoverPassword: _recoverPassword,
-        onSubmitAnimationCompleted: () {
-          context.go("/Navigation");
+      appBar: AppBar(
+        title: ShaderMask(
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.inversePrimary,
+              Theme.of(context).colorScheme.tertiary,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: const Text(
+            'IoTail',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      resizeToAvoidBottomInset: false,
+      body: GestureDetector(
+        onTap: () {
+          // Nascondi la tastiera e reimposta lo stato idle
+          FocusScope.of(context).unfocus();
+          // riveHelper.addIdle2Controller();
         },
-        // loginProviders: [
-        //   LoginProvider(
-        //     icon: FontAwesomeIcons.google,
-        //     label: 'Google',
-        //     callback: () async {
-        //       return null;
-        //     },
-        //   ),
-        //   LoginProvider(
-        //     icon: FontAwesomeIcons.apple,
-        //     label: 'Apple',
-        //     callback: () async {
-        //       return null;
-        //     },
-        //   ),
-        //   LoginProvider(
-        //     icon: FontAwesomeIcons.faceAngry,
-        //     label: 'Polito',
-        //     callback: () async {
-        //       debugPrint('start Polito sign in');
-        //       await Future.delayed(loginTime);
-        //       debugPrint('stop Polito sign in');
-        //       return null;
-        //     },
-        //   ),
-        // ],
-        termsOfService: [
-          TermOfService(
-            id: 'newsletter',
-            mandatory: false,
-            text: 'Newsletter subscription',
-          ),
-          TermOfService(
-            id: 'general-term',
-            mandatory: true,
-            text: 'Term of services',
-            linkUrl:
-                'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUIcmlja3JvbGw%3D',
-          ),
-        ],
-        additionalSignupFields: [
-          const UserFormField(
-            keyName: 'Username',
-            icon: Icon(FontAwesomeIcons.userLarge),
-          ),
-          const UserFormField(keyName: 'Name'),
-          const UserFormField(keyName: 'Surname'),
-          UserFormField(
-            keyName: 'phone_number',
-            icon: const Icon(FontAwesomeIcons.phone),
-            displayName: 'Phone Number',
-            userType: LoginUserType.phone,
-            fieldValidator: (value) {
-              final phoneRegExp = RegExp(
-                '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\$',
-              );
-              if (value != null &&
-                  value.length < 7 &&
-                  !phoneRegExp.hasMatch(value)) {
-                return "This isn't a valid phone number";
-              }
-              return null;
-            },
-          ),
-        ],
-        //messages: LoginMessages(userHint: "SIUUUUUUUUM"),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height,
+                ),
+                child: FlutterLogin(
+                  theme: LoginTheme(
+                    pageColorLight: Theme.of(context).colorScheme.surface,
+                    pageColorDark: Theme.of(context).colorScheme.surface,
+                    primaryColor: Theme.of(context).colorScheme.primary,
+                    errorColor: Theme.of(context).colorScheme.error,
+                    accentColor: Theme.of(context).colorScheme.secondary,
+                    cardTheme: CardTheme(
+                      color: Theme.of(context).colorScheme.surface,
+                      surfaceTintColor:
+                          Theme.of(context).colorScheme.surfaceTint,
+                      shadowColor: Theme.of(context).colorScheme.shadow,
+                      elevation: 1,
+                    ),
+                    buttonTheme: LoginButtonTheme(
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
+                      elevation: 1,
+                    ),
+                    buttonStyle: TextStyle(
+                        color:
+                            Theme.of(context).colorScheme.onPrimaryContainer),
+                    bodyStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface),
+                    cardInitialHeight: MediaQuery.of(context).size.height - 250,
+                  ),
+                  userFocusNode: emailFocusNode,
+                  passwordFocusNode: passwordFocusNode,
+                  confirmPasswordFocusNode: confirmPasswordFocusNode,
+                  logo: riveHelper.riveArtboard != null
+                      ? Rive(
+                          artboard: riveHelper.riveArtboard!,
+                          fit: BoxFit.contain,
+                        )
+                      : const SizedBox.shrink(),
+                  onLogin: _authUser,
+                  onSignup: _signupUser,
+                  onRecoverPassword: _recoverPassword,
+                  onSubmitAnimationCompleted: () {
+                    context.go("/Navigation", extra: {
+                      "ip": widget.ip,
+                      "token": token,
+                      "userID": userID
+                    });
+                  },
+                  additionalSignupFields: const [
+                    UserFormField(
+                      keyName: 'Name',
+                      userType: LoginUserType.firstName,
+                      icon: Icon(FontAwesomeIcons.userLarge),
+                    ),
+                    UserFormField(
+                      keyName: 'Surname',
+                      userType: LoginUserType.lastName,
+                      icon: Icon(FontAwesomeIcons.userLarge),
+                    ),
+                    UserFormField(
+                      keyName: 'Phone Number',
+                      userType: LoginUserType.phone,
+                      icon: Icon(FontAwesomeIcons.phone),
+                    ),
+                  ],
+                  loginAfterSignUp: false,
+                  scrollable: true,
+                  termsOfService: [
+                    TermOfService(
+                      id: 'general-term',
+                      mandatory: true,
+                      text: 'I agree the Terms of service and Privacy Policy',
+                      linkUrl:
+                          'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUIcmlja3JvbGw%3D',
+                    ),
+                  ],
+                  //savedEmail:
+                  // footer: "© 2024 IoTail",
+                  //onSwitchToAdditionalFields: ,
+                ),
+              ),
+            ),
+            const Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: TermsAndConditionsText(),
+            ),
+          ],
+        ),
       ),
     );
   }

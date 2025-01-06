@@ -13,8 +13,9 @@ Future<Map> login(String ip, String email, String password) async {
   final response =
       await http.post(url, body: body, headers: headers); // post request
   if (response.statusCode != 200) {
-    throw Exception(
-        "Failed to login"); // throw exception if status code is not 200
+    return {
+      "error": "Failed to login"
+    }; // throw exception if status code is not 200
   }
   Map tmp = jsonDecode(response.body); // decode the response
   Map data = {"token": tmp["token"], "userID": tmp["userID"]};
