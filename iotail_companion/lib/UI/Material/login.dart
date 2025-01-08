@@ -192,6 +192,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
@@ -212,6 +213,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
           ),
         ),
         centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
@@ -252,7 +254,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                             Theme.of(context).colorScheme.onPrimaryContainer),
                     bodyStyle: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface),
-                    cardInitialHeight: MediaQuery.of(context).size.height - 250,
+                    cardInitialHeight: MediaQuery.of(context).size.height / 2,
                   ),
                   userFocusNode: emailFocusNode,
                   passwordFocusNode: passwordFocusNode,
