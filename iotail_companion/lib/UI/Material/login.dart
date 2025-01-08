@@ -119,58 +119,42 @@ class _LoginWithRiveState extends State<LoginWithRive> {
       _isAnimating = false; // Riattiva i listener dopo l'animazione
     });
     return null;
-
-    // debugPrint('Name: ${data.name}, Password: ${data.password}');
-    // return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
-    //   if (!users.containsKey(data.name)) {
-    //     riveHelper.playSequentialAnimationControllers([
-    //       riveHelper.addFailController,
-    //       riveHelper.addIdle2Controller,
-    //     ]);
-    //     return 'User does not exist';
-    //   }
-    //   if (users[data.name] != data.password) {
-    //     riveHelper.playSequentialAnimationControllers([
-    //       riveHelper.addFailController,
-    //       riveHelper.addIdle2Controller,
-    //     ]);
-    //     return 'Password does not match';
-    //   } else {
-    //     riveHelper.addSuccessController();
-    //   }
-    //   return null;
-    // }).whenComplete(() {
-    //   setState(() {
-    //     _isAnimating = false; // Riattiva i listener dopo l'animazione
-    //   });
-    // });
   }
 
   Future<String?> _signupUser(SignupData data) async {
-    // if (_isAnimating)
-    //   return null; // Evita di riattivare l'animazione se già in corso
+    if (_isAnimating) {
+      return null; // Evita di riattivare l'animazione se già in corso
+    }
 
     setState(() {
       _isAnimating = true; // Blocca i listener
     });
 
-    debugPrint('Signup Name: ${data.name}, Password: ${data.password}');
-    return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
-      if (users.containsKey(data.name)) {
-        riveHelper.playSequentialAnimationControllers([
-          riveHelper.addFailController,
-          riveHelper.addIdle2Controller,
-        ]);
-        return 'User already exists';
-      } else {
-        riveHelper.addIdle2Controller();
-      }
-      return null;
-    }).whenComplete(() {
-      setState(() {
-        _isAnimating = false; // Riattiva i listener dopo l'animazione
-      });
+    // debugPrint('Signup Name: ${data.name}, Password: ${data.password}');
+    Map tmp = await requests.register(widget.ip, {
+      "name": data.additionalSignupData!['Full Name']!,
+      "email": data.name!,
+      "password": data.password!,
+      "phone": data.additionalSignupData!['Phone Number']!,
     });
+    if (tmp.containsKey("message")) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addFailController,
+        riveHelper.addIdle2Controller,
+      ]);
+      return tmp["message"];
+    }
+    userID = tmp["userID"];
+    storage.write(key: "userID", value: tmp["userID"]);
+    storage.write(key: "email", value: data.name);
+    storage.write(key: "password", value: data.password);
+    token = tmp["token"];
+    storage.write(key: "token", value: tmp["token"]);
+    riveHelper.addSuccessController();
+    setState(() {
+      _isAnimating = false; // Riattiva i listener dopo l'animazione
+    });
+    return null;
   }
 
   Future<String?> _recoverPassword(String name) {
@@ -277,13 +261,8 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                   },
                   additionalSignupFields: const [
                     UserFormField(
-                      keyName: 'Name',
+                      keyName: 'Full Name',
                       userType: LoginUserType.firstName,
-                      icon: Icon(FontAwesomeIcons.userLarge),
-                    ),
-                    UserFormField(
-                      keyName: 'Surname',
-                      userType: LoginUserType.lastName,
                       icon: Icon(FontAwesomeIcons.userLarge),
                     ),
                     UserFormField(
@@ -292,7 +271,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                       icon: Icon(FontAwesomeIcons.phone),
                     ),
                   ],
-                  loginAfterSignUp: false,
+                  loginAfterSignUp: true,
                   scrollable: true,
                   termsOfService: [
                     TermOfService(

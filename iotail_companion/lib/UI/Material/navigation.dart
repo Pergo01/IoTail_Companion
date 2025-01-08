@@ -118,7 +118,33 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             extendBody: true,
             appBar: AppBar(
               backgroundColor: Theme.of(context).colorScheme.surface,
-              title: const Text("IoTail"),
+              title: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.inversePrimary,
+                    Theme.of(context).colorScheme.tertiary,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Text(
+                  'IoTail',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              // actions: [
+              //   IconButton(
+              //     onPressed: () async {
+              //       context.go("/Login", extra: widget.ip);
+              //       await storage.deleteAll();
+              //     },
+              //     icon: const Icon(Icons.logout),
+              //   ),
+              // ],
             ),
             bottomNavigationBar:
                 Stack(alignment: Alignment.bottomCenter, children: [
