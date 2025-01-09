@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../util/requests.dart' as requests;
-import '../../util/user.dart';
+// import 'package:iotail_companion/util/requests.dart' as requests;
+import 'package:iotail_companion/util/user.dart';
 
 class Home extends StatefulWidget {
   final Function(int) onDogSelected;

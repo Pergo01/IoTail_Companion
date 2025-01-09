@@ -4,7 +4,7 @@ class Dog {
   String breed;
   int age;
   int sex; // 0 for male, 1 for female
-  double size;
+  String size;
   double weight;
   String coatType;
   List<String> allergies;
@@ -29,7 +29,7 @@ class Dog {
       breed: json["Breed"],
       age: json["Age"],
       sex: json["Sex"] == 0 ? 0 : 1,
-      size: json["Size"].toDouble(),
+      size: json["Size"],
       weight: json["Weight"].toDouble(),
       coatType: json["CoatType"],
       allergies: allergies,

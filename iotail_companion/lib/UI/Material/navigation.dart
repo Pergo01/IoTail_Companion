@@ -4,11 +4,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
-import '../../util/store.dart';
+import 'package:iotail_companion/util/dataMarker.dart';
+import 'package:iotail_companion/util/store.dart';
 import 'home.dart';
 import 'map.dart';
-import '../../util/requests.dart' as requests;
-import '../../util/user.dart';
+import 'package:iotail_companion/util/requests.dart' as requests;
+import 'package:iotail_companion/util/user.dart';
 
 class Navigation extends StatefulWidget {
   final String? ip;
@@ -105,6 +106,24 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  // Helper function to check if a store has a suitable kennel
+  bool _isStoreSuitable(Store store, String dogSize) {
+    for (var kennel in store.kennels) {
+      if (!kennel.booked &&
+          !kennel.occupied &&
+          _sizeFits(kennel.size, dogSize)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Helper function to check if the kennel size fits the dog size
+  bool _sizeFits(String kennelSize, String dogSize) {
+    const sizeOrder = {"Small": 0, "Medium": 1, "Large": 2};
+    return sizeOrder[kennelSize]! >= sizeOrder[dogSize]!;
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -114,9 +133,56 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       future: Future.wait([user, prenotazioni, stores]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          List<DataMarker> markersList;
+          if ((snapshot.data![0] as User).dogs.isEmpty) {
+            markersList = (snapshot.data![2] as List<Store>).map(
+              (store) {
+                Color color;
+                bool isSuitable = true;
+                color = Theme.of(context).colorScheme.primary;
+                return DataMarker(
+                  name: store.name,
+                  isSuitable: isSuitable,
+                  height: 30,
+                  width: 30,
+                  point: store.location,
+                  child: Icon(
+                    Icons.pets,
+                    color: color,
+                  ),
+                );
+              },
+            ).toList();
+          } else {
+            String dogSize = (snapshot.data![0] as User).dogs[selectedDog].size;
+            markersList = (snapshot.data![2] as List<Store>).map(
+              (store) {
+                Color color;
+                bool isSuitable = _isStoreSuitable(store, dogSize);
+                if (isSuitable) {
+                  color = Theme.of(context).colorScheme.primary;
+                } else {
+                  color = Colors.red;
+                }
+                return DataMarker(
+                  name: store.name,
+                  isSuitable: isSuitable,
+                  height: 30,
+                  width: 30,
+                  point: store.location,
+                  child: Icon(
+                    Icons.pets,
+                    color: color,
+                  ),
+                );
+              },
+            ).toList();
+          }
           return Scaffold(
             extendBody: true,
             appBar: AppBar(
+              centerTitle: true,
+              forceMaterialTransparency: true,
               backgroundColor: Theme.of(context).colorScheme.surface,
               title: ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
@@ -136,15 +202,15 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              // actions: [
-              //   IconButton(
-              //     onPressed: () async {
-              //       context.go("/Login", extra: widget.ip);
-              //       await storage.deleteAll();
-              //     },
-              //     icon: const Icon(Icons.logout),
-              //   ),
-              // ],
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    context.go("/Login", extra: widget.ip);
+                    await storage.deleteAll();
+                  },
+                  icon: const Icon(Icons.logout),
+                ),
+              ],
             ),
             bottomNavigationBar:
                 Stack(alignment: Alignment.bottomCenter, children: [
@@ -427,7 +493,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   ),
                   child: OSMMap(
                     client: client,
-                    stores: snapshot.data![2] as List<Store>,
+                    markerslist: markersList,
                   ),
                 ),
               ],

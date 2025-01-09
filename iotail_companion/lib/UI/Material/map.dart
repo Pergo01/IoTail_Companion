@@ -8,17 +8,17 @@ import 'package:flutter_map_compass/flutter_map_compass.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:iotail_companion/UI/Material/DataMarker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
-import '../../util/store.dart';
-// import '../../util/requests.dart' as requests;
+import 'package:iotail_companion/UI/Material/dataMarkerPopup.dart';
+import 'package:iotail_companion/util/dataMarker.dart';
+// import 'package:iotail_companion/util/requests.dart' as requests;
 
 class OSMMap extends StatefulWidget {
   final MqttServerClient client;
-  final List<Store> stores;
-  const OSMMap({super.key, required this.client, required this.stores});
+  final List<DataMarker> markerslist;
+  const OSMMap({super.key, required this.client, required this.markerslist});
 
   @override
   _OSMMapState createState() => _OSMMapState();
@@ -59,21 +59,6 @@ class _OSMMapState extends State<OSMMap> {
   Widget build(BuildContext context) {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
-    List<DataMarker> markersList;
-    markersList = widget.stores
-        .map(
-          (store) => DataMarker(
-            name: store.name,
-            height: 30,
-            width: 30,
-            point: store.location,
-            child: Icon(
-              Icons.pets,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        )
-        .toList();
 
     return Center(
       child: PopupScope(
@@ -117,7 +102,7 @@ class _OSMMapState extends State<OSMMap> {
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                   spiderfyCluster: false,
-                  spiderfyCircleRadius: widget.stores.length * 20,
+                  spiderfyCircleRadius: widget.markerslist.length * 20,
                   spiderfySpiralDistanceMultiplier: 2,
                   circleSpiralSwitchover: 12,
                   maxClusterRadius: 120,
@@ -126,7 +111,7 @@ class _OSMMapState extends State<OSMMap> {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(50),
                   maxZoom: 15,
-                  markers: markersList,
+                  markers: widget.markerslist,
                   /* onMarkerTap: (marker) {
                       marker = Marker(
                         alignment: Alignment.center,
@@ -180,6 +165,7 @@ class _OSMMapState extends State<OSMMap> {
                             ],
                             child: DataMarkerPopup(
                               name: marker.name,
+                              isSuitable: marker.isSuitable,
                             ));
                       }
                       return const SizedBox();

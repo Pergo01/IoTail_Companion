@@ -1,22 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:iotail_companion/UI/Material/reservation_dialog.dart';
 
-class DataMarker extends Marker {
-  const DataMarker({
-    required this.name,
-    required super.point,
-    required super.child,
-    super.height,
-    super.width,
-  });
-
-  final String name;
-}
-
 class DataMarkerPopup extends StatelessWidget {
-  const DataMarkerPopup({super.key, required this.name});
+  const DataMarkerPopup(
+      {super.key, required this.name, required this.isSuitable});
   final String name; // Name to show in the popup
+  final bool
+      isSuitable; // Boolean to check if the dog is suitable for the kennels inside the store
 
   @override
   Widget build(BuildContext context) {
@@ -35,25 +25,29 @@ class DataMarkerPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-                onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                          title: const Text(
-                            "Book a kennel",
-                            textAlign: TextAlign.center,
-                          ),
-                          content: SizedBox(
-                              width: double.maxFinite,
-                              height: MediaQuery.of(context).size.height * 0.5,
-                              child: const ReservationDialog()),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text("Chiudi"))
-                          ],
-                        )),
+                onPressed: () => isSuitable
+                    ? showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              title: const Text(
+                                "Book a kennel",
+                                textAlign: TextAlign.center,
+                              ),
+                              content: SizedBox(
+                                  width: double.maxFinite,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.5,
+                                  child: const ReservationDialog()),
+                              actions: [
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: const Text("Chiudi"))
+                              ],
+                            ))
+                    : null,
                 icon: Icon(
-                  Icons.calendar_month,
+                  isSuitable ? Icons.calendar_month : Icons.event_busy,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 )),
             // const SizedBox(

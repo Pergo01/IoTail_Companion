@@ -6,11 +6,11 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'UI/Material/login.dart';
-import 'UI/Material/splash_screen.dart';
-import 'UI/Material/navigation.dart';
-// import 'UI/Material/login_new.dart';
-import 'theme/color_schemes.g.dart';
+import 'package:iotail_companion/UI/Material/login.dart';
+import 'package:iotail_companion/UI/Material/splash_screen.dart';
+import 'package:iotail_companion/UI/Material/navigation.dart';
+// import 'package:iotail_companion/UI/Material/login_new.dart';
+import 'package:iotail_companion/theme/color_schemes.g.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

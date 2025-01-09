@@ -73,6 +73,47 @@ Future<Map> editUser(String ip, String token, String userID, Map data) async {
   return tmp; // return the response
 }
 
+Future<Map<String, dynamic>> recover_password(String ip, String email) async {
+  final headers = {
+    'Content-Type': 'application/json',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "/recover"); // URL for request
+  final body = jsonEncode({
+    "email": email,
+  }); // body for request
+  final response =
+      await http.post(url, body: body, headers: headers); // post request
+  if (response.statusCode != 200) {
+    return {
+      "message": "Failed to recover password"
+    }; // return error if status code is not 200
+  }
+  Map<String, dynamic> tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
+Future<Map> reset_password(
+    String ip, String recovery_code, String email, String password) async {
+  final headers = {
+    'Content-Type': 'application/json',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "/reset_password"); // URL for request
+  final body = jsonEncode({
+    "recovery_code": recovery_code,
+    "email": email,
+    "password": password,
+  }); // body for request
+  final response =
+      await http.put(url, body: body, headers: headers); // post request
+  if (response.statusCode != 200) {
+    return {
+      "message": "Failed to reset password"
+    }; // return error if status code is not 200
+  }
+  Map tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
 Future<Map> deleteUser(String ip, String token, String userID) async {
   final headers = {
     'Content-Type': 'application/json',

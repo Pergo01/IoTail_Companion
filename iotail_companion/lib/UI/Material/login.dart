@@ -5,9 +5,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rive/rive.dart' hide LinearGradient, Image;
 import 'package:go_router/go_router.dart';
 
-import 'terms_and_conditions.dart';
-import '/util/rive_controller.dart';
-import '../../util/requests.dart' as requests;
+import 'package:iotail_companion/UI/Material/terms_and_conditions.dart';
+import 'package:iotail_companion/util/rive_controller.dart';
+import 'package:iotail_companion/util/requests.dart' as requests;
 
 class LoginWithRive extends StatefulWidget {
   final String ip;
@@ -157,20 +157,42 @@ class _LoginWithRiveState extends State<LoginWithRive> {
     return null;
   }
 
-  Future<String?> _recoverPassword(String name) {
-    debugPrint('Name: $name');
-    return Future.delayed(const Duration(milliseconds: 2250)).then((_) {
-      if (!users.containsKey(name)) {
-        riveHelper.playSequentialAnimationControllers([
-          riveHelper.addFailController,
-          riveHelper.addIdle2Controller,
-        ]);
-        return 'User does not exist';
-      } else {
-        riveHelper.addIdle2Controller();
-      }
+  Future<String?> _signupConfirm(String error, LoginData data) async {
+    return Future.delayed(const Duration(seconds: 2)).then((_) {
       return null;
     });
+  }
+
+  Future<String?> _recoverPassword(String email) async {
+    // debugPrint('Name: $name');
+    Map<String, dynamic> tmp =
+        await requests.recover_password(widget.ip, email);
+    if ((tmp["message"] as String).contains("Failed")) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addFailController,
+        riveHelper.addIdle2Controller,
+      ]);
+      return tmp["message"];
+    }
+    riveHelper.addIdle2Controller();
+    setState(() {
+      _isAnimating = false; // Riattiva i listener dopo l'animazione
+    });
+    return null;
+  }
+
+  Future<String?> _resetPassword(String recovery_code, LoginData data) async {
+    Map tmp = await requests.reset_password(
+        widget.ip, recovery_code, data.name, data.password);
+    if ((tmp["message"] as String).contains("Failed")) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addFailController,
+        riveHelper.addIdle2Controller,
+      ]);
+      return tmp["message"];
+    }
+    riveHelper.addIdle2Controller();
+    return null;
   }
 
   @override
@@ -251,7 +273,9 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                       : const SizedBox.shrink(),
                   onLogin: _authUser,
                   onSignup: _signupUser,
+                  // onConfirmSignup: ,
                   onRecoverPassword: _recoverPassword,
+                  onConfirmRecover: _resetPassword,
                   onSubmitAnimationCompleted: () {
                     context.go("/Navigation", extra: {
                       "ip": widget.ip,
@@ -271,7 +295,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                       icon: Icon(FontAwesomeIcons.phone),
                     ),
                   ],
-                  loginAfterSignUp: true,
+                  loginAfterSignUp: false,
                   scrollable: true,
                   termsOfService: [
                     TermOfService(
