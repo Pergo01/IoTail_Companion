@@ -28,6 +28,7 @@ class RiveAnimationControllerHelper {
   late RiveAnimationController _controllerFail;
   late RiveAnimationController _controllerLookDownRight;
   late RiveAnimationController _controllerLookDownLeft;
+  late RiveAnimationController _controllerSuccessToIdle;
 
   bool isLookingRight = false;
   bool isLookingLeft = false;
@@ -59,6 +60,10 @@ class RiveAnimationControllerHelper {
 
   void addIdle2Controller() => addController(_controllerIdle2);
 
+  void addSuccessToIdleController() => addController(_controllerSuccessToIdle);
+
+  void addIdleController() => addController(_controllerIdle);
+
   void playSequentialAnimationControllers(List<void Function()> methods) {
     if (methods.isEmpty) return;
 
@@ -78,6 +83,10 @@ class RiveAnimationControllerHelper {
         currentController = _controllerIdle2;
       } else if (methods[index] == addDownLeftController) {
         currentController = _controllerLookDownLeft;
+      } else if (methods[index] == addSuccessToIdleController) {
+        currentController = _controllerSuccessToIdle;
+      } else if (methods[index] == addIdleController) {
+        currentController = _controllerIdle;
       }
       // Aggiungi altri casi se necessario
 
@@ -109,6 +118,7 @@ class RiveAnimationControllerHelper {
     _controllerFail = SimpleAnimation('fail');
     _controllerLookDownRight = SimpleAnimation('look_right');
     _controllerLookDownLeft = SimpleAnimation('look_left');
+    _controllerSuccessToIdle = SimpleAnimation('success_to_idle');
 
     _riveArtboard?.addController(_controllerIdle);
   }
@@ -123,6 +133,7 @@ class RiveAnimationControllerHelper {
       _controllerFail,
       _controllerLookDownRight,
       _controllerLookDownLeft,
+      _controllerSuccessToIdle
     ];
     for (var controller in listOfControllers) {
       _riveArtboard?.removeController(controller);
@@ -141,5 +152,6 @@ class RiveAnimationControllerHelper {
     _controllerFail.dispose();
     _controllerLookDownRight.dispose();
     _controllerLookDownLeft.dispose();
+    _controllerSuccessToIdle.dispose();
   }
 }

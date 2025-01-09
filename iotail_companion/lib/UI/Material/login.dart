@@ -17,12 +17,6 @@ class LoginWithRive extends StatefulWidget {
   _LoginWithRiveState createState() => _LoginWithRiveState();
 }
 
-const users = {
-  'ale@gmail.com': '1234',
-  'dribbble@gmail.com': '12345',
-  'hunter@gmail.com': 'hunter',
-};
-
 class _LoginWithRiveState extends State<LoginWithRive> {
   final RiveAnimationControllerHelper riveHelper =
       RiveAnimationControllerHelper();
@@ -191,7 +185,8 @@ class _LoginWithRiveState extends State<LoginWithRive> {
       ]);
       return tmp["message"];
     }
-    riveHelper.addIdle2Controller();
+    riveHelper.playSequentialAnimationControllers(
+        [riveHelper.addSuccessToIdleController, riveHelper.addIdleController]);
     return null;
   }
 
@@ -273,7 +268,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                       : const SizedBox.shrink(),
                   onLogin: _authUser,
                   onSignup: _signupUser,
-                  // onConfirmSignup: ,
+                  onConfirmSignup: _signupConfirm,
                   onRecoverPassword: _recoverPassword,
                   onConfirmRecover: _resetPassword,
                   onSubmitAnimationCompleted: () {
