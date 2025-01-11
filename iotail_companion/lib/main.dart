@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iotail_companion/UI/Material/booking.dart';
+import 'package:iotail_companion/util/user.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,8 +10,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:iotail_companion/UI/Material/login.dart';
 import 'package:iotail_companion/UI/Material/splash_screen.dart';
 import 'package:iotail_companion/UI/Material/navigation.dart';
-// import 'package:iotail_companion/UI/Material/login_new.dart';
 import 'package:iotail_companion/theme/color_schemes.g.dart';
+
+import 'UI/Material/user_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,9 +39,6 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
       name: "SplashScreen",
       path: "/",
       builder: (build, context) => const SplashScreen()),
-  //GoRoute(
-  //name: "Home", path: "/Home", builder: (context, state) => const Home()),
-  //GoRoute(name: "Map", path: "/Map", builder: (context, state) => const Map()),
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
@@ -56,6 +55,13 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
         return Booking(
           client: client,
         );
+      }),
+  GoRoute(
+      name: "UserScreen",
+      path: "/User",
+      builder: (build, context) {
+        User extra = context.extra as User;
+        return UserScreen(user: extra);
       })
 ]);
 

@@ -204,11 +204,10 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
               ),
               actions: [
                 IconButton(
-                  onPressed: () async {
-                    context.go("/Login", extra: widget.ip);
-                    await storage.deleteAll();
+                  onPressed: () {
+                    context.push("/User", extra: snapshot.data![0]);
                   },
-                  icon: const Icon(Icons.logout),
+                  icon: const Icon(Icons.account_circle_outlined),
                 ),
               ],
             ),
