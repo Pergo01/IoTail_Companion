@@ -85,7 +85,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            cani.isEmpty ? "Aggiungi un cane." : "Cani:",
+            cani.isEmpty ? "Add a dog." : "Dogs:",
             style: TextStyle(fontSize: 40),
           ),
           SizedBox(

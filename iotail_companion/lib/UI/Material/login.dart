@@ -126,10 +126,30 @@ class _LoginWithRiveState extends State<LoginWithRive> {
 
     // debugPrint('Signup Name: ${data.name}, Password: ${data.password}');
     Map tmp = await requests.register(widget.ip, {
+      "email": data.name!,
+    });
+    if ((tmp["message"] as String).contains("Failed")) {
+      riveHelper.playSequentialAnimationControllers([
+        riveHelper.addFailController,
+        riveHelper.addIdle2Controller,
+      ]);
+      return tmp["message"];
+    }
+    riveHelper.addSuccessToIdleController();
+    setState(() {
+      _isAnimating = false; // Riattiva i listener dopo l'animazione
+    });
+    return null;
+  }
+
+  Future<String?> _signupConfirm(
+      String registration_code, SignupData data) async {
+    Map tmp = await requests.confirm_registration(widget.ip, {
       "name": data.additionalSignupData!['Full Name']!,
       "email": data.name!,
       "password": data.password!,
       "phone": data.additionalSignupData!['Phone Number']!,
+      "registration_code": registration_code,
     });
     if (tmp.containsKey("message")) {
       riveHelper.playSequentialAnimationControllers([
@@ -149,12 +169,6 @@ class _LoginWithRiveState extends State<LoginWithRive> {
       _isAnimating = false; // Riattiva i listener dopo l'animazione
     });
     return null;
-  }
-
-  Future<String?> _signupConfirm(String error, LoginData data) async {
-    return Future.delayed(const Duration(seconds: 2)).then((_) {
-      return null;
-    });
   }
 
   Future<String?> _recoverPassword(String email) async {
@@ -290,7 +304,7 @@ class _LoginWithRiveState extends State<LoginWithRive> {
                       icon: Icon(FontAwesomeIcons.phone),
                     ),
                   ],
-                  loginAfterSignUp: false,
+                  loginAfterSignUp: true,
                   scrollable: true,
                   termsOfService: [
                     TermOfService(

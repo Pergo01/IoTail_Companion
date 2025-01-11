@@ -68,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen>
               builder: (context, tokenSnapshot) {
                 if (tokenSnapshot.hasError) {
                   return Center(child: Text('Error: ${tokenSnapshot.error}'));
-                } else {
+                } else if (tokenSnapshot.hasData) {
                   String token_val = tokenSnapshot.data!;
                   Future.delayed(const Duration(seconds: 6), () {
                     context.go("/Navigation", extra: {
@@ -77,6 +77,8 @@ class _SplashScreenState extends State<SplashScreen>
                       "token": token_val,
                     });
                   });
+                  return _buildSplashScreen(context);
+                } else {
                   return _buildSplashScreen(context);
                 }
               },

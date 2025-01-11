@@ -27,6 +27,25 @@ Future<Map> register(String ip, Map<String, String> user) async {
     'Content-Type': 'application/json',
   }; // headers for request
   final Uri url = Uri.http("$ip:8080", "register"); // URL for request
+  final String? email = user["email"];
+  final body = jsonEncode({"email": email});
+  final response =
+      await http.post(url, body: body, headers: headers); // post request
+  if (response.statusCode != 200) {
+    return {
+      "message": "Failed to send registration email"
+    }; // return error if status code is not 200
+  }
+  Map tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
+Future<Map> confirm_registration(String ip, Map<String, String> user) async {
+  final headers = {
+    'Content-Type': 'application/json',
+  }; // headers for request
+  final Uri url =
+      Uri.http("$ip:8080", "confirm_registration"); // URL for request
   final body = jsonEncode(user);
   final response =
       await http.post(url, body: body, headers: headers); // post request
