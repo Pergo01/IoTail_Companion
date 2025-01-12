@@ -2,13 +2,23 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:iotail_companion/util/user.dart';
+import 'package:iotail_companion/util/requests.dart' as requests;
 
 class UserScreen extends StatefulWidget {
   final User user;
+  final String ip;
+  final String token;
+  final VoidCallback onEdit;
 
-  const UserScreen({super.key, required this.user});
+  const UserScreen(
+      {super.key,
+      required this.user,
+      required this.ip,
+      required this.token,
+      required this.onEdit});
 
   @override
   _UserScreenState createState() => _UserScreenState();
@@ -16,16 +26,35 @@ class UserScreen extends StatefulWidget {
 
 class _UserScreenState extends State<UserScreen> {
   File? _pickedImage;
+  late String _name;
+  late String _email;
+  late String _phone;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
+  late FlutterSecureStorage storage;
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.user.name);
-    _emailController = TextEditingController(text: widget.user.email);
-    _phoneController = TextEditingController(text: widget.user.phoneNumber);
+    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
+    _phone = widget.user.name;
+    _nameController = TextEditingController(text: _phone);
+    _email = widget.user.email;
+    _emailController = TextEditingController(text: _email);
+    _phone = widget.user.phoneNumber;
+    _phoneController = TextEditingController(text: _phone);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
   }
 
   Future<void> _captureImageFromCamera() async {
@@ -205,6 +234,9 @@ class _UserScreenState extends State<UserScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
                         controller: _nameController,
+                        onChanged: (value) {
+                          _name = value;
+                        },
                         decoration: InputDecoration(
                           labelText: "Name",
                           labelStyle: TextStyle(
@@ -230,6 +262,9 @@ class _UserScreenState extends State<UserScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
                         controller: _emailController,
+                        onChanged: (value) {
+                          _email = value;
+                        },
                         decoration: InputDecoration(
                           labelText: "Email",
                           labelStyle: TextStyle(
@@ -255,6 +290,9 @@ class _UserScreenState extends State<UserScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
                         controller: _phoneController,
+                        onChanged: (value) {
+                          _phone = value;
+                        },
                         decoration: InputDecoration(
                           labelText: "Phone Number",
                           labelStyle: TextStyle(
@@ -281,7 +319,27 @@ class _UserScreenState extends State<UserScreen> {
                 Column(
                   children: [
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        Map tmp = {
+                          "name": _name,
+                          "email": _email,
+                          "phoneNumber": _phone
+                        };
+                        final response = await requests.editUser(
+                            widget.ip, widget.token, widget.user.userID, tmp);
+                        if (response["message"].toString().contains("Failed")) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(response["message"]),
+                          ));
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("User edited successfully"),
+                        ));
+                        storage.write(
+                            key: "email", value: _emailController.text);
+                        widget.onEdit();
+                      },
                       style: ButtonStyle(
                         elevation: WidgetStateProperty.all(8),
                         shape: WidgetStateProperty.all(RoundedRectangleBorder(
@@ -307,7 +365,12 @@ class _UserScreenState extends State<UserScreen> {
                       height: 8,
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        storage.delete(key: "email");
+                        storage.delete(key: "password");
+                        storage.delete(key: "userID");
+                        context.go("/Login", extra: widget.ip);
+                      },
                       style: ButtonStyle(
                         shape: WidgetStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

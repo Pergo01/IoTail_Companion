@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iotail_companion/UI/Material/booking.dart';
-import 'package:iotail_companion/util/user.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -60,8 +59,13 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
       name: "UserScreen",
       path: "/User",
       builder: (build, context) {
-        User extra = context.extra as User;
-        return UserScreen(user: extra);
+        Map extra = context.extra as Map;
+        return UserScreen(
+          user: extra["user"],
+          ip: extra["ip"],
+          token: extra["token"],
+          onEdit: extra["onEdit"],
+        );
       })
 ]);
 

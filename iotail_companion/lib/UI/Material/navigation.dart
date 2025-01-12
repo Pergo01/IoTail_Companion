@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 
@@ -40,10 +39,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   List cani = [];
   late Future<User> user;
   late Future<List<Store>> stores;
-  late FlutterSecureStorage storage;
-  AndroidOptions _getAndroidOptions() => const AndroidOptions(
-        encryptedSharedPreferences: true,
-      );
   late List<bool> isExpanded;
   late Future<List> prenotazioni;
 
@@ -72,7 +67,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
     user = getUser();
     prenotazioni = getReservations();
     stores = getStores();
@@ -205,7 +199,16 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
               actions: [
                 IconButton(
                   onPressed: () {
-                    context.push("/User", extra: snapshot.data![0]);
+                    context.push("/User", extra: {
+                      "user": snapshot.data![0],
+                      "ip": widget.ip,
+                      "token": widget.token,
+                      "onEdit": () async {
+                        setState(() {
+                          user = getUser();
+                        });
+                      }
+                    });
                   },
                   icon: Icon(Icons.account_circle_outlined,
                       color:
