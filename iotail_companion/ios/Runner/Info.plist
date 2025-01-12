@@ -33,6 +33,10 @@
 			<key>NSLocationWhenInUseUsageDescription</key>
 			<string>This app requires temporary access to the device's precise location.</string>
 		</dict>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app needs access to photos for user and dog profile pictures.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>This app needs access to camera images for user and dog profile pictures.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs access to location when open.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>

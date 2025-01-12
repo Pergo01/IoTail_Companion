@@ -207,7 +207,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   onPressed: () {
                     context.push("/User", extra: snapshot.data![0]);
                   },
-                  icon: const Icon(Icons.account_circle_outlined),
+                  icon: Icon(Icons.account_circle_outlined,
+                      color:
+                          Theme.of(context).colorScheme.onSecondaryContainer),
                 ),
               ],
             ),
