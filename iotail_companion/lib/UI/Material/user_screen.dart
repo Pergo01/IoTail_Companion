@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,10 +25,11 @@ class UserScreen extends StatefulWidget {
 }
 
 class _UserScreenState extends State<UserScreen> {
-  File? _pickedImage;
+  Uint8List? _pickedImage;
   late String _name;
   late String _email;
   late String _phone;
+  late String? _imagePath;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
@@ -40,9 +41,10 @@ class _UserScreenState extends State<UserScreen> {
   @override
   void initState() {
     super.initState();
+    _pickedImage = widget.user.profilePicture;
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-    _phone = widget.user.name;
-    _nameController = TextEditingController(text: _phone);
+    _name = widget.user.name;
+    _nameController = TextEditingController(text: _name);
     _email = widget.user.email;
     _emailController = TextEditingController(text: _email);
     _phone = widget.user.phoneNumber;
@@ -61,18 +63,22 @@ class _UserScreenState extends State<UserScreen> {
     final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.camera,
     );
-    setState(() {
-      _pickedImage = File(pickedFile!.path);
-    });
+    if (pickedFile != null) {
+      _imagePath = pickedFile.path;
+      _pickedImage = await pickedFile.readAsBytes();
+      setState(() {});
+    }
   }
 
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.gallery,
     );
-    setState(() {
-      _pickedImage = File(pickedFile!.path);
-    });
+    if (pickedFile != null) {
+      _imagePath = pickedFile.path;
+      _pickedImage = await pickedFile.readAsBytes();
+      setState(() {});
+    }
   }
 
   void _showBottomSheet(BuildContext context) {
@@ -113,10 +119,63 @@ class _UserScreenState extends State<UserScreen> {
                       _pickImageFromGallery();
                     },
                   ),
+                  if (_pickedImage != null && _pickedImage!.isNotEmpty)
+                    _buildOptionButton(
+                      icon: Icons.delete,
+                      label: 'Cancel',
+                      onTap: () {
+                        context.pop();
+                        _showDeleteConfirmDialog(context);
+                      },
+                    ),
                 ],
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          actionsAlignment: MainAxisAlignment.spaceAround,
+          title: Text('Delete Profile image'),
+          content: Text('Are you sure you want to delete the profile image?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                context.pop();
+                Map<String, dynamic> message =
+                    await requests.deleteProfilePicture(
+                        widget.ip, widget.token, widget.user.userID);
+                if (message["message"].contains("Failed")) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(message["message"]),
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Profile image deleted successfully"),
+                  ));
+                  _imagePath = null;
+                  setState(() {
+                    _pickedImage = null;
+                  });
+                  widget.onEdit();
+                }
+              },
+              child: Text('YES'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.pop();
+              },
+              child: Text('NO'),
+            ),
+          ],
         );
       },
     );
@@ -201,19 +260,18 @@ class _UserScreenState extends State<UserScreen> {
                                 width: 2,
                               ),
                             ),
-                            child: _pickedImage != null
-                                ? CircleAvatar(
-                                    radius: 75,
-                                    backgroundImage:
-                                        Image.file(_pickedImage!).image,
-                                  )
-                                : Icon(
+                            child: _pickedImage == null || _pickedImage!.isEmpty
+                                ? Icon(
                                     Icons.account_circle_outlined,
                                     size: 150,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSecondaryContainer,
-                                  )),
+                                  )
+                                : CircleAvatar(
+                                    radius: 75,
+                                    backgroundImage:
+                                        Image.memory(_pickedImage!).image)),
                         GestureDetector(
                           onTap: () => _showBottomSheet(context),
                           child: CircleAvatar(
@@ -323,7 +381,8 @@ class _UserScreenState extends State<UserScreen> {
                         Map tmp = {
                           "name": _name,
                           "email": _email,
-                          "phoneNumber": _phone
+                          "phoneNumber": _phone,
+                          "profilePicture": _imagePath,
                         };
                         final response = await requests.editUser(
                             widget.ip, widget.token, widget.user.userID, tmp);

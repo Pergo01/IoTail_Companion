@@ -1,10 +1,13 @@
-import 'dog.dart';
+import 'dart:typed_data';
+
+import 'package:iotail_companion/util/dog.dart';
 
 class User {
   final String userID;
   final String name;
   final String email;
   final String phoneNumber;
+  final Uint8List? profilePicture;
   final List<Dog> dogs;
 
   User(
@@ -12,6 +15,7 @@ class User {
       required this.name,
       required this.email,
       required this.phoneNumber,
+      this.profilePicture,
       required this.dogs});
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,7 @@ class User {
       name: json["Name"],
       email: json["Email"],
       phoneNumber: json["PhoneNumber"],
+      profilePicture: json["ProfilePicture"],
       dogs: dogs,
     );
   }

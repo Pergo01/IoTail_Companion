@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 Future<Map> login(String ip, String email, String password) async {
   final headers = {
@@ -68,28 +70,63 @@ Future<Map<String, dynamic>> getUser(
   final url = Uri.http("$ip:8080", "/users/$userID"); // URL for request
   final response = await http.get(url, headers: headers); // post request
   if (response.statusCode != 200) {
-    throw Exception(
-        "Failed to get user"); // throw exception if status code is not 200
-  }
+    throw Exception("Failed to get user");
+  } // throw exception if status code is not 200
   Map<String, dynamic> tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response
 }
 
-Future<Map> editUser(String ip, String token, String userID, Map data) async {
+Future<Uint8List?> getProfilePicture(
+    String ip, String userID, String token) async {
   final headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer $token',
   }; // headers for request
+  final url = Uri.http("$ip:8080", "/profile_picture/$userID");
+  final response = await http.get(url, headers: headers); // get request
+
+  if (response.statusCode == 200) {
+    return response.bodyBytes; // Get the raw image bytes
+  }
+  return null;
+}
+
+Future<Map<String, dynamic>> deleteProfilePicture(
+    String ip, String token, String userID) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  };
+  final url = Uri.http("$ip:8080", "/profile_picture/$userID");
+  final response = await http.delete(url, headers: headers);
+  if (response.statusCode != 200) {
+    return {"message": "Failed to delete profile picture"};
+  }
+  Map<String, dynamic> tmp = jsonDecode(response.body);
+  return tmp;
+}
+
+Future<Map> editUser(String ip, String token, String userID, Map data) async {
+  final headers = {
+    'Content-Type': 'multipart/form-data',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
   final url = Uri.http("$ip:8080", "/users/$userID"); // URL for request
-  final response = await http.put(url,
-      body: jsonEncode(data), headers: headers); // put request
+  var request = http.MultipartRequest("PUT", url);
+  request.headers.addAll(headers);
+  request.fields['userData'] = jsonEncode(data);
+  request.files.add(await http.MultipartFile.fromPath(
+    'profilePicture',
+    data["profilePicture"],
+    contentType: MediaType("image", "jpeg"),
+  ));
+  final response = await request.send();
   if (response.statusCode != 200) {
     return {
       "message": "Failed to edit user"
     }; // return error if status code is not 200
   }
-  Map tmp = jsonDecode(response.body); // decode the response
-  return tmp; // return the response
+  return {"message": "User updated"}; // return the response
 }
 
 Future<Map<String, dynamic>> recover_password(String ip, String email) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
+import 'dart:typed_data';
 
 import 'package:iotail_companion/util/dataMarker.dart';
 import 'package:iotail_companion/util/store.dart';
@@ -43,8 +44,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late Future<List> prenotazioni;
 
   Future<User> getUser() async {
-    Map<String, dynamic> data =
+    final Map<String, dynamic> data =
         await requests.getUser(widget.ip!, widget.userID!, widget.token!);
+    final Uint8List? profilePicture = await requests.getProfilePicture(
+        widget.ip!, widget.userID!, widget.token!);
+    data["ProfilePicture"] = profilePicture;
     return User.fromJson(data);
   }
 
@@ -198,22 +202,41 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
               ),
               actions: [
                 IconButton(
-                  onPressed: () {
-                    context.push("/User", extra: {
-                      "user": snapshot.data![0],
-                      "ip": widget.ip,
-                      "token": widget.token,
-                      "onEdit": () async {
-                        setState(() {
-                          user = getUser();
-                        });
-                      }
-                    });
-                  },
-                  icon: Icon(Icons.account_circle_outlined,
-                      color:
-                          Theme.of(context).colorScheme.onSecondaryContainer),
-                ),
+                    onPressed: () {
+                      context.push("/User", extra: {
+                        "user": snapshot.data![0],
+                        "ip": widget.ip,
+                        "token": widget.token,
+                        "onEdit": () async {
+                          setState(() {
+                            user = getUser();
+                          });
+                        }
+                      });
+                    },
+                    icon: ((snapshot.data![0] as User)
+                                .profilePicture!
+                                .isEmpty) ||
+                            (snapshot.data![0] as User).profilePicture == null
+                        ? Icon(Icons.account_circle_outlined,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSecondaryContainer)
+                        : Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              backgroundImage: Image.memory(
+                                      (snapshot.data![0] as User)
+                                          .profilePicture!)
+                                  .image,
+                            ),
+                          )),
               ],
             ),
             bottomNavigationBar:
