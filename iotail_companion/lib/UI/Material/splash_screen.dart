@@ -36,6 +36,7 @@ class _SplashScreenState extends State<SplashScreen>
     String? email = await storage.read(key: "email");
     String? password = await storage.read(key: "password");
     Map tmp = await requests.login(ip, email!, password!);
+    await storage.write(key: "token", value: tmp["token"]);
     return tmp["token"];
   }
 

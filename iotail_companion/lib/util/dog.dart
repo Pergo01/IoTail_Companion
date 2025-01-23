@@ -1,13 +1,16 @@
+import 'dart:typed_data';
+
 class Dog {
-  String dogID;
-  String name;
-  String breed;
-  int age;
-  int sex; // 0 for male, 1 for female
-  String size;
-  double weight;
-  String coatType;
-  List<String> allergies;
+  final String dogID;
+  final String name;
+  final String breed;
+  final int age;
+  final int sex; // 0 for male, 1 for female
+  final String size;
+  final double weight;
+  final String coatType;
+  final List<String> allergies;
+  final Uint8List? picture;
   Dog(
       {required this.dogID,
       required this.name,
@@ -17,7 +20,9 @@ class Dog {
       required this.size,
       required this.weight,
       required this.coatType,
-      required this.allergies});
+      required this.allergies,
+      this.picture});
+
   factory Dog.fromJson(Map<String, dynamic> json) {
     List<String> allergies = [];
     for (var allergy in json["Allergies"]) {
@@ -30,9 +35,10 @@ class Dog {
       age: json["Age"],
       sex: json["Sex"] == 0 ? 0 : 1,
       size: json["Size"],
-      weight: json["Weight"].toDouble(),
+      weight: double.parse(json["Weight"].toString()),
       coatType: json["CoatType"],
       allergies: allergies,
+      picture: json["Picture"],
     );
   }
 }

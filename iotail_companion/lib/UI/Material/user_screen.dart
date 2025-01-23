@@ -125,7 +125,7 @@ class _UserScreenState extends State<UserScreen> {
                       label: 'Cancel',
                       onTap: () {
                         context.pop();
-                        _showDeleteConfirmDialog(context);
+                        _showProfilePictureDeleteConfirmDialog(context);
                       },
                     ),
                 ],
@@ -137,7 +137,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  void _showDeleteConfirmDialog(BuildContext context) {
+  void _showProfilePictureDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -165,6 +165,51 @@ class _UserScreenState extends State<UserScreen> {
                     _pickedImage = null;
                   });
                   widget.onEdit();
+                }
+              },
+              child: Text('YES'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.pop();
+              },
+              child: Text('NO'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showUserDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          actionsAlignment: MainAxisAlignment.spaceAround,
+          title: Text('Delete Account'),
+          content: Text(
+              'Are you sure you want to delete your account? The action is irreversible.'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                context.pop();
+                Map<String, dynamic> message =
+                    await requests.deleteProfilePicture(
+                        widget.ip, widget.token, widget.user.userID);
+                if (message["message"].contains("Failed")) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(message["message"]),
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Account deleted successfully"),
+                  ));
+                  storage.delete(key: "email");
+                  storage.delete(key: "password");
+                  storage.delete(key: "userID");
+                  storage.delete(key: "token");
+                  context.go("/Login", extra: widget.ip);
                 }
               },
               child: Text('YES'),
@@ -450,7 +495,7 @@ class _UserScreenState extends State<UserScreen> {
                       height: 8,
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => _showUserDeleteConfirmDialog(context),
                       style: ButtonStyle(
                         shape: WidgetStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

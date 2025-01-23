@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-// import 'package:iotail_companion/util/requests.dart' as requests;
 import 'package:iotail_companion/util/user.dart';
 
 class Home extends StatefulWidget {
@@ -10,27 +10,23 @@ class Home extends StatefulWidget {
   final int selectedDog;
   final User user;
   final List reservations;
+  final ScrollController scrollController;
+  final VoidCallback onDogUpdated;
 
   const Home(
       {super.key,
       required this.selectedDog,
       required this.onDogSelected,
       required this.user,
-      required this.reservations});
+      required this.reservations,
+      required this.scrollController,
+      required this.onDogUpdated});
 
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  // Map<String, String> cani = {
-  //   "Fido": "Golden Retriever",
-  //   "Fuffi": "Dobbermann",
-  // };
-  List<String> dogPicture = [
-    "assets/default_cane.jpeg",
-    "assets/default_cane_2.jpeg"
-  ];
   List cani = [];
   late String? ip;
   late String name;
@@ -43,6 +39,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   List prenotazioni = [];
   late List<bool> isExpanded;
   late WebViewController webController;
+  bool editMode = false;
 
   Future<void> setup() async {
     ip = await storage.read(key: "ip");
@@ -77,7 +74,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   @override
+  void didUpdateWidget(oldwidget) {
+    super.didUpdateWidget(oldwidget);
+    cani = widget.user.dogs;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -91,6 +96,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           SizedBox(
             height: 150,
             child: ListView.separated(
+              controller: widget.scrollController,
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: cani.length,
               scrollDirection: Axis.horizontal,
@@ -100,48 +106,101 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   onTap: () {
                     widget.onDogSelected(index);
                   },
-                  child: Card(
-                    elevation: widget.selectedDog == index ? 5 : 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: SizedBox(
-                        width: 300,
-                        child: Row(
-                          children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                  shape: BoxShape.rectangle,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(5))),
-                              clipBehavior: Clip.hardEdge,
-                              child: Image.asset(
-                                dogPicture[index],
-                                height: 100,
-                                width: 100,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 8,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                  onLongPress: () {
+                    setState(() {
+                      editMode = !editMode;
+                    });
+                  },
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Card(
+                        elevation: widget.selectedDog == index ? 5 : 1,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: isDarkTheme
+                                ? Border.all(
+                                    color: widget.selectedDog == index
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Colors.transparent,
+                                    width: 1)
+                                : null,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 300,
+                              child: Row(
                                 children: [
-                                  Text(cani.elementAt(index).name,
-                                      style: const TextStyle(
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.bold)),
-                                  Text(
-                                    cani.elementAt(index).breed,
-                                    style: const TextStyle(fontSize: 20),
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                        shape: BoxShape.rectangle,
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(5))),
+                                    clipBehavior: Clip.hardEdge,
+                                    child: widget.user.dogs[index].picture ==
+                                                null ||
+                                            widget.user.dogs[index].picture!
+                                                .isEmpty
+                                        ? Image.asset(
+                                            "assets/default_cane.jpeg")
+                                        : Image.memory(
+                                            widget.user.dogs[index].picture!,
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(cani.elementAt(index).name,
+                                            style: const TextStyle(
+                                                fontSize: 40,
+                                                fontWeight: FontWeight.bold)),
+                                        Text(
+                                          cani.elementAt(index).breed,
+                                          style: const TextStyle(fontSize: 20),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                            )
-                          ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      if (editMode)
+                        IconButton(
+                            style: ButtonStyle(
+                                // backgroundColor: WidgetStateProperty.all(
+                                //     Colors.yellow.shade600),
+                                shape: WidgetStateProperty.all(CircleBorder())),
+                            // color: Colors.white,
+                            onPressed: () async {
+                              String? token = await storage.read(key: "token");
+                              context.push(
+                                "/Dog",
+                                extra: {
+                                  "dog": cani.elementAt(index),
+                                  "userID": widget.user.userID,
+                                  "ip": ip,
+                                  "token": token,
+                                  "onEdit": () {
+                                    widget.onDogUpdated();
+                                  }
+                                },
+                              );
+                            },
+                            icon: const Icon(Icons.edit)),
+                    ],
                   ),
                 );
               },
