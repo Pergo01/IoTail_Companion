@@ -13,12 +13,18 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'package:iotail_companion/UI/Material/dataMarkerPopup.dart';
 import 'package:iotail_companion/util/dataMarker.dart';
-// import 'package:iotail_companion/util/requests.dart' as requests;
 
 class OSMMap extends StatefulWidget {
   final MqttServerClient client;
   final List<DataMarker> markerslist;
-  const OSMMap({super.key, required this.client, required this.markerslist});
+  final Function(DataMarker) onPrepareReservation;
+  final VoidCallback onSubmitReservation;
+  const OSMMap(
+      {super.key,
+      required this.client,
+      required this.markerslist,
+      required this.onPrepareReservation,
+      required this.onSubmitReservation});
 
   @override
   _OSMMapState createState() => _OSMMapState();
@@ -29,11 +35,6 @@ class _OSMMapState extends State<OSMMap> {
 
   late AlignOnUpdate _alignPositionOnUpdate;
   late final StreamController<double?> _alignPositionStreamController;
-  late String? ip;
-  late String? token;
-  List stores = [];
-  List prenotazioni = [];
-  late List<bool> isExpanded;
   late FlutterSecureStorage storage;
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
@@ -112,19 +113,9 @@ class _OSMMapState extends State<OSMMap> {
                   padding: const EdgeInsets.all(50),
                   maxZoom: 15,
                   markers: widget.markerslist,
-                  /* onMarkerTap: (marker) {
-                      marker = Marker(
-                        alignment: Alignment.center,
-                        height: 30,
-                        width: 30,
-                        point: marker.point,
-                        child: Icon(
-                          Icons.pets,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      );
-                      _popupController.togglePopup(marker);
-                    }, */
+                  onMarkerTap: (marker) {
+                    widget.onPrepareReservation(marker as DataMarker);
+                  },
                   onClusterTap: (cluster) {
                     final latLngs =
                         cluster.markers.map((m) => m.point).toList();
@@ -166,6 +157,10 @@ class _OSMMapState extends State<OSMMap> {
                             child: DataMarkerPopup(
                               name: marker.name,
                               isSuitable: marker.isSuitable,
+                              onReserve: () => {
+                                widget.onSubmitReservation(),
+                                _popupController.hideAllPopups()
+                              },
                             ));
                       }
                       return const SizedBox();

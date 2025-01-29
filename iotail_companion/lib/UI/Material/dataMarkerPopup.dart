@@ -1,12 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:iotail_companion/UI/Material/reservation_dialog.dart';
 
 class DataMarkerPopup extends StatelessWidget {
   const DataMarkerPopup(
-      {super.key, required this.name, required this.isSuitable});
+      {super.key,
+      required this.name,
+      required this.isSuitable,
+      required this.onReserve});
   final String name; // Name to show in the popup
   final bool
       isSuitable; // Boolean to check if the dog is suitable for the kennels inside the store
+  final VoidCallback onReserve;
+
+  void _showReservationDialog(context) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text(
+                "Confirm reservation",
+                textAlign: TextAlign.center,
+              ),
+              content: Text("Are you sure you want to book a kennel?"),
+              actionsAlignment: MainAxisAlignment.spaceEvenly,
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("Cancel")),
+                TextButton(
+                    onPressed: () {
+                      onReserve();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Yes")),
+              ],
+            ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,27 +52,8 @@ class DataMarkerPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-                onPressed: () => isSuitable
-                    ? showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                              title: const Text(
-                                "Book a kennel",
-                                textAlign: TextAlign.center,
-                              ),
-                              content: SizedBox(
-                                  width: double.maxFinite,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.5,
-                                  child: const ReservationDialog()),
-                              actions: [
-                                TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: const Text("Chiudi"))
-                              ],
-                            ))
-                    : null,
+                onPressed: () =>
+                    isSuitable ? _showReservationDialog(context) : null,
                 icon: Icon(
                   isSuitable ? Icons.calendar_month : Icons.event_busy,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,

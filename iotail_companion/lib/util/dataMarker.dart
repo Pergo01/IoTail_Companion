@@ -2,6 +2,7 @@ import 'package:flutter_map/flutter_map.dart';
 
 class DataMarker extends Marker {
   const DataMarker({
+    required this.id,
     required this.name,
     required this.isSuitable,
     required super.point,
@@ -12,4 +13,5 @@ class DataMarker extends Marker {
 
   final String name;
   final bool isSuitable;
+  final int id;
 }

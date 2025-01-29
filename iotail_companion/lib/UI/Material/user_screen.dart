@@ -29,7 +29,7 @@ class _UserScreenState extends State<UserScreen> {
   late String _name;
   late String _email;
   late String _phone;
-  late String? _imagePath;
+  String? _imagePath;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;

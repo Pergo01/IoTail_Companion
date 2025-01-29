@@ -37,8 +37,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late List<Uint8List?> dogPicture;
   final MqttServerClient client =
       MqttServerClient("mqtt.eclipseprojects.io", "");
+  late DataMarker selectedShop;
 
-  List cani = [];
   late Future<User> user;
   late Future<List<Store>> stores;
   late List<bool> isExpanded;
@@ -55,7 +55,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           widget.ip!, widget.userID!, dog["DogID"], widget.token!);
       dog["Picture"] = picture;
     }
-    return User.fromJson(data);
+    User user = User.fromJson(data);
+    if (selectedDog >= user.dogs.length) {
+      selectedDog = 0;
+    }
+    return user;
   }
 
   Future<List> getReservations() async {
@@ -72,6 +76,19 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       tmp.add(Store.fromJson(store));
     }
     return tmp;
+  }
+
+  Future<String> reserveKennel(Map<String, dynamic> data) async {
+    final Map response =
+        await requests.reserve(widget.ip!, widget.token!, data);
+    if (response["message"].contains("Failed")) {
+      return response["message"];
+    } else {
+      setState(() {
+        prenotazioni = getReservations();
+      });
+      return "Reservation was successful";
+    }
   }
 
   @override
@@ -137,6 +154,58 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return sizeOrder[kennelSize]! >= sizeOrder[dogSize]!;
   }
 
+  List<DataMarker> _getMarkersList(List<Store> stores, User user) {
+    List<DataMarker> markersList;
+    if (user.dogs.isEmpty) {
+      dogPicture = [];
+      markersList = (stores).map(
+        (store) {
+          Color color;
+          bool isSuitable = true;
+          color = Theme.of(context).colorScheme.primary;
+          return DataMarker(
+              id: store.id,
+              name: store.name,
+              isSuitable: isSuitable,
+              height: 30,
+              width: 30,
+              point: store.location,
+              child: Icon(
+                Icons.pets,
+                color: color,
+              ));
+        },
+      ).toList();
+    } else {
+      dogPicture = user.dogs.map((dog) => dog.picture).toList();
+      String dogSize = user.dogs[selectedDog].size;
+      markersList = stores.map(
+        (store) {
+          Color color;
+          bool isSuitable = _isStoreSuitable(store, dogSize);
+          if (isSuitable) {
+            color = Theme.of(context).colorScheme.primary;
+          } else {
+            color = Colors.red;
+          }
+          return DataMarker(
+            id: store.id,
+            name: store.name,
+            isSuitable: isSuitable,
+            height: 30,
+            width: 30,
+            point: store.location,
+            child: Icon(
+              Icons.pets,
+              color: color,
+            ),
+          );
+        },
+      ).toList();
+    }
+    return markersList;
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -147,56 +216,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       future: Future.wait([user, prenotazioni, stores]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          List<DataMarker> markersList;
-          if ((snapshot.data![0] as User).dogs.isEmpty) {
-            dogPicture = [];
-            markersList = (snapshot.data![2] as List<Store>).map(
-              (store) {
-                Color color;
-                bool isSuitable = true;
-                color = Theme.of(context).colorScheme.primary;
-                return DataMarker(
-                  name: store.name,
-                  isSuitable: isSuitable,
-                  height: 30,
-                  width: 30,
-                  point: store.location,
-                  child: Icon(
-                    Icons.pets,
-                    color: color,
-                  ),
-                );
-              },
-            ).toList();
-          } else {
-            dogPicture = (snapshot.data![0] as User)
-                .dogs
-                .map((dog) => dog.picture)
-                .toList();
-            String dogSize = (snapshot.data![0] as User).dogs[selectedDog].size;
-            markersList = (snapshot.data![2] as List<Store>).map(
-              (store) {
-                Color color;
-                bool isSuitable = _isStoreSuitable(store, dogSize);
-                if (isSuitable) {
-                  color = Theme.of(context).colorScheme.primary;
-                } else {
-                  color = Colors.red;
-                }
-                return DataMarker(
-                  name: store.name,
-                  isSuitable: isSuitable,
-                  height: 30,
-                  width: 30,
-                  point: store.location,
-                  child: Icon(
-                    Icons.pets,
-                    color: color,
-                  ),
-                );
-              },
-            ).toList();
-          }
+          dogPicture = [];
+          List<DataMarker> markersList = _getMarkersList(
+              snapshot.data![2] as List<Store>, snapshot.data![0] as User);
           return Scaffold(
             extendBody: true,
             appBar: AppBar(
@@ -263,18 +285,16 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
             bottomNavigationBar: Container(
               margin: const EdgeInsets.only(bottom: 8),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: 172,
-                  maxHeight: 100,
-                ),
+                constraints:
+                    const BoxConstraints(minWidth: 172, maxHeight: 100),
                 child: Card(
                   margin: defaultTargetPlatform == TargetPlatform.iOS
                       ? EdgeInsets.only(
                           bottom: height / 30,
-                          left: width / 4 + 4,
-                          right: width / 4 + 4)
+                          left: width / 4 + 12,
+                          right: width / 4 + 12)
                       : EdgeInsets.symmetric(
-                          vertical: 20, horizontal: width / 4 + 4),
+                          vertical: 20, horizontal: width / 4 + 12),
                   elevation: 1,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -412,6 +432,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                             if (index >= 0) {
                               setState(() {
                                 selectedDog = index;
+                                markersList = _getMarkersList(
+                                    snapshot.data![2] as List<Store>,
+                                    snapshot.data![0] as User);
                                 isOpen = false;
                               });
                               _scrollToSelectedDog(index);
@@ -576,8 +599,18 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                             .toList();
                       });
                     },
+                    onReservationsUpdated: () {
+                      setState(() {
+                        prenotazioni = getReservations();
+                        stores = getStores();
+                        markersList = _getMarkersList(
+                            snapshot.data![2] as List<Store>,
+                            snapshot.data![0] as User);
+                      });
+                    },
                     user: snapshot.data![0] as User,
                     reservations: snapshot.data![1] as List,
+                    shops: snapshot.data![2] as List<Store>,
                   ),
                 ),
                 SlideTransition(
@@ -590,6 +623,33 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   child: OSMMap(
                     client: client,
                     markerslist: markersList,
+                    onPrepareReservation: (marker) => selectedShop = marker,
+                    onSubmitReservation: () async {
+                      Map<String, dynamic> data = {
+                        "dogID":
+                            (snapshot.data![0] as User).dogs[selectedDog].dogID,
+                        "userID": widget.userID,
+                        "storeID": selectedShop.id,
+                        "dog_size":
+                            (snapshot.data![0] as User).dogs[selectedDog].size,
+                      };
+                      final response = await reserveKennel(data);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(response),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                      if (!response.contains("Failed")) {
+                        setState(() {
+                          prenotazioni = getReservations();
+                          stores = getStores();
+                          markersList = _getMarkersList(
+                              snapshot.data![2] as List<Store>,
+                              snapshot.data![0] as User);
+                        });
+                      }
+                    },
                   ),
                 ),
               ],

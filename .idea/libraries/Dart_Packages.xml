@@ -716,6 +716,13 @@
             </list>
           </value>
         </entry>
+        <entry key="pausable_timer">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/pausable_timer-3.1.0+3/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="petitparser">
           <value>
             <list>
@@ -804,6 +811,13 @@
           <value>
             <list>
               <option value="/opt/homebrew/Caskroom/flutter/3.24.3/flutter/bin/cache/pkg/sky_engine/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="slide_countdown">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/slide_countdown-2.0.2/lib" />
             </list>
           </value>
         </entry>
@@ -1154,6 +1168,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/path_provider_platform_interface-2.1.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/path_provider_windows-2.3.0/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/pausable_timer-3.1.0+3/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/petitparser-6.0.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/phone_numbers_parser-8.3.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/platform-3.1.6/lib" />
@@ -1166,6 +1181,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/rive-0.13.20/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/rive_common-0.4.15/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sign_in_button-3.2.0/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/slide_countdown-2.0.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/source_span-1.10.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sprintf-7.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/stack_trace-1.12.0/lib" />

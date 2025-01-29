@@ -3,10 +3,15 @@ import 'package:latlong2/latlong.dart';
 
 class Store {
   final String name;
+  final int id;
   final LatLng location;
   final List<Kennel> kennels;
 
-  Store({required this.name, required this.location, required this.kennels});
+  Store(
+      {required this.name,
+      required this.id,
+      required this.location,
+      required this.kennels});
 
   factory Store.fromJson(Map<String, dynamic> json) {
     List<Kennel> kennels = [];
@@ -15,6 +20,7 @@ class Store {
     }
     return Store(
       name: json["Name"],
+      id: json["StoreID"],
       location: LatLng(json["Location"][0], json["Location"][1]),
       kennels: kennels,
     );

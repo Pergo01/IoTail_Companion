@@ -92,6 +92,21 @@ Future<Uint8List?> getProfilePicture(
 }
 
 Future<Map> editUser(String ip, String token, String userID, Map data) async {
+  if (data["profilePicture"] == null) {
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    }; // headers for request
+    final url = Uri.http("$ip:8080", "/users/$userID"); // URL for request
+    final response = await http.put(url,
+        body: jsonEncode(data), headers: headers); // post request
+    if (response.statusCode != 200) {
+      return {
+        "message": "Failed to update user"
+      }; // return error if status code is not 200
+    }
+    return {"message": "User updated successfully"}; // return the response
+  }
   final headers = {
     'Content-Type': 'multipart/form-data',
     'Authorization': 'Bearer $token',
@@ -357,8 +372,9 @@ Future<Map> reserve(String ip, String token, Map data) async {
   final response = await http.post(url,
       body: jsonEncode(data), headers: headers); // post request
   if (response.statusCode != 200) {
-    throw Exception(
-        "Failed to reserve"); // throw exception if status code is not 200
+    return {
+      "message": "Failed to reserve"
+    }; // throw exception if status code is not 200
   }
   Map tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response
@@ -373,8 +389,9 @@ Future<Map> cancel_reservation(
   final url = Uri.http("$ip:8083", "/cancel/$reservationID"); // URL for request
   final response = await http.delete(url, headers: headers); // post request
   if (response.statusCode != 200) {
-    throw Exception(
-        "Failed to cancel reservation"); // throw exception if status code is not 200
+    return {
+      "message": "Failed to cancel reservation"
+    }; // throw exception if status code is not 200
   }
   Map tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response
