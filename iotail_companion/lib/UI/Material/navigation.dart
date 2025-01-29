@@ -573,74 +573,44 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            body: Stack(
-              children: [
-                SlideTransition(
-                  position: controller.drive(
-                    Tween<Offset>(
-                      begin: Offset.zero,
-                      end: const Offset(-1, 0),
+            body: RefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  user = getUser();
+                  prenotazioni = getReservations();
+                  stores = getStores();
+                  markersList = _getMarkersList(
+                      snapshot.data![2] as List<Store>,
+                      snapshot.data![0] as User);
+                });
+              },
+              child: Stack(
+                children: [
+                  SlideTransition(
+                    position: controller.drive(
+                      Tween<Offset>(
+                        begin: Offset.zero,
+                        end: const Offset(-1, 0),
+                      ),
                     ),
-                  ),
-                  child: Home(
-                    selectedDog: selectedDog,
-                    onDogSelected: (int index) {
-                      setState(() {
-                        selectedDog = index;
-                      });
-                    },
-                    scrollController: _scrollController,
-                    onDogUpdated: () {
-                      setState(() {
-                        user = getUser();
-                        dogPicture = (snapshot.data![0] as User)
-                            .dogs
-                            .map((dog) => dog.picture)
-                            .toList();
-                      });
-                    },
-                    onReservationsUpdated: () {
-                      setState(() {
-                        prenotazioni = getReservations();
-                        stores = getStores();
-                        markersList = _getMarkersList(
-                            snapshot.data![2] as List<Store>,
-                            snapshot.data![0] as User);
-                      });
-                    },
-                    user: snapshot.data![0] as User,
-                    reservations: snapshot.data![1] as List,
-                    shops: snapshot.data![2] as List<Store>,
-                  ),
-                ),
-                SlideTransition(
-                  position: controller.drive(
-                    Tween<Offset>(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ),
-                  ),
-                  child: OSMMap(
-                    client: client,
-                    markerslist: markersList,
-                    onPrepareReservation: (marker) => selectedShop = marker,
-                    onSubmitReservation: () async {
-                      Map<String, dynamic> data = {
-                        "dogID":
-                            (snapshot.data![0] as User).dogs[selectedDog].dogID,
-                        "userID": widget.userID,
-                        "storeID": selectedShop.id,
-                        "dog_size":
-                            (snapshot.data![0] as User).dogs[selectedDog].size,
-                      };
-                      final response = await reserveKennel(data);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(response),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-                      if (!response.contains("Failed")) {
+                    child: Home(
+                      selectedDog: selectedDog,
+                      onDogSelected: (int index) {
+                        setState(() {
+                          selectedDog = index;
+                        });
+                      },
+                      scrollController: _scrollController,
+                      onDogUpdated: () {
+                        setState(() {
+                          user = getUser();
+                          dogPicture = (snapshot.data![0] as User)
+                              .dogs
+                              .map((dog) => dog.picture)
+                              .toList();
+                        });
+                      },
+                      onReservationsUpdated: () {
                         setState(() {
                           prenotazioni = getReservations();
                           stores = getStores();
@@ -648,11 +618,55 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                               snapshot.data![2] as List<Store>,
                               snapshot.data![0] as User);
                         });
-                      }
-                    },
+                      },
+                      user: snapshot.data![0] as User,
+                      reservations: snapshot.data![1] as List,
+                      shops: snapshot.data![2] as List<Store>,
+                    ),
                   ),
-                ),
-              ],
+                  SlideTransition(
+                    position: controller.drive(
+                      Tween<Offset>(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ),
+                    ),
+                    child: OSMMap(
+                      client: client,
+                      markerslist: markersList,
+                      onPrepareReservation: (marker) => selectedShop = marker,
+                      onSubmitReservation: () async {
+                        Map<String, dynamic> data = {
+                          "dogID": (snapshot.data![0] as User)
+                              .dogs[selectedDog]
+                              .dogID,
+                          "userID": widget.userID,
+                          "storeID": selectedShop.id,
+                          "dog_size": (snapshot.data![0] as User)
+                              .dogs[selectedDog]
+                              .size,
+                        };
+                        final response = await reserveKennel(data);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(response),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        if (!response.contains("Failed")) {
+                          setState(() {
+                            prenotazioni = getReservations();
+                            stores = getStores();
+                            markersList = _getMarkersList(
+                                snapshot.data![2] as List<Store>,
+                                snapshot.data![0] as User);
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
             floatingActionButton: currentPageIndex == 1
                 ? FloatingActionButton.extended(
@@ -663,8 +677,33 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         } else if (snapshot.hasError) {
           return const Text("Error fetching data");
         }
-        return const Center(
-          child: CircularProgressIndicator(),
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            forceMaterialTransparency: true,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            title: ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.inversePrimary,
+                  Theme.of(context).colorScheme.tertiary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: const Text(
+                'IoTail',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          body: const Center(
+            child: CircularProgressIndicator(),
+          ),
         );
       },
     );
