@@ -344,7 +344,7 @@ Future<List> getStores(String ip, String token) async {
   return tmp; // return the response
 }
 
-Future<List> getReservations(
+Future<List<Map<String, dynamic>>> getReservations(
   String ip,
   String userID,
   String token,
@@ -359,7 +359,8 @@ Future<List> getReservations(
     throw Exception(
         "Failed to get reservations"); // throw exception if status code is not 200
   }
-  List tmp = jsonDecode(response.body); // decode the response
+  List<Map<String, dynamic>> tmp = List<Map<String, dynamic>>.from(
+      jsonDecode(response.body)); // decode the response
   return tmp; // return the response
 }
 

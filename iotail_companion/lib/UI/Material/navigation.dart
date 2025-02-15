@@ -42,7 +42,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late Future<User> user;
   late Future<List<Store>> stores;
   late List<bool> isExpanded;
-  late Future<List> prenotazioni;
+  late Future<List<Map<String, dynamic>>> prenotazioni;
 
   Future<User> getUser() async {
     final Map<String, dynamic> data =
@@ -62,7 +62,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return user;
   }
 
-  Future<List> getReservations() async {
+  Future<List<Map<String, dynamic>>> getReservations() async {
     var data = await requests.getReservations(
         widget.ip!, widget.userID!, widget.token!);
     isExpanded = List.filled(data.length, false);
@@ -137,11 +137,20 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   }
 
   // Helper function to check if a store has a suitable kennel
-  bool _isStoreSuitable(Store store, String dogSize) {
+  bool _isStoreSuitable(
+      Store store, Dog dog, List<Map<String, dynamic>> reservations) {
+    List<int?> storeIDs = reservations.map((reservation) {
+      if (reservation["dogID"] == dog.dogID) {
+        return reservation["storeID"] as int;
+      }
+    }).toList();
+    if (storeIDs.contains(store.id)) {
+      return false;
+    }
     for (var kennel in store.kennels) {
       if (!kennel.booked &&
           !kennel.occupied &&
-          _sizeFits(kennel.size, dogSize)) {
+          _sizeFits(kennel.size, dog.size)) {
         return true;
       }
     }
@@ -154,7 +163,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return sizeOrder[kennelSize]! >= sizeOrder[dogSize]!;
   }
 
-  List<DataMarker> _getMarkersList(List<Store> stores, User user) {
+  List<DataMarker> _getMarkersList(
+      List<Store> stores, User user, List<Map<String, dynamic>> reservations) {
     List<DataMarker> markersList;
     if (user.dogs.isEmpty) {
       dogPicture = [];
@@ -178,11 +188,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       ).toList();
     } else {
       dogPicture = user.dogs.map((dog) => dog.picture).toList();
-      String dogSize = user.dogs[selectedDog].size;
+      Dog dog = user.dogs[selectedDog];
       markersList = stores.map(
         (store) {
           Color color;
-          bool isSuitable = _isStoreSuitable(store, dogSize);
+          bool isSuitable = _isStoreSuitable(store, dog, reservations);
           if (isSuitable) {
             color = Theme.of(context).colorScheme.primary;
           } else {
@@ -218,7 +228,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         if (snapshot.hasData) {
           dogPicture = [];
           List<DataMarker> markersList = _getMarkersList(
-              snapshot.data![2] as List<Store>, snapshot.data![0] as User);
+              snapshot.data![2] as List<Store>,
+              snapshot.data![0] as User,
+              snapshot.data![1] as List<Map<String, dynamic>>);
           return Scaffold(
             extendBody: true,
             appBar: AppBar(
@@ -434,7 +446,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 selectedDog = index;
                                 markersList = _getMarkersList(
                                     snapshot.data![2] as List<Store>,
-                                    snapshot.data![0] as User);
+                                    snapshot.data![0] as User,
+                                    snapshot.data![1]
+                                        as List<Map<String, dynamic>>);
                                 isOpen = false;
                               });
                               _scrollToSelectedDog(index);
@@ -581,7 +595,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   stores = getStores();
                   markersList = _getMarkersList(
                       snapshot.data![2] as List<Store>,
-                      snapshot.data![0] as User);
+                      snapshot.data![0] as User,
+                      snapshot.data![1] as List<Map<String, dynamic>>);
                 });
               },
               child: Stack(
@@ -616,7 +631,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           stores = getStores();
                           markersList = _getMarkersList(
                               snapshot.data![2] as List<Store>,
-                              snapshot.data![0] as User);
+                              snapshot.data![0] as User,
+                              snapshot.data![1] as List<Map<String, dynamic>>);
                         });
                       },
                       user: snapshot.data![0] as User,
@@ -659,7 +675,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                             stores = getStores();
                             markersList = _getMarkersList(
                                 snapshot.data![2] as List<Store>,
-                                snapshot.data![0] as User);
+                                snapshot.data![0] as User,
+                                snapshot.data![1]
+                                    as List<Map<String, dynamic>>);
                           });
                         }
                       },

@@ -83,7 +83,7 @@ SPEC CHECKSUMS:
   PhoneNumberKit: 9c8d546d65c3784721d575a29e712ae8b992fe79
   rive_common: dd421daaf9ae69f0125aa761dd96abd278399952
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
+  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
 
 PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
 

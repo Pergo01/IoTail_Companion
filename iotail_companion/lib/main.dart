@@ -20,7 +20,7 @@ void main() async {
         encryptedSharedPreferences: true,
       );
   await FlutterSecureStorage(aOptions: _getAndroidOptions())
-      .write(key: "ip", value: "localhost");
+      .write(key: "ip", value: "192.168.0.243");
   runApp(const MyApp());
 }
 
