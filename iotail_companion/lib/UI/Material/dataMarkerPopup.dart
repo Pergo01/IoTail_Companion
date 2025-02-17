@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class DataMarkerPopup extends StatelessWidget {
   const DataMarkerPopup(
@@ -23,12 +24,12 @@ class DataMarkerPopup extends StatelessWidget {
               actionsAlignment: MainAxisAlignment.spaceEvenly,
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                     child: const Text("Cancel")),
                 TextButton(
                     onPressed: () {
                       onReserve();
-                      Navigator.of(context).pop();
+                      context.pop();
                     },
                     child: const Text("Yes")),
               ],

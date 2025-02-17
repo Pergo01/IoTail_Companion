@@ -12,6 +12,7 @@ import 'package:iotail_companion/UI/Material/map.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/dog.dart';
+import 'package:iotail_companion/util/reservation.dart';
 
 class Navigation extends StatefulWidget {
   final String? ip;
@@ -42,7 +43,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late Future<User> user;
   late Future<List<Store>> stores;
   late List<bool> isExpanded;
-  late Future<List<Map<String, dynamic>>> prenotazioni;
+  late Future<List<Reservation>> prenotazioni;
 
   Future<User> getUser() async {
     final Map<String, dynamic> data =
@@ -62,11 +63,13 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return user;
   }
 
-  Future<List<Map<String, dynamic>>> getReservations() async {
+  Future<List<Reservation>> getReservations() async {
     var data = await requests.getReservations(
         widget.ip!, widget.userID!, widget.token!);
     isExpanded = List.filled(data.length, false);
-    return data;
+    return data
+        .map((reservation) => Reservation.fromJson(reservation))
+        .toList();
   }
 
   Future<List<Store>> getStores() async {
@@ -137,11 +140,10 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   }
 
   // Helper function to check if a store has a suitable kennel
-  bool _isStoreSuitable(
-      Store store, Dog dog, List<Map<String, dynamic>> reservations) {
+  bool _isStoreSuitable(Store store, Dog dog, List<Reservation> reservations) {
     List<int?> storeIDs = reservations.map((reservation) {
-      if (reservation["dogID"] == dog.dogID) {
-        return reservation["storeID"] as int;
+      if (reservation.dogID == dog.dogID) {
+        return reservation.storeID;
       }
     }).toList();
     if (storeIDs.contains(store.id)) {
@@ -164,7 +166,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   }
 
   List<DataMarker> _getMarkersList(
-      List<Store> stores, User user, List<Map<String, dynamic>> reservations) {
+      List<Store> stores, User user, List<Reservation> reservations) {
     List<DataMarker> markersList;
     if (user.dogs.isEmpty) {
       dogPicture = [];
@@ -230,7 +232,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           List<DataMarker> markersList = _getMarkersList(
               snapshot.data![2] as List<Store>,
               snapshot.data![0] as User,
-              snapshot.data![1] as List<Map<String, dynamic>>);
+              snapshot.data![1] as List<Reservation>);
           return Scaffold(
             extendBody: true,
             appBar: AppBar(
@@ -447,8 +449,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 markersList = _getMarkersList(
                                     snapshot.data![2] as List<Store>,
                                     snapshot.data![0] as User,
-                                    snapshot.data![1]
-                                        as List<Map<String, dynamic>>);
+                                    snapshot.data![1] as List<Reservation>);
                                 isOpen = false;
                               });
                               _scrollToSelectedDog(index);
@@ -596,7 +597,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                   markersList = _getMarkersList(
                       snapshot.data![2] as List<Store>,
                       snapshot.data![0] as User,
-                      snapshot.data![1] as List<Map<String, dynamic>>);
+                      snapshot.data![1] as List<Reservation>);
                 });
               },
               child: Stack(
@@ -632,11 +633,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           markersList = _getMarkersList(
                               snapshot.data![2] as List<Store>,
                               snapshot.data![0] as User,
-                              snapshot.data![1] as List<Map<String, dynamic>>);
+                              snapshot.data![1] as List<Reservation>);
                         });
                       },
                       user: snapshot.data![0] as User,
-                      reservations: snapshot.data![1] as List,
+                      reservations: snapshot.data![1] as List<Reservation>,
                       shops: snapshot.data![2] as List<Store>,
                     ),
                   ),
@@ -648,40 +649,36 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       ),
                     ),
                     child: OSMMap(
-                      client: client,
-                      markerslist: markersList,
-                      onPrepareReservation: (marker) => selectedShop = marker,
-                      onSubmitReservation: () async {
-                        Map<String, dynamic> data = {
-                          "dogID": (snapshot.data![0] as User)
-                              .dogs[selectedDog]
-                              .dogID,
-                          "userID": widget.userID,
-                          "storeID": selectedShop.id,
-                          "dog_size": (snapshot.data![0] as User)
-                              .dogs[selectedDog]
-                              .size,
-                        };
-                        final response = await reserveKennel(data);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(response),
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                        if (!response.contains("Failed")) {
+                        client: client,
+                        markerslist: markersList,
+                        onPrepareReservation: (marker) => selectedShop = marker,
+                        onSubmitReservation: () async {
+                          Map<String, dynamic> data = {
+                            "dogID": (snapshot.data![0] as User)
+                                .dogs[selectedDog]
+                                .dogID,
+                            "userID": widget.userID,
+                            "storeID": selectedShop.id,
+                            "dog_size": (snapshot.data![0] as User)
+                                .dogs[selectedDog]
+                                .size,
+                          };
+                          final response = await reserveKennel(data);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(response),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
                           setState(() {
                             prenotazioni = getReservations();
                             stores = getStores();
                             markersList = _getMarkersList(
                                 snapshot.data![2] as List<Store>,
                                 snapshot.data![0] as User,
-                                snapshot.data![1]
-                                    as List<Map<String, dynamic>>);
+                                snapshot.data![1] as List<Reservation>);
                           });
-                        }
-                      },
-                    ),
+                        }),
                   ),
                 ],
               ),

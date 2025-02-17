@@ -381,6 +381,26 @@ Future<Map> reserve(String ip, String token, Map data) async {
   return tmp; // return the response
 }
 
+Future<Map> activate_reservation(
+    String ip, String token, String reservationID, int unlockCode) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final body = jsonEncode({"unlockCode": unlockCode});
+  final url =
+      Uri.http("$ip:8083", "/activate/$reservationID"); // URL for request
+  final response =
+      await http.post(url, headers: headers, body: body); // post request
+  if (response.statusCode != 200) {
+    return {
+      "message": "Failed to activate reservation"
+    }; // throw exception if status code is not 200
+  }
+  Map tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
 Future<Map> cancel_reservation(
     String ip, String token, String reservationID) async {
   final headers = {
