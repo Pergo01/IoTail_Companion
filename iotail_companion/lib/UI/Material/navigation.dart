@@ -706,7 +706,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 : null,
           );
         } else if (snapshot.hasError) {
-          return const Text("Error fetching data");
+          String msg = snapshot.error.toString();
+          return Text(msg);
         }
         return Scaffold(
           appBar: AppBar(

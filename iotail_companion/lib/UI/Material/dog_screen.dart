@@ -48,6 +48,15 @@ class _DogScreenState extends State<DogScreen> {
   late final TextEditingController _weightController;
   final ExpansionTileController _coatTypeController = ExpansionTileController();
   late final TextEditingController _allergiesController;
+  // Mixed Breed fields
+  late double _maxIdealTemperature;
+  late double _minIdealTemperature;
+  late double _maxIdealHumidity;
+  late double _minIdealHumidity;
+  late TextEditingController _maxIdealTemperatureController;
+  late TextEditingController _minIdealTemperatureController;
+  late TextEditingController _maxIdealHumidityController;
+  late TextEditingController _minIdealHumidityController;
 
   @override
   void initState() {
@@ -57,7 +66,7 @@ class _DogScreenState extends State<DogScreen> {
     _nameController =
         TextEditingController(text: widget.dog.name != "" ? _name : null);
     _breedID = widget.dog.breedID;
-    _breed = widget.dog.breedID != -2
+    _breed = widget.dog.breedID != -1
         ? widget.breeds
             .firstWhere((breed) => breed.breedID == widget.dog.breedID)
             .name
@@ -76,6 +85,23 @@ class _DogScreenState extends State<DogScreen> {
     _allergies = widget.dog.allergies;
     _allergiesController = TextEditingController(
         text: widget.dog.allergies != [] ? _allergies.join(", ") : null);
+    // Mixed Breed fields
+    _maxIdealTemperature = widget.dog.maxIdealTemperature ?? 0.0;
+    _minIdealTemperature = widget.dog.minIdealTemperature ?? 0.0;
+    _maxIdealHumidity = widget.dog.maxIdealHumidity ?? 0.0;
+    _minIdealHumidity = widget.dog.minIdealHumidity ?? 0.0;
+    _maxIdealTemperatureController = TextEditingController(
+        text: _maxIdealTemperature != 0.0
+            ? _maxIdealTemperature.toString()
+            : null);
+    _minIdealTemperatureController = TextEditingController(
+        text: _minIdealTemperature != 0.0
+            ? _minIdealTemperature.toString()
+            : null);
+    _maxIdealHumidityController = TextEditingController(
+        text: _maxIdealHumidity != 0.0 ? _maxIdealHumidity.toString() : null);
+    _minIdealHumidityController = TextEditingController(
+        text: _minIdealHumidity != 0.0 ? _minIdealHumidity.toString() : null);
   }
 
   @override
@@ -425,14 +451,19 @@ class _DogScreenState extends State<DogScreen> {
                           ],
                           isFullScreen: false,
                           searchController: _breedSearchController,
+                          onTap: () {
+                            _breedSearchController.clear();
+                          },
                           suggestionsBuilder: (BuildContext context,
                               SearchController controller) {
                             if (controller.text.isEmpty) {
                               return widget.breeds.map((breed) => ListTile(
                                     title: Text(breed.name),
                                     onTap: () {
-                                      _breed = breed.name;
-                                      _breedID = breed.breedID;
+                                      setState(() {
+                                        _breed = breed.name;
+                                        _breedID = breed.breedID;
+                                      });
                                       controller.closeView(breed.name);
                                     },
                                   ));
@@ -444,8 +475,10 @@ class _DogScreenState extends State<DogScreen> {
                                 .map((breed) => ListTile(
                                       title: Text(breed.name),
                                       onTap: () {
-                                        _breed = breed.name;
-                                        _breedID = breed.breedID;
+                                        setState(() {
+                                          _breed = breed.name;
+                                          _breedID = breed.breedID;
+                                        });
                                         controller.closeView(breed.name);
                                       },
                                     ));
@@ -782,6 +815,150 @@ class _DogScreenState extends State<DogScreen> {
                       ),
                     ),
                   ),
+                  if (_breedID == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _minIdealTemperatureController,
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            _minIdealTemperature = double.parse(value);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Minimal tolerated temperature (°C)",
+                          labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          hintText: "Your dog's minimal tolerated temperature",
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  if (_breedID == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _maxIdealTemperatureController,
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            _maxIdealTemperature = double.parse(value);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Maximal tolerated temperature (°C)",
+                          labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          hintText: "Your dog's maximal tolerated temperature",
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  if (_breedID == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _minIdealHumidityController,
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            _minIdealHumidity = double.parse(value);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Minimal tolerated humidity (%)",
+                          labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          hintText: "Your dog's minimal tolerated humidity",
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  if (_breedID == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _maxIdealHumidityController,
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            _maxIdealHumidity = double.parse(value);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Maximal tolerated humidity (%)",
+                          labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          hintText: "Your dog's maximal tolerated humidity",
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   ElevatedButton(
                     onPressed: () async {
                       if (_breedID == -1) {
@@ -790,18 +967,35 @@ class _DogScreenState extends State<DogScreen> {
                         ));
                         return;
                       }
-                      Map tmp = {
-                        "dogID": widget.dog.dogID,
-                        "name": _name,
-                        "breedID": _breedID,
-                        "age": _age,
-                        "sex": _sex == "Male" ? 0 : 1,
-                        "size": _size,
-                        "weight": _weight,
-                        "coatType": _coatType,
-                        "allergies": _allergies,
-                        "Picture": _imagePath,
-                      };
+                      Map tmp = _breedID != 0
+                          ? {
+                              "dogID": widget.dog.dogID,
+                              "name": _name,
+                              "breedID": _breedID,
+                              "age": _age,
+                              "sex": _sex == "Male" ? 0 : 1,
+                              "size": _size,
+                              "weight": _weight,
+                              "coatType": _coatType,
+                              "allergies": _allergies,
+                              "Picture": _imagePath,
+                            }
+                          : {
+                              "dogID": widget.dog.dogID,
+                              "name": _name,
+                              "breedID": _breedID,
+                              "age": _age,
+                              "sex": _sex == "Male" ? 0 : 1,
+                              "size": _size,
+                              "weight": _weight,
+                              "coatType": _coatType,
+                              "minIdealTemperature": _minIdealTemperature,
+                              "maxIdealTemperature": _maxIdealTemperature,
+                              "minIdealHumidity": _minIdealHumidity,
+                              "maxIdealHumidity": _maxIdealHumidity,
+                              "allergies": _allergies,
+                              "Picture": _imagePath,
+                            };
                       final response = widget.dog.dogID == ""
                           ? await requests.addDog(
                               widget.ip, widget.token, widget.userID, tmp)
