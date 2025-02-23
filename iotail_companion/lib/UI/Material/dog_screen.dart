@@ -784,6 +784,12 @@ class _DogScreenState extends State<DogScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () async {
+                      if (_breedID == -2) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Please select a breed"),
+                        ));
+                        return;
+                      }
                       Map tmp = {
                         "dogID": widget.dog.dogID,
                         "name": _name,
