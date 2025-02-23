@@ -423,7 +423,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                         "dog": Dog(
                                           dogID: "",
                                           name: "",
-                                          breedID: -2,
+                                          breedID: -1,
                                           age: 0,
                                           sex: 0,
                                           size: "",
@@ -472,7 +472,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 "dog": Dog(
                                   dogID: "",
                                   name: "",
-                                  breedID: -2,
+                                  breedID: -1,
                                   age: 0,
                                   sex: 0,
                                   size: "Small",
