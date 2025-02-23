@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:iotail_companion/util/dog.dart';
+import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 
 class DogScreen extends StatefulWidget {
   final Dog dog;
+  final List<Breed> breeds;
   final String userID;
   final String ip;
   final String token;
@@ -16,6 +18,7 @@ class DogScreen extends StatefulWidget {
   const DogScreen(
       {super.key,
       required this.dog,
+      required this.breeds,
       required this.userID,
       required this.ip,
       required this.token,
@@ -29,6 +32,7 @@ class _DogScreenState extends State<DogScreen> {
   Uint8List? _pickedImage;
   late String _name;
   late String _breed;
+  late int _breedID;
   late int _age;
   late String _sex;
   late String _size;
@@ -37,7 +41,7 @@ class _DogScreenState extends State<DogScreen> {
   late List<String> _allergies;
   String? _imagePath;
   late final TextEditingController _nameController;
-  late final TextEditingController _breedController;
+  late final SearchController _breedSearchController;
   late final TextEditingController _ageController;
   final ExpansionTileController _sexController = ExpansionTileController();
   final ExpansionTileController _sizeController = ExpansionTileController();
@@ -52,9 +56,14 @@ class _DogScreenState extends State<DogScreen> {
     _name = widget.dog.name;
     _nameController =
         TextEditingController(text: widget.dog.name != "" ? _name : null);
-    _breed = widget.dog.breed;
-    _breedController =
-        TextEditingController(text: widget.dog.breed != "" ? _breed : null);
+    _breedID = widget.dog.breedID;
+    _breed = widget.dog.breedID != -2
+        ? widget.breeds
+            .firstWhere((breed) => breed.breedID == widget.dog.breedID)
+            .name
+        : "";
+    _breedSearchController = SearchController();
+    _breedSearchController.text = _breed;
     _age = widget.dog.age;
     _ageController = TextEditingController(
         text: widget.dog.age != 0 ? _age.toString() : null);
@@ -73,7 +82,7 @@ class _DogScreenState extends State<DogScreen> {
   void dispose() {
     super.dispose();
     _nameController.dispose();
-    _breedController.dispose();
+    _breedSearchController.dispose();
     _ageController.dispose();
     _weightController.dispose();
     _allergiesController.dispose();
@@ -375,12 +384,9 @@ class _DogScreenState extends State<DogScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: _breedController,
-                      onChanged: (value) {
-                        _breed = value;
-                      },
+                    child: InputDecorator(
                       decoration: InputDecoration(
+                        contentPadding: EdgeInsets.zero,
                         labelText: "Breed",
                         labelStyle: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
@@ -395,13 +401,56 @@ class _DogScreenState extends State<DogScreen> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        hintText: "Your dog's breed",
-                        hintStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
                       ),
-                      style: TextStyle(
-                        fontSize: 16,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: SearchAnchor.bar(
+                          barBackgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.surface),
+                          barShape: WidgetStateProperty.all(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          barElevation: WidgetStateProperty.all(0),
+                          barPadding:
+                              WidgetStateProperty.all(EdgeInsets.all(4)),
+                          barLeading: SizedBox.shrink(),
+                          barTrailing: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 15.0),
+                              child: Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            )
+                          ],
+                          isFullScreen: false,
+                          searchController: _breedSearchController,
+                          suggestionsBuilder: (BuildContext context,
+                              SearchController controller) {
+                            if (controller.text.isEmpty) {
+                              return widget.breeds.map((breed) => ListTile(
+                                    title: Text(breed.name),
+                                    onTap: () {
+                                      _breed = breed.name;
+                                      _breedID = breed.breedID;
+                                      controller.closeView(breed.name);
+                                    },
+                                  ));
+                            }
+                            return widget.breeds
+                                .where((breed) => breed.name
+                                    .toLowerCase()
+                                    .contains(controller.text.toLowerCase()))
+                                .map((breed) => ListTile(
+                                      title: Text(breed.name),
+                                      onTap: () {
+                                        _breed = breed.name;
+                                        _breedID = breed.breedID;
+                                        controller.closeView(breed.name);
+                                      },
+                                    ));
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -738,7 +787,7 @@ class _DogScreenState extends State<DogScreen> {
                       Map tmp = {
                         "dogID": widget.dog.dogID,
                         "name": _name,
-                        "breed": _breed,
+                        "breedID": _breedID,
                         "age": _age,
                         "sex": _sex == "Male" ? 0 : 1,
                         "size": _size,

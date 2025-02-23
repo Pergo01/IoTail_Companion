@@ -240,6 +240,21 @@ Future<Map<String, dynamic>> editDog(
   return {"message": "Dog updated successfully"}; // return the response
 }
 
+Future<Uint8List?> getDogPicture(
+    String ip, String userID, String dogID, String token) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "/dog_picture/$userID/$dogID");
+  final response = await http.get(url, headers: headers); // get request
+
+  if (response.statusCode == 200) {
+    return response.bodyBytes; // Get the raw image bytes
+  }
+  return null;
+}
+
 Future<Map<String, dynamic>> deleteDogPicture(
     String ip, String token, String userID, String dogID) async {
   final headers = {
@@ -271,21 +286,6 @@ Future<Map<String, dynamic>> deleteDog(
   return {
     "message": "Dog $dogID of user $userID deleted successfully"
   }; // return success message
-}
-
-Future<Uint8List?> getDogPicture(
-    String ip, String userID, String dogID, String token) async {
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $token',
-  }; // headers for request
-  final url = Uri.http("$ip:8080", "/dog_picture/$userID/$dogID");
-  final response = await http.get(url, headers: headers); // get request
-
-  if (response.statusCode == 200) {
-    return response.bodyBytes; // Get the raw image bytes
-  }
-  return null;
 }
 
 Future<Map<String, dynamic>> recover_password(String ip, String email) async {
@@ -339,6 +339,21 @@ Future<List> getStores(String ip, String token) async {
   if (response.statusCode != 200) {
     throw Exception(
         "Failed to get stores"); // throw exception if status code is not 200
+  }
+  List tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
+Future<List> getBreeds(String ip, String token) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "breeds"); // url for request
+  final response = await http.get(url, headers: headers); // get request
+  if (response.statusCode != 200) {
+    throw Exception(
+        "Failed to get breeds"); // throw exception if status code is not 200
   }
   List tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response

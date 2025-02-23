@@ -3,7 +3,7 @@ import 'dart:typed_data';
 class Dog {
   final String dogID;
   final String name;
-  final String breed;
+  final int breedID;
   final int age;
   final int sex; // 0 for male, 1 for female
   final String size;
@@ -14,7 +14,7 @@ class Dog {
   Dog(
       {required this.dogID,
       required this.name,
-      required this.breed,
+      required this.breedID,
       required this.age,
       required this.sex,
       required this.size,
@@ -31,7 +31,7 @@ class Dog {
     return Dog(
       dogID: json["DogID"],
       name: json["Name"],
-      breed: json["Breed"],
+      breedID: json["BreedID"],
       age: json["Age"],
       sex: json["Sex"] == 0 ? 0 : 1,
       size: json["Size"],

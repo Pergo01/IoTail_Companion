@@ -9,6 +9,7 @@ import 'package:slide_countdown/slide_countdown.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:iotail_companion/util/user.dart';
+import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 import 'package:iotail_companion/util/reservation.dart';
 import 'package:iotail_companion/util/store.dart';
@@ -18,6 +19,7 @@ class Home extends StatefulWidget {
   final int selectedDog;
   final User user;
   final List<Reservation> reservations;
+  final List<Breed> breeds;
   final List<Store> shops;
   final ScrollController scrollController;
   final VoidCallback onDogUpdated;
@@ -29,6 +31,7 @@ class Home extends StatefulWidget {
       required this.onDogSelected,
       required this.onReservationsUpdated,
       required this.user,
+      required this.breeds,
       required this.reservations,
       required this.shops,
       required this.scrollController,
@@ -299,9 +302,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                 fontSize: 40,
                                                 fontWeight: FontWeight.bold)),
                                         Text(
-                                          widget.user.dogs
-                                              .elementAt(index)
-                                              .breed,
+                                          widget.breeds
+                                              .firstWhere((breed) =>
+                                                  breed.breedID ==
+                                                  widget.user.dogs
+                                                      .elementAt(index)
+                                                      .breedID)
+                                              .name,
                                           style: const TextStyle(fontSize: 20),
                                         ),
                                       ],
@@ -326,6 +333,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 "/Dog",
                                 extra: {
                                   "dog": widget.user.dogs.elementAt(index),
+                                  "breeds": widget.breeds,
                                   "userID": widget.user.userID,
                                   "ip": ip,
                                   "token": token,

@@ -12,6 +12,7 @@ import 'package:iotail_companion/UI/Material/map.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/dog.dart';
+import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/reservation.dart';
 
 class Navigation extends StatefulWidget {
@@ -44,6 +45,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late Future<List<Store>> stores;
   late List<bool> isExpanded;
   late Future<List<Reservation>> prenotazioni;
+  late Future<List<Breed>> breeds;
 
   Future<User> getUser() async {
     final Map<String, dynamic> data =
@@ -94,10 +96,20 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     }
   }
 
+  Future<List<Breed>> getBreeds() async {
+    var data = await requests.getBreeds(widget.ip!, widget.token!);
+    List<Breed> tmp = [];
+    for (var breed in data) {
+      tmp.add(Breed.fromJson(breed));
+    }
+    return tmp;
+  }
+
   @override
   void initState() {
     super.initState();
     user = getUser();
+    breeds = getBreeds();
     prenotazioni = getReservations();
     stores = getStores();
     client.connect('IoTail_app');
@@ -225,7 +237,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     final isDarkTheme =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
     return FutureBuilder(
-      future: Future.wait([user, prenotazioni, stores]),
+      future: Future.wait([user, prenotazioni, stores, breeds]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           dogPicture = [];
@@ -411,7 +423,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                         "dog": Dog(
                                           dogID: "",
                                           name: "",
-                                          breed: "",
+                                          breedID: -2,
                                           age: 0,
                                           sex: 0,
                                           size: "",
@@ -419,6 +431,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                           coatType: "",
                                           allergies: [],
                                         ),
+                                        "breeds":
+                                            snapshot.data![3] as List<Breed>,
                                         "userID": widget.userID,
                                         "ip": widget.ip,
                                         "token": widget.token,
@@ -458,7 +472,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 "dog": Dog(
                                   dogID: "",
                                   name: "",
-                                  breed: "",
+                                  breedID: -2,
                                   age: 0,
                                   sex: 0,
                                   size: "Small",
@@ -467,6 +481,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                   allergies: [],
                                 ),
                                 "userID": widget.userID,
+                                "breeds": snapshot.data![3] as List<Breed>,
                                 "ip": widget.ip,
                                 "token": widget.token,
                                 "onEdit": () async {
@@ -637,6 +652,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                         });
                       },
                       user: snapshot.data![0] as User,
+                      breeds: snapshot.data![3] as List<Breed>,
                       reservations: snapshot.data![1] as List<Reservation>,
                       shops: snapshot.data![2] as List<Store>,
                     ),

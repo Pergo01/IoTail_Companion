@@ -77,6 +77,7 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
           userID: extra["userID"],
           ip: extra["ip"],
           token: extra["token"],
+          breeds: extra["breeds"],
           onEdit: extra["onEdit"],
         );
       })
