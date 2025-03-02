@@ -55,6 +55,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   late List<bool> isExpanded;
   late WebViewController webController;
   bool editMode = false;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   Future<void> setup() async {
     ip = await storage.read(key: "ip");
@@ -203,6 +205,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
     setup();
     isExpanded = List.filled(widget.reservations.length, false);
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 150),
+    )..repeat(reverse: true); // Loops back and forth
+    _animation = Tween<double>(
+      begin: -0.01, // Small rotation to left
+      end: 0.01, // Small rotation to right
+    ).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
     super.initState();
   }
 
@@ -210,6 +221,23 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   void didUpdateWidget(Home oldwidget) {
     super.didUpdateWidget(oldwidget);
     isExpanded = List.filled(widget.reservations.length, false);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      editMode = !editMode;
+      if (editMode) {
+        _animationController.repeat(reverse: true);
+      } else {
+        _animationController.stop();
+      }
+    });
   }
 
   @override
@@ -240,111 +268,125 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   onTap: () {
                     widget.onDogSelected(index);
                   },
-                  onLongPress: () {
-                    setState(() {
-                      editMode = !editMode;
-                    });
-                  },
-                  child: Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      Card(
-                        elevation: widget.selectedDog == index ? 5 : 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: isDarkTheme
-                                ? Border.all(
-                                    color: widget.selectedDog == index
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Colors.transparent,
-                                    width: 1)
-                                : null,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: SizedBox(
-                              width: 300,
-                              child: Row(
-                                children: [
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                        shape: BoxShape.rectangle,
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(5))),
-                                    clipBehavior: Clip.hardEdge,
-                                    child: widget.user.dogs[index].picture ==
-                                                null ||
-                                            widget.user.dogs[index].picture!
-                                                .isEmpty
-                                        ? Image.asset(
-                                            "assets/default_cane.jpeg")
-                                        : Image.memory(
-                                            widget.user.dogs[index].picture!,
-                                            height: 100,
-                                            width: 100,
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                            widget.user.dogs
-                                                .elementAt(index)
-                                                .name,
-                                            style: const TextStyle(
-                                                fontSize: 40,
-                                                fontWeight: FontWeight.bold)),
-                                        Text(
-                                          widget.breeds
-                                              .firstWhere((breed) =>
-                                                  breed.breedID ==
-                                                  widget.user.dogs
-                                                      .elementAt(index)
-                                                      .breedID)
-                                              .name,
-                                          style: const TextStyle(fontSize: 20),
-                                        ),
-                                      ],
+                  onLongPress: _toggleEditMode,
+                  child: AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset:
+                            Offset(0, editMode ? _animation.value * 100 : 0),
+                        child: Transform.rotate(
+                          angle: editMode ? _animation.value : 0,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        Card(
+                          elevation: widget.selectedDog == index ? 5 : 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: isDarkTheme
+                                  ? Border.all(
+                                      color: widget.selectedDog == index
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : Colors.transparent,
+                                      width: 1)
+                                  : null,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 300,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.rectangle,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(5))),
+                                      clipBehavior: Clip.hardEdge,
+                                      child: widget.user.dogs[index].picture ==
+                                                  null ||
+                                              widget.user.dogs[index].picture!
+                                                  .isEmpty
+                                          ? Image.asset(
+                                              "assets/default_cane.jpeg")
+                                          : Image.memory(
+                                              widget.user.dogs[index].picture!,
+                                              height: 100,
+                                              width: 100,
+                                              fit: BoxFit.cover,
+                                            ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(
+                                      width: 8,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              widget.user.dogs
+                                                  .elementAt(index)
+                                                  .name,
+                                              style: const TextStyle(
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.bold)),
+                                          Text(
+                                            widget.breeds
+                                                .firstWhere((breed) =>
+                                                    breed.breedID ==
+                                                    widget.user.dogs
+                                                        .elementAt(index)
+                                                        .breedID)
+                                                .name,
+                                            style:
+                                                const TextStyle(fontSize: 20),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      if (editMode)
-                        IconButton(
-                            style: ButtonStyle(
-                                // backgroundColor: WidgetStateProperty.all(
-                                //     Colors.yellow.shade600),
-                                shape: WidgetStateProperty.all(CircleBorder())),
-                            // color: Colors.white,
-                            onPressed: () async {
-                              String? token = await storage.read(key: "token");
-                              context.push(
-                                "/Dog",
-                                extra: {
-                                  "dog": widget.user.dogs.elementAt(index),
-                                  "breeds": widget.breeds,
-                                  "userID": widget.user.userID,
-                                  "ip": ip,
-                                  "token": token,
-                                  "onEdit": () {
-                                    widget.onDogUpdated();
-                                  }
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.edit)),
-                    ],
+                        if (editMode)
+                          IconButton(
+                              style: ButtonStyle(
+                                  // backgroundColor: WidgetStateProperty.all(
+                                  //     Colors.yellow.shade600),
+                                  shape:
+                                      WidgetStateProperty.all(CircleBorder())),
+                              // color: Colors.white,
+                              onPressed: () async {
+                                String? token =
+                                    await storage.read(key: "token");
+                                context.push(
+                                  "/Dog",
+                                  extra: {
+                                    "dog": widget.user.dogs.elementAt(index),
+                                    "breeds": widget.breeds,
+                                    "userID": widget.user.userID,
+                                    "ip": ip,
+                                    "token": token,
+                                    "onEdit": () {
+                                      widget.onDogUpdated();
+                                    }
+                                  },
+                                );
+                              },
+                              icon: const Icon(Icons.edit)),
+                      ],
+                    ),
                   ),
                 );
               },
