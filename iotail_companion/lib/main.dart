@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 import 'package:iotail_companion/UI/Material/login.dart';
 import 'package:iotail_companion/UI/Material/splash_screen.dart';
@@ -16,6 +18,9 @@ import 'package:iotail_companion/UI/Material/user_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RiveFile.initialize();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );

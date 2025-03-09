@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "231215715047",
+    "project_id": "iotail-companion",
+    "storage_bucket": "iotail-companion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:231215715047:android:682dbadb499192240f4842",
+        "android_client_info": {
+          "package_name": "com.iotail.iotail_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB16BchpPLiQfEb93SLIi4b8l52BQtvIu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
