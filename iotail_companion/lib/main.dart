@@ -14,6 +14,7 @@ import 'package:iotail_companion/theme/color_schemes.g.dart';
 import 'package:iotail_companion/UI/Material/booking.dart';
 import 'package:iotail_companion/UI/Material/dog_screen.dart';
 import 'package:iotail_companion/UI/Material/user_screen.dart';
+import 'package:iotail_companion/util/firebase_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseApi.instance.initialize();
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );
