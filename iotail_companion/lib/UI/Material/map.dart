@@ -9,19 +9,16 @@ import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mqtt5_client/mqtt5_server_client.dart';
 
 import 'package:iotail_companion/UI/Material/dataMarkerPopup.dart';
 import 'package:iotail_companion/util/dataMarker.dart';
 
 class OSMMap extends StatefulWidget {
-  final MqttServerClient client;
   final List<DataMarker> markerslist;
   final Function(DataMarker) onPrepareReservation;
   final VoidCallback onSubmitReservation;
   const OSMMap(
       {super.key,
-      required this.client,
       required this.markerslist,
       required this.onPrepareReservation,
       required this.onSubmitReservation});

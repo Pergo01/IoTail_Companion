@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:holdable_button/holdable_button.dart';
 import 'package:holdable_button/utils/utils.dart';
+import 'package:mqtt5_client/mqtt5_client.dart';
+import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:slide_countdown/slide_countdown.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -24,6 +27,7 @@ class Home extends StatefulWidget {
   final ScrollController scrollController;
   final VoidCallback onDogUpdated;
   final VoidCallback onReservationsUpdated;
+  final MqttServerClient client;
 
   const Home(
       {super.key,
@@ -35,7 +39,8 @@ class Home extends StatefulWidget {
       required this.reservations,
       required this.shops,
       required this.scrollController,
-      required this.onDogUpdated});
+      required this.onDogUpdated,
+      required this.client});
 
   @override
   _HomeState createState() => _HomeState();
@@ -60,26 +65,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Future<void> setup() async {
     ip = await storage.read(key: "ip");
-    webController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            // Update loading bar.
-          },
-          onPageStarted: (String url) {},
-          onPageFinished: (String url) {},
-          onHttpError: (HttpResponseError error) {},
-          onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (NavigationRequest request) {
-            if (request.url.startsWith('https://www.youtube.com/')) {
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('http:$ip:8090/camera_0'));
   }
 
   Future<bool> _showReservationCancelConfirmation(
@@ -456,186 +441,222 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                               isExpanded[isExpanded.indexOf(element)] = false;
                             });
                             isExpanded[index] = true;
-                            webController.reload();
                           }
                         });
                       },
-                      child: Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          side: BorderSide(
-                            color: widget.reservations.elementAt(index).active
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    "Dog: ${widget.user.dogs.firstWhere((dog) => dog.dogID == widget.reservations.elementAt(index).dogID).name}",
-                                    style: const TextStyle(fontSize: 40)),
-                                Text(
-                                    "${widget.shops.firstWhere((shop) => shop.id == widget.reservations.elementAt(index).storeID).name}, kennel: ${widget.reservations.elementAt(index).kennelID.toString().padLeft(3, '0')}",
-                                    style: const TextStyle(fontSize: 20)),
-                                if (!widget.reservations
-                                    .elementAt(index)
-                                    .active)
-                                  SlideCountdown(
-                                    duration: remainingTime,
-                                    slideDirection: SlideDirection.up,
-                                    separator: ":",
-                                    separatorStyle: TextStyle(fontSize: 20),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.surface,
-                                    ),
-                                    style: const TextStyle(fontSize: 20),
-                                    onDone: () async {
-                                      Future.delayed(const Duration(seconds: 5),
-                                          () {
-                                        widget.onReservationsUpdated();
-                                      });
-                                    },
-                                  ),
-                                // if (isExpanded[index])
-                                //   SizedBox(
-                                //     height: 200,
-                                //     // Set a fixed height for the WebView
-                                //     child: WebViewWidget(
-                                //         controller: webController),
-                                //   ),
-                                if (isExpanded[index])
-                                  widget.reservations.elementAt(index).active
-                                      ? Container(
-                                          margin: const EdgeInsets.only(top: 8),
-                                          decoration: BoxDecoration(
-                                              border: Border.all(
-                                                  color: Colors.red, width: 2),
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          child: HoldableButton(
-                                            loadingType:
-                                                LoadingType.fillingLoading,
-                                            buttonColor: Theme.of(context)
-                                                .colorScheme
-                                                .surface,
-                                            loadingColor: Colors.red,
-                                            duration: 5,
-                                            radius: 10,
-                                            beginFillingPoint:
-                                                Alignment.centerLeft,
-                                            endFillingPoint:
-                                                Alignment.centerRight,
-                                            resetAfterFinish: true,
-                                            onConfirm: () async {
-                                              final String? token =
-                                                  await storage.read(
-                                                      key: "token");
-                                              Map response = await requests
-                                                  .cancel_reservation(
-                                                      ip!,
-                                                      token!,
-                                                      widget.reservations
-                                                          .elementAt(index)
-                                                          .reservationID);
-                                              if (response["message"]
-                                                  .contains("Failed")) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                        response["message"]),
-                                                    duration: const Duration(
-                                                        seconds: 3),
-                                                  ),
-                                                );
-                                              } else {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: const Text(
-                                                        "Reservation cancel successful"),
-                                                    duration: const Duration(
-                                                        seconds: 3),
-                                                  ),
-                                                );
-                                                widget.onReservationsUpdated();
-                                              }
-                                            },
-                                            strokeWidth: 1,
-                                            hasVibrate: true,
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
-                                            height: 50,
-                                            child: const Text(
-                                              "HOLD TO CONFIRM TERMINATION",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        )
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            if (!widget.reservations
-                                                .elementAt(index)
-                                                .active)
-                                              IconButton(
-                                                  style: ButtonStyle(
-                                                      backgroundColor:
-                                                          WidgetStateProperty.all(
-                                                              Colors.green),
-                                                      shape: WidgetStateProperty.all(
-                                                          RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          5)))),
-                                                  color: Colors.white,
-                                                  onPressed: () =>
-                                                      _showReservationActivationDialog(
-                                                          context,
+                      child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          Card(
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              side: BorderSide(
+                                color:
+                                    widget.reservations.elementAt(index).active
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        "Dog: ${widget.user.dogs.firstWhere((dog) => dog.dogID == widget.reservations.elementAt(index).dogID).name}",
+                                        style: const TextStyle(fontSize: 40)),
+                                    Text(
+                                        "${widget.shops.firstWhere((shop) => shop.id == widget.reservations.elementAt(index).storeID).name}, kennel: ${widget.reservations.elementAt(index).kennelID.toString().padLeft(3, '0')}",
+                                        style: const TextStyle(fontSize: 20)),
+                                    if (!widget.reservations
+                                        .elementAt(index)
+                                        .active)
+                                      SlideCountdown(
+                                        duration: remainingTime,
+                                        slideDirection: SlideDirection.up,
+                                        separator: ":",
+                                        separatorStyle: TextStyle(fontSize: 20),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                        ),
+                                        style: const TextStyle(fontSize: 20),
+                                        onDone: () async {
+                                          Future.delayed(
+                                              const Duration(seconds: 5), () {
+                                            widget.onReservationsUpdated();
+                                          });
+                                        },
+                                      ),
+                                    if (isExpanded[index])
+                                      widget.reservations
+                                              .elementAt(index)
+                                              .active
+                                          ? Container(
+                                              margin:
+                                                  const EdgeInsets.only(top: 8),
+                                              decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.red,
+                                                      width: 2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              child: HoldableButton(
+                                                loadingType:
+                                                    LoadingType.fillingLoading,
+                                                buttonColor: Theme.of(context)
+                                                    .colorScheme
+                                                    .surface,
+                                                loadingColor: Colors.red,
+                                                duration: 5,
+                                                radius: 10,
+                                                beginFillingPoint:
+                                                    Alignment.centerLeft,
+                                                endFillingPoint:
+                                                    Alignment.centerRight,
+                                                resetAfterFinish: true,
+                                                onConfirm: () async {
+                                                  final String? token =
+                                                      await storage.read(
+                                                          key: "token");
+                                                  Map response = await requests
+                                                      .cancel_reservation(
+                                                          ip!,
+                                                          token!,
                                                           widget.reservations
-                                                              .elementAt(index)),
-                                                  icon: Icon(
-                                                    Icons.check,
-                                                  )),
-                                            IconButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        WidgetStateProperty.all(
-                                                            Colors.red),
-                                                    shape: WidgetStateProperty.all(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5)))),
-                                                color: Colors.white,
-                                                onPressed: () =>
-                                                    _showReservationCancelConfirmation(
-                                                        context,
-                                                        widget.reservations
-                                                            .elementAt(index)),
-                                                icon: const Icon(Icons.delete)),
-                                          ],
-                                        )
-                              ],
+                                                              .elementAt(index)
+                                                              .reservationID);
+                                                  if (response["message"]
+                                                      .contains("Failed")) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(response[
+                                                            "message"]),
+                                                        duration:
+                                                            const Duration(
+                                                                seconds: 3),
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: const Text(
+                                                            "Reservation cancel successful"),
+                                                        duration:
+                                                            const Duration(
+                                                                seconds: 3),
+                                                      ),
+                                                    );
+                                                    widget
+                                                        .onReservationsUpdated();
+                                                  }
+                                                },
+                                                strokeWidth: 1,
+                                                hasVibrate: true,
+                                                width: MediaQuery.of(context)
+                                                    .size
+                                                    .width,
+                                                height: 50,
+                                                child: const Text(
+                                                  "HOLD TO CONFIRM TERMINATION",
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                if (!widget.reservations
+                                                    .elementAt(index)
+                                                    .active)
+                                                  IconButton(
+                                                      style: ButtonStyle(
+                                                          backgroundColor:
+                                                              WidgetStateProperty.all(
+                                                                  Colors.green),
+                                                          shape: WidgetStateProperty.all(
+                                                              RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                          5)))),
+                                                      color: Colors.white,
+                                                      onPressed: () =>
+                                                          _showReservationActivationDialog(
+                                                              context,
+                                                              widget
+                                                                  .reservations
+                                                                  .elementAt(
+                                                                      index)),
+                                                      icon: Icon(
+                                                        Icons.check,
+                                                      )),
+                                                IconButton(
+                                                    style: ButtonStyle(
+                                                        backgroundColor:
+                                                            WidgetStateProperty.all(
+                                                                Colors.red),
+                                                        shape: WidgetStateProperty.all(
+                                                            RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            5)))),
+                                                    color: Colors.white,
+                                                    onPressed: () =>
+                                                        _showReservationCancelConfirmation(
+                                                            context,
+                                                            widget.reservations
+                                                                .elementAt(
+                                                                    index)),
+                                                    icon: const Icon(Icons.delete)),
+                                              ],
+                                            )
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          if (widget.reservations.elementAt(index).active)
+                            IconButton(
+                              onPressed: () async {
+                                await context
+                                    .push("/ReservationScreen", extra: {
+                                  "reservation":
+                                      widget.reservations.elementAt(index),
+                                  "ip": ip,
+                                  "client": widget.client // Pass the client
+                                });
+                                final builder = MqttPayloadBuilder();
+                                builder
+                                    .addString(jsonEncode({"message": "off"}));
+                                widget.client.publishMessage(
+                                    "IoTail/kennel1/camera",
+                                    MqttQos.exactlyOnce,
+                                    builder.payload!);
+                                print(
+                                    'MQTT message sent to turn off the camera');
+                              },
+                              icon: Icon(Icons.open_in_new),
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                        ],
                       ),
                     ),
                   );
