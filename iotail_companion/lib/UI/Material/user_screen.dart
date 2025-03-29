@@ -469,7 +469,20 @@ class _UserScreenState extends State<UserScreen> {
                       height: 8,
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final String? firebaseToken =
+                            await storage.read(key: "FirebaseToken");
+                        final response = await requests.logout(widget.ip,
+                            widget.token, widget.user.userID, firebaseToken!);
+                        if (response["message"].toString().contains("Failed")) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(response["message"]),
+                          ));
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Logged out successfully"),
+                        ));
                         storage.delete(key: "email");
                         storage.delete(key: "password");
                         storage.delete(key: "userID");

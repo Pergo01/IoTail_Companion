@@ -35,7 +35,8 @@ class _SplashScreenState extends State<SplashScreen>
   Future<String> refreshToken(String ip) async {
     String? email = await storage.read(key: "email");
     String? password = await storage.read(key: "password");
-    Map tmp = await requests.login(ip, email!, password!);
+    final String? firebaseToken = await storage.read(key: "FirebaseToken");
+    Map tmp = await requests.login(ip, email!, password!, firebaseToken!);
     await storage.write(key: "token", value: tmp["token"]);
     return tmp["token"];
   }

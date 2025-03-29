@@ -94,7 +94,9 @@ class _LoginWithRiveState extends State<LoginWithRive> {
       _isAnimating = true; // Blocca i listener
     });
 
-    Map tmp = await requests.login(widget.ip, data.name, data.password);
+    final String firebaseToken = await storage.read(key: "FirebaseToken") ?? "";
+    Map tmp = await requests.login(
+        widget.ip, data.name, data.password, firebaseToken);
     if (tmp.containsKey("error")) {
       riveHelper.playSequentialAnimationControllers([
         riveHelper.addFailController,
@@ -144,12 +146,14 @@ class _LoginWithRiveState extends State<LoginWithRive> {
 
   Future<String?> _signupConfirm(
       String registration_code, SignupData data) async {
+    final String firebaseToken = await storage.read(key: "FirebaseToken") ?? "";
     Map tmp = await requests.confirm_registration(widget.ip, {
       "name": data.additionalSignupData!['Full Name']!,
       "email": data.name!,
       "password": data.password!,
       "phone": data.additionalSignupData!['Phone Number']!,
       "registration_code": registration_code,
+      "firebaseToken": firebaseToken,
     });
     if (tmp.containsKey("message")) {
       riveHelper.playSequentialAnimationControllers([

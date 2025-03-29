@@ -3,7 +3,8 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-Future<Map> login(String ip, String email, String password) async {
+Future<Map> login(
+    String ip, String email, String password, String firebaseToken) async {
   final headers = {
     'Content-Type': 'application/json',
   }; // headers for request
@@ -11,6 +12,7 @@ Future<Map> login(String ip, String email, String password) async {
   final body = jsonEncode({
     "email": email,
     "password": password,
+    "firebaseToken": firebaseToken,
   }); // body for request
   final response =
       await http.post(url, body: body, headers: headers); // post request
@@ -59,6 +61,24 @@ Future<Map> confirm_registration(String ip, Map<String, String> user) async {
   Map tmp = jsonDecode(response.body); // decode the response
   Map data = {"token": tmp["token"], "userID": tmp["userID"]};
   return data; // return the response
+}
+
+Future<Map> logout(
+    String ip, String token, String userID, String firebaseToken) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final url = Uri.http("$ip:8080", "/logout"); // URL for request
+  final body = jsonEncode({"userID": userID, "firebaseToken": firebaseToken});
+  final response =
+      await http.post(url, body: body, headers: headers); // post request
+  if (response.statusCode != 200) {
+    return {
+      "message": "Failed to logout"
+    }; // return error if status code is not 200
+  }
+  return {"message": "Logged out"}; // return the response
 }
 
 Future<Map<String, dynamic>> getUser(

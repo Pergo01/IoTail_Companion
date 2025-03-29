@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:iotail_companion/firebase_options.dart';
 
@@ -22,13 +23,18 @@ class FirebaseApi {
   bool _isFlutterLocalNotificationsInitialized = false;
 
   Future<void> initialize() async {
+    AndroidOptions _getAndroidOptions() => const AndroidOptions(
+          encryptedSharedPreferences: true,
+        );
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     await requestPermission();
     await requestPermission();
     await _setupMessageHandlers();
 
     final token = await _messaging.getToken();
-    print('Token: $token');
+    await FlutterSecureStorage(aOptions: _getAndroidOptions())
+        .write(key: "FirebaseToken", value: token);
+    // print('Token: $token');
   }
 
   Future<void> requestPermission() async {
