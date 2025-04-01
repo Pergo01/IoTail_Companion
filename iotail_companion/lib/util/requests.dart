@@ -452,3 +452,27 @@ Future<Map> cancel_reservation(
   Map tmp = jsonDecode(response.body); // decode the response
   return tmp; // return the response
 }
+
+Future<List<double>> getTemperatureHumidity(String ip) async {
+  final headers = {
+    'Content-Type': 'application/json',
+  }; // headers for request
+  final url = Uri.http("$ip:8082"); // URL for request
+  final response = await http.get(url, headers: headers); // get request
+  if (response.statusCode != 200) {
+    return [-1, -1];
+  }
+  Map tmp = jsonDecode(response.body);
+  List values = tmp["e"];
+  double temperature = 1000;
+  double humidity = 1000;
+  for (Map measurement in values) {
+    if (measurement["n"] == "humidity") {
+      humidity = double.parse(measurement["v"].toString());
+    }
+    if (measurement["n"] == "temperature") {
+      temperature = double.parse(measurement["v"].toString());
+    }
+  }
+  return [temperature, humidity];
+}

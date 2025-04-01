@@ -26,7 +26,7 @@ void main() async {
         encryptedSharedPreferences: true,
       );
   await FlutterSecureStorage(aOptions: _getAndroidOptions())
-      .write(key: "ip", value: "10.0.2.2");
+      .write(key: "ip", value: "192.168.0.243");
   runApp(const MyApp());
 }
 
@@ -85,8 +85,10 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
         Map extra = context.extra as Map;
         return ReservationScreen(
           reservation: extra["reservation"],
+          dog: extra["dog"],
           ip: extra["ip"],
           client: extra["client"], // Pass the client
+          onReservationCancel: extra["onReservationCancel"],
         );
       }),
 ]);

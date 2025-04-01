@@ -401,7 +401,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                             constraints: const BoxConstraints(
                               maxWidth: 60,
                             ),
-                            offset: const Offset(0, 20),
+                            // offset: const Offset(0, -50),
+                            position: PopupMenuPosition.over,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(60),
                             ),

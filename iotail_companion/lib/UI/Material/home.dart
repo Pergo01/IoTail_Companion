@@ -636,18 +636,57 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           if (widget.reservations.elementAt(index).active)
                             IconButton(
                               onPressed: () async {
+                                int kennelID = widget.reservations
+                                    .elementAt(index)
+                                    .kennelID;
                                 await context
                                     .push("/ReservationScreen", extra: {
                                   "reservation":
                                       widget.reservations.elementAt(index),
+                                  "dog": widget.user.dogs.firstWhere((dog) =>
+                                      dog.dogID ==
+                                      widget.reservations
+                                          .elementAt(index)
+                                          .dogID),
                                   "ip": ip,
-                                  "client": widget.client // Pass the client
+                                  "client": widget.client, // Pass the client
+                                  "onReservationCancel": () async {
+                                    final String? token =
+                                        await storage.read(key: "token");
+                                    Map response =
+                                        await requests.cancel_reservation(
+                                            ip!,
+                                            token!,
+                                            widget.reservations
+                                                .elementAt(index)
+                                                .reservationID);
+                                    if (response["message"]
+                                        .contains("Failed")) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(response["message"]),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                              "Reservation cancel successful"),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                      widget.onReservationsUpdated();
+                                    }
+                                  }
                                 });
                                 final builder = MqttPayloadBuilder();
                                 builder
                                     .addString(jsonEncode({"message": "off"}));
                                 widget.client.publishMessage(
-                                    "IoTail/kennel1/camera",
+                                    "IoTail/kennel$kennelID/camera",
                                     MqttQos.exactlyOnce,
                                     builder.payload!);
                                 print(
