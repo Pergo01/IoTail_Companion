@@ -39,6 +39,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   bool isOpen = false;
   late List<Uint8List?> dogPicture;
   late DataMarker selectedShop;
+  late List<DataMarker> markersList;
 
   late Future<User> user;
   late Future<List<Store>> stores;
@@ -93,6 +94,21 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         prenotazioni = getReservations();
       });
       return "Reservation was successful";
+    }
+  }
+
+  Future<String> unlockKennel(Map<String, dynamic> data) async {
+    final Map response =
+        await requests.unlock_kennel(widget.ip!, widget.token!, data);
+    if (response["message"].contains("Failed")) {
+      return response["message"];
+    } else if (response["message"].contains("Kennel")) {
+      return response["message"];
+    } else {
+      setState(() {
+        prenotazioni = getReservations();
+      });
+      return "Kennel was unlocked";
     }
   }
 
@@ -263,6 +279,121 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     return markersList;
   }
 
+  void _showUnlockKennelDialog(BuildContext context, User user,
+      List<Store> storesList, List<Reservation> reservations) {
+    showDialog(
+        context: context,
+        builder: (dialogContext) {
+          final TextEditingController idController = TextEditingController();
+          final TextEditingController codeController = TextEditingController();
+          int kennelID = -1;
+          int unlockCode = -1;
+          return AlertDialog(
+            actionsAlignment: MainAxisAlignment.spaceAround,
+            title: const Text("Unlock Kennel"),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                keyboardType: TextInputType.number,
+                controller: idController,
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    kennelID = int.parse(value);
+                  }
+                },
+                decoration: InputDecoration(
+                    labelText: "Kennel ID",
+                    helperText: "ID of the kennel you want to unlock",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    helperStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 9)),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                keyboardType: TextInputType.number,
+                controller: codeController,
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    unlockCode = int.parse(value);
+                  }
+                },
+                decoration: InputDecoration(
+                    labelText: "Kennel Code",
+                    helperText: "Unlock code of the kennel you want to unlock",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    helperStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 9)),
+              ),
+            ]),
+            actions: [
+              TextButton(
+                  onPressed: () async {
+                    if (kennelID == -1 || unlockCode == -1) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Please fill all fields"),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                      context.pop();
+                      return;
+                    }
+                    Map<String, dynamic> data = {
+                      "dogID": user.dogs[selectedDog].dogID,
+                      "userID": widget.userID,
+                      "dog_size": user.dogs[selectedDog].size,
+                      "kennelID": kennelID,
+                      "unlockCode": unlockCode,
+                    };
+                    final response = await unlockKennel(data);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(response),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                    setState(() {
+                      prenotazioni = getReservations();
+                      stores = getStores();
+                      markersList =
+                          _getMarkersList(storesList, user, reservations);
+                    });
+                    context.pop();
+                  },
+                  child: Text("Unlock")),
+              TextButton(onPressed: () => context.pop(), child: Text("Cancel"))
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -274,412 +405,452 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           dogPicture = [];
-          List<DataMarker> markersList = _getMarkersList(
+          markersList = _getMarkersList(
               snapshot.data![2] as List<Store>,
               snapshot.data![0] as User,
               snapshot.data![1] as List<Reservation>);
           return Scaffold(
-              extendBody: true,
-              appBar: AppBar(
-                centerTitle: true,
-                forceMaterialTransparency: true,
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                title: ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.inversePrimary,
-                      Theme.of(context).colorScheme.tertiary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds),
-                  child: const Text(
-                    'IoTail',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                actions: [
-                  IconButton(
-                      onPressed: () {
-                        context.push("/User", extra: {
-                          "user": snapshot.data![0],
-                          "ip": widget.ip,
-                          "token": widget.token,
-                          "onEdit": () async {
-                            setState(() {
-                              user = getUser();
-                            });
-                          }
-                        });
-                      },
-                      icon: ((snapshot.data![0] as User)
-                                  .profilePicture!
-                                  .isEmpty) ||
-                              (snapshot.data![0] as User).profilePicture == null
-                          ? Icon(Icons.account_circle_outlined,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSecondaryContainer)
-                          : Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              child: CircleAvatar(
-                                backgroundImage: Image.memory(
-                                        (snapshot.data![0] as User)
-                                            .profilePicture!)
-                                    .image,
-                              ),
-                            )),
-                ],
-              ),
-              bottomNavigationBar: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(minWidth: 172, maxHeight: 100),
-                  child: Card(
-                    margin: defaultTargetPlatform == TargetPlatform.iOS
-                        ? EdgeInsets.only(
-                            bottom: height / 30,
-                            left: width / 4 + 12,
-                            right: width / 4 + 12)
-                        : EdgeInsets.symmetric(
-                            vertical: 20, horizontal: width / 4 + 12),
-                    elevation: 1,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        side: isDarkTheme
-                            ? BorderSide(
-                                color: Theme.of(context).colorScheme.primary)
-                            : BorderSide.none),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minWidth: 172),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          IconButton(
-                            iconSize: 24,
-                            onPressed: () {
-                              if (currentPageIndex == 1) {
-                                setState(() {
-                                  controller.reverse();
-                                  currentPageIndex = 0;
-                                });
-                              }
-                            },
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: currentPageIndex == 0
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .secondaryContainer
-                                    : Colors.transparent,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                currentPageIndex == 0
-                                    ? Icons.home
-                                    : Icons.home_outlined,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSecondaryContainer,
-                              ),
-                            ),
-                          ),
-                          PopupMenuButton<int>(
-                            constraints: const BoxConstraints(
-                              maxWidth: 60,
-                            ),
-                            // offset: const Offset(0, -50),
-                            position: PopupMenuPosition.over,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(60),
-                            ),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.5),
-                            icon: dogPicture.isNotEmpty
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 2,
-                                        color: isOpen
-                                            ? Colors.transparent
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                      ),
-                                    ),
-                                    child: !isOpen
-                                        ? CircleAvatar(
-                                            backgroundColor: Colors.transparent,
-                                            foregroundImage: dogPicture[
-                                                            selectedDog] ==
-                                                        null ||
-                                                    dogPicture[selectedDog]!
-                                                        .isEmpty
-                                                ? const AssetImage(
-                                                    "assets/default_cane.jpeg")
-                                                : Image.memory(dogPicture[
-                                                        selectedDog]!)
-                                                    .image,
-                                          )
-                                        : const CircleAvatar(
-                                            backgroundColor:
-                                                Colors.transparent),
-                                  )
-                                : Container(
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 2,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                    ),
-                                    child: IconButton(
-                                      iconSize: 24,
-                                      onPressed: () {
-                                        context.push("/Dog", extra: {
-                                          "dog": Dog(
-                                            dogID: "",
-                                            name: "",
-                                            breedID: -1,
-                                            age: 0,
-                                            sex: 0,
-                                            size: "",
-                                            weight: 0,
-                                            coatType: "",
-                                            allergies: [],
-                                          ),
-                                          "breeds":
-                                              snapshot.data![3] as List<Breed>,
-                                          "userID": widget.userID,
-                                          "ip": widget.ip,
-                                          "token": widget.token,
-                                          "onEdit": () async {
-                                            setState(() {
-                                              user = getUser();
-                                            });
-                                          }
-                                        });
-                                      },
-                                      icon:
-                                          const Icon(Icons.add_circle_outline),
-                                    ),
-                                  ),
-                            onCanceled: () {
-                              setState(() {
-                                isOpen = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isOpen = true;
-                              });
-                            },
-                            onSelected: (int index) {
-                              if (index >= 0) {
-                                setState(() {
-                                  selectedDog = index;
-                                  markersList = _getMarkersList(
-                                      snapshot.data![2] as List<Store>,
-                                      snapshot.data![0] as User,
-                                      snapshot.data![1] as List<Reservation>);
-                                  isOpen = false;
-                                });
-                                _scrollToSelectedDog(index);
-                              } else {
-                                context.push("/Dog", extra: {
-                                  "dog": Dog(
-                                    dogID: "",
-                                    name: "",
-                                    breedID: -1,
-                                    age: 0,
-                                    sex: 0,
-                                    size: "Small",
-                                    weight: 0,
-                                    coatType: "Short",
-                                    allergies: [],
-                                  ),
-                                  "userID": widget.userID,
-                                  "breeds": snapshot.data![3] as List<Breed>,
-                                  "ip": widget.ip,
-                                  "token": widget.token,
-                                  "onEdit": () async {
-                                    setState(() {
-                                      user = getUser();
-                                    });
-                                  }
-                                });
-                                setState(() {
-                                  selectedDog = 0;
-                                  isOpen = false;
-                                });
-                              }
-                            },
-                            itemBuilder: (BuildContext context) {
-                              return [
-                                if (dogPicture.isNotEmpty)
-                                  for (int i = dogPicture.length; i > 0; i--)
-                                    PopupMenuItem<int>(
-                                      value: i - 1,
-                                      child: Animate(
-                                        effects: [
-                                          SlideEffect(
-                                              begin: const Offset(0, 1),
-                                              end: const Offset(0, 0),
-                                              duration: duration,
-                                              curve: Curves.bounceInOut,
-                                              delay: Duration(
-                                                  milliseconds:
-                                                      (dogPicture.length - i) *
-                                                          100)),
-                                        ],
-                                        child: Container(
-                                          width: 60,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              width: 2,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                            ),
-                                          ),
-                                          child: dogPicture[i - 1] == null ||
-                                                  dogPicture[i - 1]!.isEmpty
-                                              ? const CircleAvatar(
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  foregroundImage: AssetImage(
-                                                      "assets/default_cane.jpeg"),
-                                                )
-                                              : CircleAvatar(
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  foregroundImage: Image.memory(
-                                                          dogPicture[i - 1]!)
-                                                      .image,
-                                                ),
-                                        ),
-                                      ),
-                                    ),
-                                PopupMenuItem<int>(
-                                  value: -1,
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 2,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      size: 24,
-                                      Icons.add_circle_outline,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondaryContainer,
-                                    ),
-                                  ),
-                                ),
-                              ];
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 24,
-                            onPressed: () {
-                              if (currentPageIndex == 0) {
-                                setState(() {
-                                  controller.forward();
-                                  currentPageIndex = 1;
-                                });
-                              }
-                            },
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: currentPageIndex == 1
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .secondaryContainer
-                                    : Colors.transparent,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                currentPageIndex == 1
-                                    ? Icons.map
-                                    : Icons.map_outlined,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSecondaryContainer,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            extendBody: true,
+            appBar: AppBar(
+              centerTitle: true,
+              forceMaterialTransparency: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              title: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.inversePrimary,
+                    Theme.of(context).colorScheme.tertiary,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Text(
+                  'IoTail',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              body: RefreshIndicator(
-                onRefresh: () async {
-                  setState(() {
-                    user = getUser();
-                    prenotazioni = getReservations();
-                    stores = getStores();
-                    markersList = _getMarkersList(
-                        snapshot.data![2] as List<Store>,
-                        snapshot.data![0] as User,
-                        snapshot.data![1] as List<Reservation>);
-                  });
-                },
-                child: Stack(
-                  children: [
-                    SlideTransition(
-                      position: controller.drive(
-                        Tween<Offset>(
-                          begin: Offset.zero,
-                          end: const Offset(-1, 0),
-                        ),
-                      ),
-                      child: Home(
-                        selectedDog: selectedDog,
-                        onDogSelected: (int index) {
-                          setState(() {
-                            selectedDog = index;
-                          });
-                        },
-                        scrollController: _scrollController,
-                        onDogUpdated: () {
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      context.push("/User", extra: {
+                        "user": snapshot.data![0],
+                        "ip": widget.ip,
+                        "token": widget.token,
+                        "onEdit": () async {
                           setState(() {
                             user = getUser();
-                            dogPicture = (snapshot.data![0] as User)
-                                .dogs
-                                .map((dog) => dog.picture)
-                                .toList();
                           });
-                        },
-                        onReservationsUpdated: () {
+                        }
+                      });
+                    },
+                    icon: ((snapshot.data![0] as User)
+                                .profilePicture!
+                                .isEmpty) ||
+                            (snapshot.data![0] as User).profilePicture == null
+                        ? Icon(Icons.account_circle_outlined,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSecondaryContainer)
+                        : Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              backgroundImage: Image.memory(
+                                      (snapshot.data![0] as User)
+                                          .profilePicture!)
+                                  .image,
+                            ),
+                          )),
+              ],
+            ),
+            bottomNavigationBar: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(minWidth: 172, maxHeight: 100),
+                child: Card(
+                  margin: defaultTargetPlatform == TargetPlatform.iOS
+                      ? EdgeInsets.only(
+                          bottom: height / 30,
+                          left: width / 4 + 12,
+                          right: width / 4 + 12)
+                      : EdgeInsets.symmetric(
+                          vertical: 20, horizontal: width / 4 + 12),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: isDarkTheme
+                          ? BorderSide(
+                              color: Theme.of(context).colorScheme.primary)
+                          : BorderSide.none),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 172),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          iconSize: 24,
+                          onPressed: () {
+                            if (currentPageIndex == 1) {
+                              setState(() {
+                                controller.reverse();
+                                currentPageIndex = 0;
+                              });
+                            }
+                          },
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: currentPageIndex == 0
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              currentPageIndex == 0
+                                  ? Icons.home
+                                  : Icons.home_outlined,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                        PopupMenuButton<int>(
+                          constraints: const BoxConstraints(
+                            maxWidth: 60,
+                          ),
+                          // offset: const Offset(0, -50),
+                          position: PopupMenuPosition.over,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(60),
+                          ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5),
+                          icon: dogPicture.isNotEmpty
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      width: 2,
+                                      color: isOpen
+                                          ? Colors.transparent
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                    ),
+                                  ),
+                                  child: !isOpen
+                                      ? CircleAvatar(
+                                          backgroundColor: Colors.transparent,
+                                          foregroundImage: dogPicture[
+                                                          selectedDog] ==
+                                                      null ||
+                                                  dogPicture[selectedDog]!
+                                                      .isEmpty
+                                              ? const AssetImage(
+                                                  "assets/default_cane.jpeg")
+                                              : Image.memory(
+                                                      dogPicture[selectedDog]!)
+                                                  .image,
+                                        )
+                                      : const CircleAvatar(
+                                          backgroundColor: Colors.transparent),
+                                )
+                              : Container(
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      width: 2,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                  child: IconButton(
+                                    iconSize: 24,
+                                    onPressed: () {
+                                      context.push("/Dog", extra: {
+                                        "dog": Dog(
+                                          dogID: "",
+                                          name: "",
+                                          breedID: -1,
+                                          age: 0,
+                                          sex: 0,
+                                          size: "",
+                                          weight: 0,
+                                          coatType: "",
+                                          allergies: [],
+                                        ),
+                                        "breeds":
+                                            snapshot.data![3] as List<Breed>,
+                                        "userID": widget.userID,
+                                        "ip": widget.ip,
+                                        "token": widget.token,
+                                        "onEdit": () async {
+                                          setState(() {
+                                            user = getUser();
+                                          });
+                                        }
+                                      });
+                                    },
+                                    icon: const Icon(Icons.add_circle_outline),
+                                  ),
+                                ),
+                          onCanceled: () {
+                            setState(() {
+                              isOpen = false;
+                            });
+                          },
+                          onOpened: () {
+                            setState(() {
+                              isOpen = true;
+                            });
+                          },
+                          onSelected: (int index) {
+                            if (index >= 0) {
+                              setState(() {
+                                selectedDog = index;
+                                markersList = _getMarkersList(
+                                    snapshot.data![2] as List<Store>,
+                                    snapshot.data![0] as User,
+                                    snapshot.data![1] as List<Reservation>);
+                                isOpen = false;
+                              });
+                              _scrollToSelectedDog(index);
+                            } else {
+                              context.push("/Dog", extra: {
+                                "dog": Dog(
+                                  dogID: "",
+                                  name: "",
+                                  breedID: -1,
+                                  age: 0,
+                                  sex: 0,
+                                  size: "Small",
+                                  weight: 0,
+                                  coatType: "Short",
+                                  allergies: [],
+                                ),
+                                "userID": widget.userID,
+                                "breeds": snapshot.data![3] as List<Breed>,
+                                "ip": widget.ip,
+                                "token": widget.token,
+                                "onEdit": () async {
+                                  setState(() {
+                                    user = getUser();
+                                  });
+                                }
+                              });
+                              setState(() {
+                                selectedDog = 0;
+                                isOpen = false;
+                              });
+                            }
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return [
+                              if (dogPicture.isNotEmpty)
+                                for (int i = dogPicture.length; i > 0; i--)
+                                  PopupMenuItem<int>(
+                                    value: i - 1,
+                                    child: Animate(
+                                      effects: [
+                                        SlideEffect(
+                                            begin: const Offset(0, 1),
+                                            end: const Offset(0, 0),
+                                            duration: duration,
+                                            curve: Curves.bounceInOut,
+                                            delay: Duration(
+                                                milliseconds:
+                                                    (dogPicture.length - i) *
+                                                        100)),
+                                      ],
+                                      child: Container(
+                                        width: 60,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            width: 2,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        ),
+                                        child: dogPicture[i - 1] == null ||
+                                                dogPicture[i - 1]!.isEmpty
+                                            ? const CircleAvatar(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                foregroundImage: AssetImage(
+                                                    "assets/default_cane.jpeg"),
+                                              )
+                                            : CircleAvatar(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                foregroundImage: Image.memory(
+                                                        dogPicture[i - 1]!)
+                                                    .image,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                              PopupMenuItem<int>(
+                                value: -1,
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      width: 2,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    size: 24,
+                                    Icons.add_circle_outline,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ];
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 24,
+                          onPressed: () {
+                            if (currentPageIndex == 0) {
+                              setState(() {
+                                controller.forward();
+                                currentPageIndex = 1;
+                              });
+                            }
+                          },
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: currentPageIndex == 1
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              currentPageIndex == 1
+                                  ? Icons.map
+                                  : Icons.map_outlined,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            body: RefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  user = getUser();
+                  prenotazioni = getReservations();
+                  stores = getStores();
+                  markersList = _getMarkersList(
+                      snapshot.data![2] as List<Store>,
+                      snapshot.data![0] as User,
+                      snapshot.data![1] as List<Reservation>);
+                });
+              },
+              child: Stack(
+                children: [
+                  SlideTransition(
+                    position: controller.drive(
+                      Tween<Offset>(
+                        begin: Offset.zero,
+                        end: const Offset(-1, 0),
+                      ),
+                    ),
+                    child: Home(
+                      selectedDog: selectedDog,
+                      onDogSelected: (int index) {
+                        setState(() {
+                          selectedDog = index;
+                        });
+                      },
+                      scrollController: _scrollController,
+                      onDogUpdated: () {
+                        setState(() {
+                          user = getUser();
+                          dogPicture = (snapshot.data![0] as User)
+                              .dogs
+                              .map((dog) => dog.picture)
+                              .toList();
+                        });
+                      },
+                      onReservationsUpdated: () {
+                        setState(() {
+                          prenotazioni = getReservations();
+                          stores = getStores();
+                          markersList = _getMarkersList(
+                              snapshot.data![2] as List<Store>,
+                              snapshot.data![0] as User,
+                              snapshot.data![1] as List<Reservation>);
+                        });
+                      },
+                      user: snapshot.data![0] as User,
+                      breeds: snapshot.data![3] as List<Breed>,
+                      reservations: snapshot.data![1] as List<Reservation>,
+                      shops: snapshot.data![2] as List<Store>,
+                      client: snapshot.data![4] as MqttServerClient,
+                    ),
+                  ),
+                  SlideTransition(
+                    position: controller.drive(
+                      Tween<Offset>(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ),
+                    ),
+                    child: OSMMap(
+                        markerslist: markersList,
+                        onPrepareReservation: (marker) => selectedShop = marker,
+                        onSubmitReservation: () async {
+                          Map<String, dynamic> data = {
+                            "dogID": (snapshot.data![0] as User)
+                                .dogs[selectedDog]
+                                .dogID,
+                            "userID": widget.userID,
+                            "storeID": selectedShop.id,
+                            "dog_size": (snapshot.data![0] as User)
+                                .dogs[selectedDog]
+                                .size,
+                          };
+                          final response = await reserveKennel(data);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(response),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
                           setState(() {
                             prenotazioni = getReservations();
                             stores = getStores();
@@ -688,59 +859,36 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 snapshot.data![0] as User,
                                 snapshot.data![1] as List<Reservation>);
                           });
-                        },
-                        user: snapshot.data![0] as User,
-                        breeds: snapshot.data![3] as List<Breed>,
-                        reservations: snapshot.data![1] as List<Reservation>,
-                        shops: snapshot.data![2] as List<Store>,
-                        client: snapshot.data![4] as MqttServerClient,
-                      ),
-                    ),
-                    SlideTransition(
-                      position: controller.drive(
-                        Tween<Offset>(
-                          begin: const Offset(1, 0),
-                          end: Offset.zero,
-                        ),
-                      ),
-                      child: OSMMap(
-                          markerslist: markersList,
-                          onPrepareReservation: (marker) =>
-                              selectedShop = marker,
-                          onSubmitReservation: () async {
-                            Map<String, dynamic> data = {
-                              "dogID": (snapshot.data![0] as User)
-                                  .dogs[selectedDog]
-                                  .dogID,
-                              "userID": widget.userID,
-                              "storeID": selectedShop.id,
-                              "dog_size": (snapshot.data![0] as User)
-                                  .dogs[selectedDog]
-                                  .size,
-                            };
-                            final response = await reserveKennel(data);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(response),
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                            setState(() {
-                              prenotazioni = getReservations();
-                              stores = getStores();
-                              markersList = _getMarkersList(
-                                  snapshot.data![2] as List<Store>,
-                                  snapshot.data![0] as User,
-                                  snapshot.data![1] as List<Reservation>);
-                            });
-                          }),
-                    ),
-                  ],
-                ),
-              ));
+                        }),
+                  ),
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+                onPressed: () {
+                  _showUnlockKennelDialog(
+                      context,
+                      snapshot.data![0] as User,
+                      snapshot.data![2] as List<Store>,
+                      snapshot.data![1] as List<Reservation>);
+                },
+                label: Text("Unlock Kennel")),
+          );
         } else if (snapshot.hasError) {
           String msg = snapshot.error.toString();
-          return Text(msg);
+          return RefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  user = getUser();
+                  prenotazioni = getReservations();
+                  stores = getStores();
+                  markersList = _getMarkersList(
+                      snapshot.data![2] as List<Store>,
+                      snapshot.data![0] as User,
+                      snapshot.data![1] as List<Reservation>);
+                });
+              },
+              child: Text(msg));
         }
         return Scaffold(
           appBar: AppBar(

@@ -416,6 +416,28 @@ Future<Map> reserve(String ip, String token, Map data) async {
   return tmp; // return the response
 }
 
+Future<Map> unlock_kennel(String ip, String token, Map data) async {
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final url = Uri.http("$ip:8083", "/unlock"); // URL for request
+  final response = await http.post(url,
+      body: jsonEncode(data), headers: headers); // post request
+  if (response.statusCode != 200) {
+    if (response.statusCode == 404) {
+      return {
+        "message": "Kennel not suitable for your dog size or not available"
+      };
+    }
+    return {
+      "message": "Failed to unlock kennel"
+    }; // throw exception if status code is not 200
+  }
+  Map tmp = jsonDecode(response.body); // decode the response
+  return tmp; // return the response
+}
+
 Future<Map> activate_reservation(
     String ip, String token, String reservationID, int unlockCode) async {
   final headers = {

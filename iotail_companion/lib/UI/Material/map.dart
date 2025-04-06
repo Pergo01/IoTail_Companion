@@ -184,6 +184,7 @@ class _OSMMapState extends State<OSMMap> {
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: FloatingActionButton(
+                    heroTag: "Center Position Button",
                     key: const Key("Center Position"),
                     shape: const CircleBorder(),
                     onPressed: () {

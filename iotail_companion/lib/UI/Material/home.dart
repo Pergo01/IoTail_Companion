@@ -125,21 +125,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           "Confirm reservation activation",
           textAlign: TextAlign.center,
         ),
-        content: Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                  "Enter kennel unlock code for kennel ${reservation.kennelID.toString().padLeft(3, '0')}"),
-              TextField(
-                controller: _unlockCodeController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Unlock code",
-                ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+                "Enter kennel unlock code for kennel ${reservation.kennelID.toString().padLeft(3, '0')}"),
+            TextField(
+              controller: _unlockCodeController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Unlock code",
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
