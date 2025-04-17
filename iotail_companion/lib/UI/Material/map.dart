@@ -17,11 +17,13 @@ class OSMMap extends StatefulWidget {
   final List<DataMarker> markerslist;
   final Function(DataMarker) onPrepareReservation;
   final VoidCallback onSubmitReservation;
+  final VoidCallback onRefreshKennels;
   const OSMMap(
       {super.key,
       required this.markerslist,
       required this.onPrepareReservation,
-      required this.onSubmitReservation});
+      required this.onSubmitReservation,
+      required this.onRefreshKennels});
 
   @override
   _OSMMapState createState() => _OSMMapState();
@@ -195,6 +197,22 @@ class _OSMMapState extends State<OSMMap> {
                     },
                     child: Icon(
                       Icons.my_location,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: FloatingActionButton(
+                    heroTag: "Refresh Kennels Button",
+                    key: const Key("Refresh Kennels"),
+                    shape: const CircleBorder(),
+                    onPressed: () => widget.onRefreshKennels(),
+                    child: Icon(
+                      Icons.refresh,
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),

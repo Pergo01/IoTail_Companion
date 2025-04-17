@@ -51,7 +51,7 @@ dependencies:
   flutter_map_compass: ^1.1.1
   flutter_secure_storage: ^9.2.4
   rive: ^0.13.20
-  flutter_native_splash: ^2.4.5
+  flutter_native_splash: ^2.4.6
   flutter_markdown: ^0.7.6+2
   image_picker: ^1.1.2
   http_parser: ^4.1.2
@@ -62,7 +62,7 @@ dependencies:
       ref: master
   firebase_core: ^3.13.0
   firebase_messaging: ^15.2.5
-  flutter_local_notifications: ^19.0.0
+  flutter_local_notifications: ^19.1.0
 
 #dependency_overrides:
 #  flutter_plugin_android_lifecycle: 2.0.27

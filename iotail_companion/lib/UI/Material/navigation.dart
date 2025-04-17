@@ -779,6 +779,12 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       snapshot.data![0] as User,
                       snapshot.data![1] as List<Reservation>);
                 });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Refresh completed"),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
               },
               child: Stack(
                 children: [
@@ -831,35 +837,50 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       ),
                     ),
                     child: OSMMap(
-                        markerslist: markersList,
-                        onPrepareReservation: (marker) => selectedShop = marker,
-                        onSubmitReservation: () async {
-                          Map<String, dynamic> data = {
-                            "dogID": (snapshot.data![0] as User)
-                                .dogs[selectedDog]
-                                .dogID,
-                            "userID": widget.userID,
-                            "storeID": selectedShop.id,
-                            "dog_size": (snapshot.data![0] as User)
-                                .dogs[selectedDog]
-                                .size,
-                          };
-                          final response = await reserveKennel(data);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(response),
-                              duration: const Duration(seconds: 3),
-                            ),
-                          );
-                          setState(() {
-                            prenotazioni = getReservations();
-                            stores = getStores();
-                            markersList = _getMarkersList(
-                                snapshot.data![2] as List<Store>,
-                                snapshot.data![0] as User,
-                                snapshot.data![1] as List<Reservation>);
-                          });
-                        }),
+                      markerslist: markersList,
+                      onPrepareReservation: (marker) => selectedShop = marker,
+                      onSubmitReservation: () async {
+                        Map<String, dynamic> data = {
+                          "dogID": (snapshot.data![0] as User)
+                              .dogs[selectedDog]
+                              .dogID,
+                          "userID": widget.userID,
+                          "storeID": selectedShop.id,
+                          "dog_size": (snapshot.data![0] as User)
+                              .dogs[selectedDog]
+                              .size,
+                        };
+                        final response = await reserveKennel(data);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(response),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        setState(() {
+                          prenotazioni = getReservations();
+                          stores = getStores();
+                          markersList = _getMarkersList(
+                              snapshot.data![2] as List<Store>,
+                              snapshot.data![0] as User,
+                              snapshot.data![1] as List<Reservation>);
+                        });
+                      },
+                      onRefreshKennels: () {
+                        setState(() {
+                          markersList = _getMarkersList(
+                              snapshot.data![2] as List<Store>,
+                              snapshot.data![0] as User,
+                              snapshot.data![1] as List<Reservation>);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text("Kennels refreshed"),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
