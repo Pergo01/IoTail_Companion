@@ -868,6 +868,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       },
                       onRefreshKennels: () {
                         setState(() {
+                          stores = getStores();
                           markersList = _getMarkersList(
                               snapshot.data![2] as List<Store>,
                               snapshot.data![0] as User,

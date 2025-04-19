@@ -111,201 +111,216 @@ Page resource error:
             ),
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: RefreshIndicator(
-            onRefresh: () async {
-              webController.reload();
-              tempHumid = getTemperatureHumidity();
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Center(
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Dog: ${widget.dog.name}",
-                            style: TextStyle(fontSize: 40),
-                          ),
-                          Text(
-                            "Kennel: ${widget.reservation.kennelID}",
-                            style: TextStyle(fontSize: 30),
-                          ),
-                          Text(
-                            "Reserved at: ${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).hour}:${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).minute}",
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Time since reservation: ",
-                                style: TextStyle(fontSize: 20),
-                              ),
-                              SlideCountdown(
-                                duration: remainingTime,
-                                countUp: true,
-                                infinityCountUp: true,
-                                countUpAtDuration: true,
-                                slideDirection: SlideDirection.down,
-                                separator: ":",
-                                separatorStyle: TextStyle(fontSize: 20),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                ),
-                                style: const TextStyle(fontSize: 20),
-                              )
-                            ],
-                          ),
-                          Stack(alignment: Alignment.center, children: [
-                            Container(
-                              height: 200,
-                              width: MediaQuery.of(context).size.width,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8)),
-                              // Set a fixed height for the WebView
-                              child: showCamera
-                                  ? FutureBuilder(
-                                      future: isCameraReady,
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          return WebViewWidget(
-                                            controller: webController,
-                                          );
-                                        }
-                                        return Center(
-                                            child: CircularProgressIndicator());
-                                      },
-                                    )
-                                  : Container(),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                webController.reload();
+                setState(() {
+                  tempHumid = getTemperatureHumidity();
+                });
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SingleChildScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Dog: ${widget.dog.name}",
+                              style: TextStyle(fontSize: 40),
                             ),
-                            if (!showCamera)
-                              ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primary),
-                                      foregroundColor: WidgetStateProperty.all(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary)),
-                                  onPressed: () async {
-                                    final builder = MqttPayloadBuilder();
-                                    builder.addString(jsonEncode({
-                                      "message": !showCamera ? "on" : "off"
-                                    }));
-                                    widget.client.publishMessage(
-                                        "IoTail/kennel1/camera",
-                                        MqttQos.exactlyOnce,
-                                        builder.payload!);
-                                    if (!showCamera) {
-                                      setState(() {
-                                        showCamera = !showCamera;
-                                      });
-                                      isCameraReady = waitForCamera();
-                                    } else {
-                                      setState(() {
-                                        showCamera = !showCamera;
-                                      });
-                                    }
-                                  },
-                                  child: Text(showCamera
-                                      ? "Hide camera"
-                                      : "Show camera")),
-                            if (showCamera)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        showCamera = !showCamera;
-                                      });
+                            Text(
+                              "Kennel: ${widget.reservation.kennelID}",
+                              style: TextStyle(fontSize: 30),
+                            ),
+                            Text(
+                              "Reserved at: ${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).hour}:${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).minute}",
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Time since reservation: ",
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                                SlideCountdown(
+                                  duration: remainingTime,
+                                  countUp: true,
+                                  infinityCountUp: true,
+                                  countUpAtDuration: true,
+                                  slideDirection: SlideDirection.down,
+                                  separator: ":",
+                                  separatorStyle: TextStyle(fontSize: 20),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                  ),
+                                  style: const TextStyle(fontSize: 20),
+                                )
+                              ],
+                            ),
+                            Stack(alignment: Alignment.center, children: [
+                              Container(
+                                height: 200,
+                                width: MediaQuery.of(context).size.width,
+                                clipBehavior: Clip.hardEdge,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8)),
+                                // Set a fixed height for the WebView
+                                child: showCamera
+                                    ? FutureBuilder(
+                                        future: isCameraReady,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            return Container(
+                                              clipBehavior: Clip.hardEdge,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(6)),
+                                              child: WebViewWidget(
+                                                controller: webController,
+                                              ),
+                                            );
+                                          }
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        },
+                                      )
+                                    : Container(),
+                              ),
+                              if (!showCamera)
+                                ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            WidgetStateProperty.all(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
+                                        foregroundColor:
+                                            WidgetStateProperty.all(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary)),
+                                    onPressed: () async {
+                                      final builder = MqttPayloadBuilder();
+                                      builder.addString(jsonEncode({
+                                        "message": !showCamera ? "on" : "off"
+                                      }));
+                                      widget.client.publishMessage(
+                                          "IoTail/kennel1/camera",
+                                          MqttQos.exactlyOnce,
+                                          builder.payload!);
+                                      if (!showCamera) {
+                                        setState(() {
+                                          showCamera = !showCamera;
+                                        });
+                                        isCameraReady = waitForCamera();
+                                      } else {
+                                        setState(() {
+                                          showCamera = !showCamera;
+                                        });
+                                      }
                                     },
-                                    icon: Icon(Icons.close)),
-                              )
-                          ]),
-                          Divider(
-                            thickness: 2,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const Text(
-                            "Current environment measurements:",
-                            style: TextStyle(fontSize: 25),
-                          ),
-                          FutureBuilder(
-                              future: tempHumid,
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
+                                    child: Text(showCamera
+                                        ? "Hide camera"
+                                        : "Show camera")),
+                              if (showCamera)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          showCamera = !showCamera;
+                                        });
+                                      },
+                                      icon: Icon(Icons.close)),
+                                )
+                            ]),
+                            Divider(
+                              thickness: 2,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const Text(
+                              "Current environment measurements:",
+                              style: TextStyle(fontSize: 25),
+                            ),
+                            FutureBuilder(
+                                future: tempHumid,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              "Temperature: ${snapshot.data![0]}°C",
+                                              style: TextStyle(fontSize: 20)),
+                                          Text(
+                                              "Humidity: ${snapshot.data![1]}%",
+                                              style: TextStyle(fontSize: 20)),
+                                        ]);
+                                  }
+                                  if (snapshot.hasError) {
+                                    return Text("Error: ${snapshot.error}");
+                                  }
                                   return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                            "Temperature: ${snapshot.data![0]}°C",
+                                        Text("Temperature: ...°C",
                                             style: TextStyle(fontSize: 20)),
-                                        Text("Humidity: ${snapshot.data![1]}%",
+                                        Text("Humidity: ...%",
                                             style: TextStyle(fontSize: 20)),
                                       ]);
-                                }
-                                if (snapshot.hasError) {
-                                  return Text("Error: ${snapshot.error}");
-                                }
-                                return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Temperature: ...°C",
-                                          style: TextStyle(fontSize: 20)),
-                                      Text("Humidity: ...%",
-                                          style: TextStyle(fontSize: 20)),
-                                    ]);
-                              }),
-                        ]),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red, width: 2),
-                      borderRadius: BorderRadius.circular(30)),
-                  child: HoldableButton(
-                    loadingType: LoadingType.fillingLoading,
-                    buttonColor: Theme.of(context).colorScheme.surface,
-                    loadingColor: Colors.red,
-                    duration: 5,
-                    radius: 30,
-                    beginFillingPoint: Alignment.centerLeft,
-                    endFillingPoint: Alignment.centerRight,
-                    resetAfterFinish: true,
-                    onConfirm: () {
-                      widget.onReservationCancel();
-                      context.pop();
-                    },
-                    strokeWidth: 1,
-                    hasVibrate: true,
-                    width: MediaQuery.of(context).size.width,
-                    height: 50,
-                    child: const Text(
-                      "HOLD TO CONFIRM TERMINATION",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                                }),
+                          ]),
                     ),
                   ),
-                )
-              ],
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.red, width: 2),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: HoldableButton(
+                      loadingType: LoadingType.fillingLoading,
+                      buttonColor: Theme.of(context).colorScheme.surface,
+                      loadingColor: Colors.red,
+                      duration: 5,
+                      radius: 10,
+                      beginFillingPoint: Alignment.centerLeft,
+                      endFillingPoint: Alignment.centerRight,
+                      resetAfterFinish: true,
+                      onConfirm: () {
+                        widget.onReservationCancel();
+                        context.pop();
+                      },
+                      strokeWidth: 1,
+                      hasVibrate: true,
+                      width: MediaQuery.of(context).size.width,
+                      height: 50,
+                      child: const Text(
+                        "HOLD TO CONFIRM TERMINATION",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ));
