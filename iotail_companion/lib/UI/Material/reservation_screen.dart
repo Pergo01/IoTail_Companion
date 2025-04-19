@@ -217,9 +217,8 @@ Page resource error:
                                                     .onPrimary)),
                                     onPressed: () async {
                                       final builder = MqttPayloadBuilder();
-                                      builder.addString(jsonEncode({
-                                        "message": !showCamera ? "on" : "off"
-                                      }));
+                                      builder.addString(
+                                          jsonEncode({"message": "on"}));
                                       widget.client.publishMessage(
                                           "IoTail/kennel1/camera",
                                           MqttQos.exactlyOnce,
@@ -235,9 +234,7 @@ Page resource error:
                                         });
                                       }
                                     },
-                                    child: Text(showCamera
-                                        ? "Hide camera"
-                                        : "Show camera")),
+                                    child: const Text("Show camera")),
                               if (showCamera)
                                 Positioned(
                                   top: 0,
@@ -247,6 +244,13 @@ Page resource error:
                                         setState(() {
                                           showCamera = !showCamera;
                                         });
+                                        final builder = MqttPayloadBuilder();
+                                        builder.addString(
+                                            jsonEncode({"message": "off"}));
+                                        widget.client.publishMessage(
+                                            "IoTail/kennel1/camera",
+                                            MqttQos.exactlyOnce,
+                                            builder.payload!);
                                       },
                                       icon: Icon(Icons.close)),
                                 )
