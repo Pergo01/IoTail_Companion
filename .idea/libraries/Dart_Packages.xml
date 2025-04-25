@@ -240,6 +240,13 @@
             </list>
           </value>
         </entry>
+        <entry key="fl_chart">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/fl_chart-0.71.0/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="floating_bottom_bar">
           <value>
             <list>
@@ -1203,6 +1210,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_messaging_platform_interface-4.6.5/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_messaging_web-3.10.5/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fixnum-1.1.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fl_chart-0.71.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/floating_bottom_bar-0.0.3/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_animate-4.5.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_compass-0.8.1/lib" />

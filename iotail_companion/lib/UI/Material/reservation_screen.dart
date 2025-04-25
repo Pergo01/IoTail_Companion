@@ -85,7 +85,7 @@ Page resource error:
   @override
   Widget build(BuildContext context) {
     DateTime startTime = DateTime.fromMillisecondsSinceEpoch(
-        widget.reservation.timestamp * 1000);
+        widget.reservation.activationTime! * 1000);
     Duration remainingTime = DateTime.now().difference(startTime);
     return Scaffold(
         appBar: AppBar(
@@ -140,7 +140,7 @@ Page resource error:
                               style: TextStyle(fontSize: 30),
                             ),
                             Text(
-                              "Reserved at: ${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).hour}:${DateTime.fromMillisecondsSinceEpoch(widget.reservation.timestamp * 1000, isUtc: false).minute}",
+                              "Activated at: ${DateTime.fromMillisecondsSinceEpoch(widget.reservation.activationTime! * 1000, isUtc: false).hour.toString().padLeft(2, '0')}:${DateTime.fromMillisecondsSinceEpoch(widget.reservation.activationTime! * 1000, isUtc: false).minute.toString().padLeft(2, '0')}",
                               style: TextStyle(fontSize: 20),
                             ),
                             Row(
@@ -148,7 +148,7 @@ Page resource error:
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Time since reservation: ",
+                                  "Time since activation: ",
                                   style: TextStyle(fontSize: 20),
                                 ),
                                 SlideCountdown(

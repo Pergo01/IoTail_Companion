@@ -5,7 +5,8 @@ class Reservation {
   final int kennelID;
   final int storeID;
   final bool active;
-  final int timestamp;
+  final int reservationTime;
+  final int? activationTime;
 
   Reservation({
     required this.userID,
@@ -14,18 +15,19 @@ class Reservation {
     required this.kennelID,
     required this.storeID,
     required this.active,
-    required this.timestamp,
+    required this.reservationTime,
+    this.activationTime,
   });
 
   factory Reservation.fromJson(Map<String, dynamic> json) {
     return Reservation(
-      userID: json['userID'],
-      reservationID: json['reservationID'],
-      dogID: json['dogID'],
-      kennelID: json['kennelID'],
-      storeID: json['storeID'],
-      active: json['active'],
-      timestamp: json['timestamp'],
-    );
+        userID: json['userID'],
+        reservationID: json['reservationID'],
+        dogID: json['dogID'],
+        kennelID: json['kennelID'],
+        storeID: json['storeID'],
+        active: json['active'],
+        reservationTime: json['reservationTime'],
+        activationTime: json['activationTime']);
   }
 }

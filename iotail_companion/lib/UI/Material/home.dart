@@ -394,7 +394,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
                   DateTime startTime = DateTime.fromMillisecondsSinceEpoch(
-                      widget.reservations.elementAt(index).timestamp * 1000);
+                      widget.reservations.elementAt(index).reservationTime *
+                          1000);
                   DateTime endtime = startTime.add(Duration(minutes: 30));
                   Duration remainingTime = endtime.difference(DateTime.now());
                   return Dismissible(
