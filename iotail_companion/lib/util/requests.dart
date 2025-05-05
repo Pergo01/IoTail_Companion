@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -497,4 +499,67 @@ Future<List<double>> getTemperatureHumidity(String ip) async {
     }
   }
   return [temperature, humidity];
+}
+
+Future<Map> getKennelmeasurements(
+    String ip, int kennelID, int activationTime) async {
+  String settingsString = await rootBundle.loadString("assets/settings.json");
+  Map<String, dynamic> settings = jsonDecode(settingsString);
+  final int channelID = settings["channel_id"];
+  final String readApiKey = settings["thingspeak_read_api_key"];
+  final dateTimeUtc =
+      DateTime.fromMillisecondsSinceEpoch(activationTime * 1000, isUtc: true);
+  // Formatta DateTime in AAAA-MM-GG HH:NN:SS
+  final year = dateTimeUtc.year.toString();
+  final month = dateTimeUtc.month.toString().padLeft(2, '0');
+  final day = dateTimeUtc.day.toString().padLeft(2, '0');
+  final hour = dateTimeUtc.hour.toString().padLeft(2, '0');
+  final minute = dateTimeUtc.minute.toString().padLeft(2, '0');
+  final second = dateTimeUtc.second.toString().padLeft(2, '0');
+  // Crea la stringa finale con il separatore %20
+  final formattedStartDate = '$year-$month-$day $hour:$minute:$second';
+  final Map<String, String> params = {
+    "api_key": readApiKey,
+    "start": formattedStartDate
+  };
+  final url = Uri.https(
+      "api.thingspeak.com", "/channels/$channelID/feeds.json", params);
+  final response = await http.get(url); // post request
+  if (response.statusCode != 200) {
+    return {"Error": "Failed to get kennel measurements"};
+  } // throw exception if status code is not 200
+  Map<String, dynamic> tmp = jsonDecode(response.body); // decode the response
+  List<Map<String, dynamic>> feeds =
+      List<Map<String, dynamic>>.from(tmp["feeds"]); // decode the response
+  final Map<String, dynamic> kennelMeasurements = {
+    "temperature": [],
+    "humidity": [],
+  };
+  for (var feed in feeds) {
+    debugPrint("${feed["entry_id"]}");
+    if (feed["entry_id"] == 112) {
+      debugPrint("Found entry id 112");
+    }
+    if (int.parse(feed["field4"]) == kennelID) {
+      if (feed["field1"] != null) {
+        double? temp = double.tryParse(feed["field1"]);
+        if (temp != null) {
+          kennelMeasurements["temperature"].add({
+            "timestamp": DateTime.parse(feed["created_at"]),
+            "value": double.parse(feed["field1"])
+          });
+        }
+      }
+      if (feed["field2"] != null) {
+        double? hum = double.tryParse(feed["field2"]);
+        if (hum != null) {
+          kennelMeasurements["humidity"].add({
+            "timestamp": DateTime.parse(feed["created_at"]),
+            "value": double.parse(feed["field2"])
+          });
+        }
+      }
+    }
+  }
+  return kennelMeasurements;
 }
