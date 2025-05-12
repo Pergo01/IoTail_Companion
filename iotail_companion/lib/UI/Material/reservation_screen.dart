@@ -407,12 +407,14 @@ Page resource error:
                                                 verticalInterval: intervalX,
                                                 getDrawingHorizontalLine:
                                                     (value) => FlLine(
+                                                  dashArray: [20, 5],
                                                   color: Colors.grey
                                                       .withOpacity(0.3),
                                                   strokeWidth: 1,
                                                 ),
                                                 getDrawingVerticalLine:
                                                     (value) => FlLine(
+                                                  dashArray: [20, 5],
                                                   color: Colors.grey
                                                       .withOpacity(0.3),
                                                   strokeWidth: 1,
@@ -490,6 +492,20 @@ Page resource error:
                                               lineTouchData: LineTouchData(
                                                 touchTooltipData:
                                                     LineTouchTooltipData(
+                                                  tooltipBorder: BorderSide(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
+                                                    width: 1,
+                                                  ),
+                                                  getTooltipColor:
+                                                      (touchedSpot) => Theme.of(
+                                                    context,
+                                                  )
+                                                          .colorScheme
+                                                          .primary
+                                                          .withValues(
+                                                              alpha: 0.7),
                                                   getTooltipItems:
                                                       (List<LineBarSpot>
                                                           touchedBarSpots) {
@@ -541,10 +557,17 @@ Page resource error:
                                                               .toDouble()))
                                                       .toList(),
                                                   isCurved: true,
-                                                  barWidth: 3,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
+                                                  barWidth: 5,
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .inversePrimary,
+                                                    ],
+                                                  ),
                                                   isStrokeCapRound: true,
                                                   dotData:
                                                       FlDotData(show: true),
@@ -555,16 +578,12 @@ Page resource error:
                                                         Theme.of(context)
                                                             .colorScheme
                                                             .primary
-                                                            .withOpacity(0.3),
+                                                            .withOpacity(0.7),
                                                         Theme.of(context)
                                                             .colorScheme
-                                                            .primary
-                                                            .withOpacity(0.0),
+                                                            .inversePrimary
+                                                            .withOpacity(0.3),
                                                       ],
-                                                      begin:
-                                                          Alignment.topCenter,
-                                                      end: Alignment
-                                                          .bottomCenter,
                                                     ),
                                                   ),
                                                 ),
@@ -596,12 +615,14 @@ Page resource error:
                                                 verticalInterval: intervalXH,
                                                 getDrawingHorizontalLine:
                                                     (value) => FlLine(
+                                                  dashArray: [20, 5],
                                                   color: Colors.grey
                                                       .withOpacity(0.3),
                                                   strokeWidth: 1,
                                                 ),
                                                 getDrawingVerticalLine:
                                                     (value) => FlLine(
+                                                  dashArray: [20, 5],
                                                   color: Colors.grey
                                                       .withOpacity(0.3),
                                                   strokeWidth: 1,
@@ -679,6 +700,20 @@ Page resource error:
                                               lineTouchData: LineTouchData(
                                                 touchTooltipData:
                                                     LineTouchTooltipData(
+                                                  tooltipBorder: BorderSide(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .tertiaryContainer,
+                                                    width: 1,
+                                                  ),
+                                                  getTooltipColor:
+                                                      (touchedSpot) => Theme.of(
+                                                    context,
+                                                  )
+                                                          .colorScheme
+                                                          .tertiary
+                                                          .withValues(
+                                                              alpha: 0.7),
                                                   getTooltipItems:
                                                       (List<LineBarSpot>
                                                           touchedBarSpots) {
@@ -730,10 +765,17 @@ Page resource error:
                                                               .toDouble()))
                                                       .toList(),
                                                   isCurved: true,
-                                                  barWidth: 3,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .tertiary,
+                                                  barWidth: 5,
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .tertiary,
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .tertiaryContainer,
+                                                    ],
+                                                  ),
                                                   isStrokeCapRound: true,
                                                   dotData:
                                                       FlDotData(show: true),
@@ -741,19 +783,19 @@ Page resource error:
                                                     show: true,
                                                     gradient: LinearGradient(
                                                       colors: [
-                                                        Theme.of(context)
+                                                        Theme.of(
+                                                          context,
+                                                        )
                                                             .colorScheme
                                                             .tertiary
+                                                            .withOpacity(0.7),
+                                                        Theme.of(
+                                                          context,
+                                                        )
+                                                            .colorScheme
+                                                            .tertiaryContainer
                                                             .withOpacity(0.3),
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .tertiary
-                                                            .withOpacity(0.0),
                                                       ],
-                                                      begin:
-                                                          Alignment.topCenter,
-                                                      end: Alignment
-                                                          .bottomCenter,
                                                     ),
                                                   ),
                                                 ),
