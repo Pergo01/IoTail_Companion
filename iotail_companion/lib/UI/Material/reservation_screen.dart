@@ -396,6 +396,12 @@ Page resource error:
                                         SizedBox(
                                           height: 250,
                                           child: LineChart(
+                                            transformationConfig:
+                                                FlTransformationConfig(
+                                              scaleAxis: FlScaleAxis.horizontal,
+                                              panEnabled: true,
+                                              scaleEnabled: true,
+                                            ),
                                             LineChartData(
                                               minY: minY,
                                               maxY: maxY,
@@ -604,6 +610,12 @@ Page resource error:
                                         SizedBox(
                                           height: 250,
                                           child: LineChart(
+                                            transformationConfig:
+                                                FlTransformationConfig(
+                                              scaleAxis: FlScaleAxis.horizontal,
+                                              panEnabled: true,
+                                              scaleEnabled: true,
+                                            ),
                                             LineChartData(
                                               minY: minH,
                                               maxY: maxH,
