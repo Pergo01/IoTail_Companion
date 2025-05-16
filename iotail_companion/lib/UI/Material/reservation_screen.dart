@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:math';
-import 'package:fl_chart/fl_chart.dart';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:holdable_button/holdable_button.dart';
 import 'package:holdable_button/utils/utils.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:slide_countdown/slide_countdown.dart';
@@ -55,12 +55,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   Future<Map> getKennelMeasurements() async {
-    int initTime = max(widget.reservation.activationTime!,
-        (DateTime.now().millisecondsSinceEpoch / 1000).round() - 600);
-    Map data = await requests.getKennelmeasurements(
-        widget.ip,
-        widget.reservation.kennelID,
-        initTime /*widget.reservation.activationTime!*/);
+    // int initTime = max(widget.reservation.activationTime!,
+    //     (DateTime.now().millisecondsSinceEpoch / 1000).round() - 600);
+    Map data = await requests.getKennelmeasurements(widget.ip,
+        widget.reservation.kennelID, widget.reservation.activationTime!);
     return data;
   }
 
@@ -306,13 +304,12 @@ Page resource error:
                               if (snapshot.hasError) {
                                 return Text("Error: ${snapshot.error}");
                               }
-                              // ... (codice precedente del FutureBuilder)
                               if (snapshot.hasData) {
                                 // Trova min e max temperatura per l'asse Y
-                                final temperatures =
-                                    snapshot.data!["temperature"] as List;
-                                final humidities =
-                                    snapshot.data!["humidity"] as List;
+                                final List<Map> temperatures = List<Map>.from(
+                                    snapshot.data!["temperature"]);
+                                final List<Map> humidities =
+                                    List<Map>.from(snapshot.data!["humidity"]);
 
                                 if (temperatures.isEmpty &&
                                     humidities.isEmpty) {
@@ -338,7 +335,7 @@ Page resource error:
                                       .map<double>((e) => e["value"].toDouble())
                                       .reduce((a, b) => a > b ? a : b);
                                   paddingY = (maxY - minY) * 0.1;
-                                  if (paddingY < 1) paddingY = 1;
+                                  if (paddingY < 1) paddingY = 0.5;
                                   minY -= paddingY;
                                   maxY += paddingY;
                                   final firstTimestamp = (temperatures
@@ -386,186 +383,411 @@ Page resource error:
                                         CrossAxisAlignment.start,
                                     children: [
                                       if (temperatures.isNotEmpty) ...[
-                                        const Text(
-                                          "Kennel Temperature chart in the last 10 minutes:",
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold),
-                                        ),
                                         const SizedBox(height: 8),
+                                        // SizedBox(
+                                        //   height: 250,
+                                        //   child: LineChart(
+                                        //     transformationConfig:
+                                        //         FlTransformationConfig(
+                                        //       scaleAxis: FlScaleAxis.horizontal,
+                                        //       panEnabled: true,
+                                        //       scaleEnabled: true,
+                                        //     ),
+                                        //     LineChartData(
+                                        //       minY: minY,
+                                        //       maxY: maxY,
+                                        //       gridData: FlGridData(
+                                        //         show: true,
+                                        //         drawVerticalLine: true,
+                                        //         horizontalInterval:
+                                        //             (maxY - minY) / 5,
+                                        //         verticalInterval: intervalX,
+                                        //         getDrawingHorizontalLine:
+                                        //             (value) => FlLine(
+                                        //           dashArray: [20, 5],
+                                        //           color: Colors.grey
+                                        //               .withOpacity(0.3),
+                                        //           strokeWidth: 1,
+                                        //         ),
+                                        //         getDrawingVerticalLine:
+                                        //             (value) => FlLine(
+                                        //           dashArray: [20, 5],
+                                        //           color: Colors.grey
+                                        //               .withOpacity(0.3),
+                                        //           strokeWidth: 1,
+                                        //         ),
+                                        //       ),
+                                        //       titlesData: FlTitlesData(
+                                        //         show: true,
+                                        //         leftTitles: AxisTitles(
+                                        //           axisNameWidget: const Text(
+                                        //               "Temperature (°C)"),
+                                        //           sideTitles: SideTitles(
+                                        //             showTitles: true,
+                                        //             reservedSize: 30,
+                                        //             interval: 1,
+                                        //             getTitlesWidget:
+                                        //                 (value, meta) =>
+                                        //                     SideTitleWidget(
+                                        //               meta: meta,
+                                        //               child: Text(
+                                        //                   value.toStringAsFixed(
+                                        //                       1),
+                                        //                   style:
+                                        //                       const TextStyle(
+                                        //                           fontSize:
+                                        //                               10)),
+                                        //             ),
+                                        //           ),
+                                        //         ),
+                                        //         topTitles: const AxisTitles(
+                                        //             sideTitles: SideTitles(
+                                        //                 showTitles: false)),
+                                        //         rightTitles: const AxisTitles(
+                                        //             sideTitles: SideTitles(
+                                        //                 showTitles: false)),
+                                        //         bottomTitles: AxisTitles(
+                                        //           axisNameWidget:
+                                        //               const Text("Time"),
+                                        //           sideTitles: SideTitles(
+                                        //             showTitles: true,
+                                        //             reservedSize: 30,
+                                        //             interval: intervalX,
+                                        //             getTitlesWidget:
+                                        //                 (value, meta) {
+                                        //               final dateTime = DateTime
+                                        //                   .fromMillisecondsSinceEpoch(
+                                        //                       value.toInt());
+                                        //               final hour = dateTime.hour
+                                        //                   .toString()
+                                        //                   .padLeft(2, '0');
+                                        //               final minute = dateTime
+                                        //                   .minute
+                                        //                   .toString()
+                                        //                   .padLeft(2, '0');
+                                        //               return SideTitleWidget(
+                                        //                 meta: meta,
+                                        //                 space: 4,
+                                        //                 angle: -0.5,
+                                        //                 child: Text(
+                                        //                     '$hour:$minute',
+                                        //                     style:
+                                        //                         const TextStyle(
+                                        //                             fontSize:
+                                        //                                 10)),
+                                        //               );
+                                        //             },
+                                        //           ),
+                                        //         ),
+                                        //       ),
+                                        //       borderData: FlBorderData(
+                                        //         show: true,
+                                        //         border: Border.all(
+                                        //             color: Colors.grey,
+                                        //             width: 1),
+                                        //       ),
+                                        //       lineTouchData: LineTouchData(
+                                        //         touchTooltipData:
+                                        //             LineTouchTooltipData(
+                                        //           tooltipBorder: BorderSide(
+                                        //             color: Theme.of(context)
+                                        //                 .colorScheme
+                                        //                 .inversePrimary,
+                                        //             width: 1,
+                                        //           ),
+                                        //           getTooltipColor:
+                                        //               (touchedSpot) => Theme.of(
+                                        //             context,
+                                        //           )
+                                        //                   .colorScheme
+                                        //                   .primary
+                                        //                   .withValues(
+                                        //                       alpha: 0.7),
+                                        //           getTooltipItems:
+                                        //               (List<LineBarSpot>
+                                        //                   touchedBarSpots) {
+                                        //             return touchedBarSpots
+                                        //                 .map((barSpot) {
+                                        //               final flSpot = barSpot;
+                                        //               final timestamp = DateTime
+                                        //                   .fromMillisecondsSinceEpoch(
+                                        //                       flSpot.x.toInt());
+                                        //               final time =
+                                        //                   '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+                                        //               return LineTooltipItem(
+                                        //                 '${flSpot.y.toStringAsFixed(1)} °C\n',
+                                        //                 const TextStyle(
+                                        //                     color: Colors.white,
+                                        //                     fontWeight:
+                                        //                         FontWeight
+                                        //                             .bold),
+                                        //                 children: [
+                                        //                   TextSpan(
+                                        //                     text: time,
+                                        //                     style: TextStyle(
+                                        //                       color: Colors
+                                        //                           .grey[300],
+                                        //                       fontWeight:
+                                        //                           FontWeight
+                                        //                               .normal,
+                                        //                       fontSize: 12,
+                                        //                     ),
+                                        //                   ),
+                                        //                 ],
+                                        //                 textAlign:
+                                        //                     TextAlign.center,
+                                        //               );
+                                        //             }).toList();
+                                        //           },
+                                        //         ),
+                                        //         handleBuiltInTouches: true,
+                                        //       ),
+                                        //       lineBarsData: [
+                                        //         LineChartBarData(
+                                        //           spots: temperatures
+                                        //               .map<FlSpot>((e) => FlSpot(
+                                        //                   (e["timestamp"]
+                                        //                           as DateTime)
+                                        //                       .millisecondsSinceEpoch
+                                        //                       .toDouble(),
+                                        //                   e["value"]
+                                        //                       .toDouble()))
+                                        //               .toList(),
+                                        //           isCurved: true,
+                                        //           barWidth: 5,
+                                        //           gradient: LinearGradient(
+                                        //             colors: [
+                                        //               Theme.of(context)
+                                        //                   .colorScheme
+                                        //                   .primary,
+                                        //               Theme.of(context)
+                                        //                   .colorScheme
+                                        //                   .inversePrimary,
+                                        //             ],
+                                        //           ),
+                                        //           isStrokeCapRound: true,
+                                        //           dotData:
+                                        //               FlDotData(show: true),
+                                        //           belowBarData: BarAreaData(
+                                        //             show: true,
+                                        //             gradient: LinearGradient(
+                                        //               colors: [
+                                        //                 Theme.of(context)
+                                        //                     .colorScheme
+                                        //                     .primary
+                                        //                     .withOpacity(0.7),
+                                        //                 Theme.of(context)
+                                        //                     .colorScheme
+                                        //                     .inversePrimary
+                                        //                     .withOpacity(0.3),
+                                        //               ],
+                                        //             ),
+                                        //           ),
+                                        //         ),
+                                        //       ],
+                                        //     ),
+                                        //   ),
+                                        // ),
                                         SizedBox(
-                                          height: 250,
-                                          child: LineChart(
-                                            transformationConfig:
-                                                FlTransformationConfig(
-                                              scaleAxis: FlScaleAxis.horizontal,
-                                              panEnabled: true,
-                                              scaleEnabled: true,
-                                            ),
-                                            LineChartData(
-                                              minY: minY,
-                                              maxY: maxY,
-                                              gridData: FlGridData(
-                                                show: true,
-                                                drawVerticalLine: true,
-                                                horizontalInterval:
-                                                    (maxY - minY) / 5,
-                                                verticalInterval: intervalX,
-                                                getDrawingHorizontalLine:
-                                                    (value) => FlLine(
-                                                  dashArray: [20, 5],
-                                                  color: Colors.grey
-                                                      .withOpacity(0.3),
-                                                  strokeWidth: 1,
-                                                ),
-                                                getDrawingVerticalLine:
-                                                    (value) => FlLine(
-                                                  dashArray: [20, 5],
-                                                  color: Colors.grey
-                                                      .withOpacity(0.3),
-                                                  strokeWidth: 1,
-                                                ),
-                                              ),
-                                              titlesData: FlTitlesData(
-                                                show: true,
-                                                leftTitles: AxisTitles(
-                                                  axisNameWidget: const Text(
-                                                      "Temperature (°C)"),
-                                                  sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    reservedSize: 30,
-                                                    interval: 1,
-                                                    getTitlesWidget:
-                                                        (value, meta) =>
-                                                            SideTitleWidget(
-                                                      meta: meta,
-                                                      child: Text(
-                                                          value.toStringAsFixed(
-                                                              1),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      10)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                topTitles: const AxisTitles(
-                                                    sideTitles: SideTitles(
-                                                        showTitles: false)),
-                                                rightTitles: const AxisTitles(
-                                                    sideTitles: SideTitles(
-                                                        showTitles: false)),
-                                                bottomTitles: AxisTitles(
-                                                  axisNameWidget:
-                                                      const Text("Time"),
-                                                  sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    reservedSize: 30,
-                                                    interval: intervalX,
-                                                    getTitlesWidget:
-                                                        (value, meta) {
-                                                      final dateTime = DateTime
-                                                          .fromMillisecondsSinceEpoch(
-                                                              value.toInt());
-                                                      final hour = dateTime.hour
-                                                          .toString()
-                                                          .padLeft(2, '0');
-                                                      final minute = dateTime
-                                                          .minute
-                                                          .toString()
-                                                          .padLeft(2, '0');
-                                                      return SideTitleWidget(
-                                                        meta: meta,
-                                                        space: 4,
-                                                        angle: -0.5,
-                                                        child: Text(
-                                                            '$hour:$minute',
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        10)),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                              borderData: FlBorderData(
-                                                show: true,
-                                                border: Border.all(
-                                                    color: Colors.grey,
-                                                    width: 1),
-                                              ),
-                                              lineTouchData: LineTouchData(
-                                                touchTooltipData:
-                                                    LineTouchTooltipData(
-                                                  tooltipBorder: BorderSide(
+                                          height: 300,
+                                          child: SfCartesianChart(
+                                            title: ChartTitle(
+                                                text:
+                                                    'Kennel Temperature chart',
+                                                textStyle: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
                                                     color: Theme.of(context)
                                                         .colorScheme
-                                                        .inversePrimary,
-                                                    width: 1,
-                                                  ),
-                                                  getTooltipColor:
-                                                      (touchedSpot) => Theme.of(
-                                                    context,
-                                                  )
+                                                        .onSurface)),
+                                            trackballBehavior:
+                                                TrackballBehavior(
+                                              enable: true,
+                                              activationMode:
+                                                  ActivationMode.singleTap,
+                                              tooltipSettings:
+                                                  InteractiveTooltip(
+                                                      format: 'point.y %',
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primaryContainer,
+                                                      textStyle:
+                                                          const TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                      canShowMarker: false),
+                                              markerSettings:
+                                                  TrackballMarkerSettings(
+                                                      markerVisibility:
+                                                          TrackballVisibilityMode
+                                                              .visible,
+                                                      height: 10,
+                                                      width: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primaryContainer,
+                                                      borderWidth: 0),
+                                              lineType:
+                                                  TrackballLineType.vertical,
+                                              shouldAlwaysShow: false,
+                                              // Specifica quali serie tracciare
+                                              tooltipDisplayMode:
+                                                  TrackballDisplayMode
+                                                      .nearestPoint,
+                                            ),
+                                            zoomPanBehavior: ZoomPanBehavior(
+                                              enablePanning: true,
+                                              enablePinching: true,
+                                              zoomMode: ZoomMode.x,
+                                              enableDoubleTapZooming: true,
+                                              enableSelectionZooming: true,
+                                              enableMouseWheelZooming: true,
+                                            ),
+                                            plotAreaBorderColor: Colors.grey,
+                                            primaryXAxis: NumericAxis(
+                                              title: AxisTitle(
+                                                  text: "Time",
+                                                  textStyle: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface)),
+                                              axisLine: const AxisLine(
+                                                  width: 1, color: Colors.grey),
+                                              desiredIntervals: 10,
+                                              majorGridLines:
+                                                  const MajorGridLines(
+                                                      width: 1,
+                                                      color: Colors.grey,
+                                                      dashArray: [5, 5]),
+                                              axisLabelFormatter:
+                                                  (AxisLabelRenderDetails
+                                                      details) {
+                                                final dateTime = DateTime
+                                                    .fromMillisecondsSinceEpoch(
+                                                        details.value.toInt());
+                                                return ChartAxisLabel(
+                                                  '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
+                                                  TextStyle(
+                                                      fontSize: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface),
+                                                );
+                                              },
+                                              // Modifiche per avvicinare le label all'asse
+                                              placeLabelsNearAxisLine: true,
+                                              labelAlignment: LabelAlignment
+                                                  .center, // Cambiato da end a center
+                                              labelPosition: ChartDataLabelPosition
+                                                  .outside, // Aggiunta questa proprietà/ Ridotto l'offset a 0
+                                              labelRotation:
+                                                  -45, // Rimossa la rotazione
+                                              edgeLabelPlacement:
+                                                  EdgeLabelPlacement.shift,
+                                              initialVisibleMaximum:
+                                                  DateTime.now()
+                                                      .millisecondsSinceEpoch
+                                                      .toDouble(),
+                                              initialVisibleMinimum: DateTime
+                                                          .now()
+                                                      .millisecondsSinceEpoch
+                                                      .toDouble() -
+                                                  60 * 10 * 1000,
+                                              interval: intervalX,
+                                            ),
+                                            primaryYAxis: NumericAxis(
+                                              title: AxisTitle(
+                                                  text: "Temperature (°C)",
+                                                  textStyle: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface)),
+                                              axisLine: const AxisLine(
+                                                  width: 1, color: Colors.grey),
+                                              majorGridLines:
+                                                  const MajorGridLines(
+                                                      width: 1,
+                                                      color: Colors.grey,
+                                                      dashArray: [5, 5]),
+                                              minimum: minY,
+                                              maximum: maxY,
+                                              interval: 0.5,
+                                              axisLabelFormatter:
+                                                  (AxisLabelRenderDetails
+                                                      details) {
+                                                return ChartAxisLabel(
+                                                  details.value.toString(),
+                                                  TextStyle(
+                                                      fontSize: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface),
+                                                );
+                                              },
+                                            ),
+                                            series: <CartesianSeries>[
+                                              // Prima serie: solo l'area con il gradiente
+                                              SplineAreaSeries<Map, double>(
+                                                dataSource: temperatures,
+                                                xValueMapper: (e, _) =>
+                                                    (e['timestamp'] as DateTime)
+                                                        .millisecondsSinceEpoch
+                                                        .toDouble(),
+                                                yValueMapper: (e, _) =>
+                                                    e['value'].toDouble(),
+                                                borderColor: Colors.transparent,
+                                                borderWidth: 0,
+                                                enableTooltip: false,
+                                                isVisibleInLegend: false,
+                                                markerSettings:
+                                                    const MarkerSettings(
+                                                        isVisible: false),
+                                                onCreateShader:
+                                                    (ShaderDetails details) {
+                                                  return ui.Gradient.linear(
+                                                    Offset(details.rect.left,
+                                                        details.rect.top),
+                                                    Offset(details.rect.right,
+                                                        details.rect.bottom),
+                                                    [
+                                                      Theme.of(context)
                                                           .colorScheme
                                                           .primary
-                                                          .withValues(
-                                                              alpha: 0.7),
-                                                  getTooltipItems:
-                                                      (List<LineBarSpot>
-                                                          touchedBarSpots) {
-                                                    return touchedBarSpots
-                                                        .map((barSpot) {
-                                                      final flSpot = barSpot;
-                                                      final timestamp = DateTime
-                                                          .fromMillisecondsSinceEpoch(
-                                                              flSpot.x.toInt());
-                                                      final time =
-                                                          '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
-                                                      return LineTooltipItem(
-                                                        '${flSpot.y.toStringAsFixed(1)} °C\n',
-                                                        const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                        children: [
-                                                          TextSpan(
-                                                            text: time,
-                                                            style: TextStyle(
-                                                              color: Colors
-                                                                  .grey[300],
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      );
-                                                    }).toList();
-                                                  },
-                                                ),
-                                                handleBuiltInTouches: true,
+                                                          .withOpacity(0.7),
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .inversePrimary
+                                                          .withOpacity(0.3),
+                                                    ],
+                                                    [0.0, 1.0],
+                                                  );
+                                                },
                                               ),
-                                              lineBarsData: [
-                                                LineChartBarData(
-                                                  spots: temperatures
-                                                      .map<FlSpot>((e) => FlSpot(
-                                                          (e["timestamp"]
-                                                                  as DateTime)
-                                                              .millisecondsSinceEpoch
-                                                              .toDouble(),
-                                                          e["value"]
-                                                              .toDouble()))
-                                                      .toList(),
-                                                  isCurved: true,
-                                                  barWidth: 5,
-                                                  gradient: LinearGradient(
-                                                    colors: [
+                                              // Seconda serie: solo la linea con il gradiente
+                                              SplineSeries<Map, double>(
+                                                dataSource: temperatures,
+                                                xValueMapper: (e, _) =>
+                                                    (e['timestamp'] as DateTime)
+                                                        .millisecondsSinceEpoch
+                                                        .toDouble(),
+                                                yValueMapper: (e, _) =>
+                                                    e['value'].toDouble(),
+                                                width: 5,
+                                                name: "Temperature",
+                                                markerSettings: MarkerSettings(
+                                                    isVisible: false,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primaryContainer),
+                                                enableTooltip: true,
+                                                onCreateShader:
+                                                    (ShaderDetails details) {
+                                                  return ui.Gradient.linear(
+                                                    Offset(details.rect.left,
+                                                        details.rect.top),
+                                                    Offset(details.rect.right,
+                                                        details.rect.bottom),
+                                                    [
                                                       Theme.of(context)
                                                           .colorScheme
                                                           .primary,
@@ -573,213 +795,217 @@ Page resource error:
                                                           .colorScheme
                                                           .inversePrimary,
                                                     ],
-                                                  ),
-                                                  isStrokeCapRound: true,
-                                                  dotData:
-                                                      FlDotData(show: true),
-                                                  belowBarData: BarAreaData(
-                                                    show: true,
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .primary
-                                                            .withOpacity(0.7),
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .inversePrimary
-                                                            .withOpacity(0.3),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                                    [0.0, 1.0],
+                                                  );
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        const SizedBox(height: 24),
                                       ],
                                       if (humidities.isNotEmpty) ...[
-                                        const Text(
-                                          "Kennel Humidity chart in the last 10 minutes:",
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        const SizedBox(height: 8),
                                         SizedBox(
-                                          height: 250,
-                                          child: LineChart(
-                                            transformationConfig:
-                                                FlTransformationConfig(
-                                              scaleAxis: FlScaleAxis.horizontal,
-                                              panEnabled: true,
-                                              scaleEnabled: true,
-                                            ),
-                                            LineChartData(
-                                              minY: minH,
-                                              maxY: maxH,
-                                              gridData: FlGridData(
-                                                show: true,
-                                                drawVerticalLine: true,
-                                                horizontalInterval:
-                                                    (maxH - minH) / 5,
-                                                verticalInterval: intervalXH,
-                                                getDrawingHorizontalLine:
-                                                    (value) => FlLine(
-                                                  dashArray: [20, 5],
-                                                  color: Colors.grey
-                                                      .withOpacity(0.3),
-                                                  strokeWidth: 1,
-                                                ),
-                                                getDrawingVerticalLine:
-                                                    (value) => FlLine(
-                                                  dashArray: [20, 5],
-                                                  color: Colors.grey
-                                                      .withOpacity(0.3),
-                                                  strokeWidth: 1,
-                                                ),
-                                              ),
-                                              titlesData: FlTitlesData(
-                                                show: true,
-                                                leftTitles: AxisTitles(
-                                                  axisNameWidget: const Text(
-                                                      "Humidity (%)"),
-                                                  sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    reservedSize: 30,
-                                                    interval: 5,
-                                                    getTitlesWidget:
-                                                        (value, meta) =>
-                                                            SideTitleWidget(
-                                                      meta: meta,
-                                                      child: Text(
-                                                          value.toStringAsFixed(
-                                                              1),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      10)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                topTitles: const AxisTitles(
-                                                    sideTitles: SideTitles(
-                                                        showTitles: false)),
-                                                rightTitles: const AxisTitles(
-                                                    sideTitles: SideTitles(
-                                                        showTitles: false)),
-                                                bottomTitles: AxisTitles(
-                                                  axisNameWidget:
-                                                      const Text("Time"),
-                                                  sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    reservedSize: 30,
-                                                    interval: intervalXH,
-                                                    getTitlesWidget:
-                                                        (value, meta) {
-                                                      final dateTime = DateTime
-                                                          .fromMillisecondsSinceEpoch(
-                                                              value.toInt());
-                                                      final hour = dateTime.hour
-                                                          .toString()
-                                                          .padLeft(2, '0');
-                                                      final minute = dateTime
-                                                          .minute
-                                                          .toString()
-                                                          .padLeft(2, '0');
-                                                      return SideTitleWidget(
-                                                        meta: meta,
-                                                        space: 4,
-                                                        angle: -0.5,
-                                                        child: Text(
-                                                            '$hour:$minute',
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        10)),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                              borderData: FlBorderData(
-                                                show: true,
-                                                border: Border.all(
-                                                    color: Colors.grey,
-                                                    width: 1),
-                                              ),
-                                              lineTouchData: LineTouchData(
-                                                touchTooltipData:
-                                                    LineTouchTooltipData(
-                                                  tooltipBorder: BorderSide(
+                                          height: 300,
+                                          child: SfCartesianChart(
+                                            title: ChartTitle(
+                                                text: 'Kennel Humidity chart',
+                                                textStyle: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
                                                     color: Theme.of(context)
                                                         .colorScheme
-                                                        .tertiaryContainer,
-                                                    width: 1,
-                                                  ),
-                                                  getTooltipColor:
-                                                      (touchedSpot) => Theme.of(
-                                                    context,
-                                                  )
+                                                        .onSurface)),
+                                            trackballBehavior:
+                                                TrackballBehavior(
+                                              enable: true,
+                                              activationMode:
+                                                  ActivationMode.singleTap,
+                                              tooltipSettings:
+                                                  InteractiveTooltip(
+                                                format: 'point.y %',
+                                                canShowMarker: false,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .tertiaryContainer,
+                                                textStyle: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              markerSettings:
+                                                  TrackballMarkerSettings(
+                                                      markerVisibility:
+                                                          TrackballVisibilityMode
+                                                              .visible,
+                                                      height: 10,
+                                                      width: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .tertiaryContainer,
+                                                      borderWidth: 0),
+                                              lineType:
+                                                  TrackballLineType.vertical,
+                                              shouldAlwaysShow: false,
+                                              // Specifica quali serie tracciare
+                                              tooltipDisplayMode:
+                                                  TrackballDisplayMode
+                                                      .nearestPoint,
+                                            ),
+                                            zoomPanBehavior: ZoomPanBehavior(
+                                              enablePanning: true,
+                                              enablePinching: true,
+                                              zoomMode: ZoomMode.x,
+                                              enableDoubleTapZooming: true,
+                                              enableSelectionZooming: true,
+                                              enableMouseWheelZooming: true,
+                                              selectionRectColor:
+                                                  Colors.blue.withOpacity(0.3),
+                                              selectionRectBorderColor:
+                                                  Colors.blue,
+                                              selectionRectBorderWidth: 1,
+                                            ),
+                                            plotAreaBorderColor: Colors.grey,
+                                            primaryXAxis: NumericAxis(
+                                              title: AxisTitle(
+                                                  text: "Time",
+                                                  textStyle: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface)),
+                                              axisLine: const AxisLine(
+                                                  width: 1, color: Colors.grey),
+                                              desiredIntervals: 10,
+                                              majorGridLines:
+                                                  const MajorGridLines(
+                                                      width: 1,
+                                                      color: Colors.grey,
+                                                      dashArray: [5, 5]),
+                                              axisLabelFormatter:
+                                                  (AxisLabelRenderDetails
+                                                      details) {
+                                                final dateTime = DateTime
+                                                    .fromMillisecondsSinceEpoch(
+                                                        details.value.toInt());
+                                                return ChartAxisLabel(
+                                                  '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
+                                                  TextStyle(
+                                                      fontSize: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface),
+                                                );
+                                              },
+                                              placeLabelsNearAxisLine: true,
+                                              labelAlignment:
+                                                  LabelAlignment.center,
+                                              labelPosition:
+                                                  ChartDataLabelPosition
+                                                      .outside,
+                                              labelRotation: -45,
+                                              edgeLabelPlacement:
+                                                  EdgeLabelPlacement.shift,
+                                              initialVisibleMaximum:
+                                                  DateTime.now()
+                                                      .millisecondsSinceEpoch
+                                                      .toDouble(),
+                                              initialVisibleMinimum: DateTime
+                                                          .now()
+                                                      .millisecondsSinceEpoch
+                                                      .toDouble() -
+                                                  60 * 10 * 1000,
+                                              interval: intervalXH,
+                                            ),
+                                            primaryYAxis: NumericAxis(
+                                              title: AxisTitle(
+                                                  text: "Humidity (%)",
+                                                  textStyle: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface)),
+                                              axisLine: const AxisLine(
+                                                  width: 1, color: Colors.grey),
+                                              majorGridLines:
+                                                  const MajorGridLines(
+                                                      width: 1,
+                                                      color: Colors.grey,
+                                                      dashArray: [5, 5]),
+                                              minimum: minH,
+                                              maximum: maxH,
+                                              interval: 5,
+                                              axisLabelFormatter:
+                                                  (AxisLabelRenderDetails
+                                                      details) {
+                                                return ChartAxisLabel(
+                                                  details.value.toString(),
+                                                  TextStyle(
+                                                      fontSize: 10,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface),
+                                                );
+                                              },
+                                            ),
+                                            series: <CartesianSeries>[
+                                              // Prima serie: solo l'area con il gradiente
+                                              SplineAreaSeries<Map, double>(
+                                                dataSource: humidities,
+                                                xValueMapper: (e, _) =>
+                                                    (e['timestamp'] as DateTime)
+                                                        .millisecondsSinceEpoch
+                                                        .toDouble(),
+                                                yValueMapper: (e, _) =>
+                                                    e['value'].toDouble(),
+                                                borderColor: Colors.transparent,
+                                                borderWidth: 0,
+                                                enableTooltip: false,
+                                                isVisibleInLegend: false,
+                                                markerSettings:
+                                                    const MarkerSettings(
+                                                        isVisible: false),
+                                                onCreateShader:
+                                                    (ShaderDetails details) {
+                                                  return ui.Gradient.linear(
+                                                    Offset(details.rect.left,
+                                                        details.rect.top),
+                                                    Offset(details.rect.right,
+                                                        details.rect.bottom),
+                                                    [
+                                                      Theme.of(context)
                                                           .colorScheme
                                                           .tertiary
-                                                          .withValues(
-                                                              alpha: 0.7),
-                                                  getTooltipItems:
-                                                      (List<LineBarSpot>
-                                                          touchedBarSpots) {
-                                                    return touchedBarSpots
-                                                        .map((barSpot) {
-                                                      final flSpot = barSpot;
-                                                      final timestamp = DateTime
-                                                          .fromMillisecondsSinceEpoch(
-                                                              flSpot.x.toInt());
-                                                      final time =
-                                                          '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
-                                                      return LineTooltipItem(
-                                                        '${flSpot.y.toStringAsFixed(1)} %\n',
-                                                        const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                        children: [
-                                                          TextSpan(
-                                                            text: time,
-                                                            style: TextStyle(
-                                                              color: Colors
-                                                                  .grey[300],
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      );
-                                                    }).toList();
-                                                  },
-                                                ),
-                                                handleBuiltInTouches: true,
+                                                          .withOpacity(0.7),
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .tertiaryContainer
+                                                          .withOpacity(0.3),
+                                                    ],
+                                                    [0.0, 1.0],
+                                                  );
+                                                },
                                               ),
-                                              lineBarsData: [
-                                                LineChartBarData(
-                                                  spots: humidities
-                                                      .map<FlSpot>((e) => FlSpot(
-                                                          (e["timestamp"]
-                                                                  as DateTime)
-                                                              .millisecondsSinceEpoch
-                                                              .toDouble(),
-                                                          e["value"]
-                                                              .toDouble()))
-                                                      .toList(),
-                                                  isCurved: true,
-                                                  barWidth: 5,
-                                                  gradient: LinearGradient(
-                                                    colors: [
+                                              // Seconda serie: solo la linea con il gradiente
+                                              SplineSeries<Map, double>(
+                                                dataSource: humidities,
+                                                xValueMapper: (e, _) =>
+                                                    (e['timestamp'] as DateTime)
+                                                        .millisecondsSinceEpoch
+                                                        .toDouble(),
+                                                yValueMapper: (e, _) =>
+                                                    e['value'].toDouble(),
+                                                width: 5,
+                                                name: "Humidity",
+                                                markerSettings: MarkerSettings(
+                                                    isVisible: false,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .tertiaryContainer),
+                                                enableTooltip: true,
+                                                onCreateShader:
+                                                    (ShaderDetails details) {
+                                                  return ui.Gradient.linear(
+                                                    Offset(details.rect.left,
+                                                        details.rect.top),
+                                                    Offset(details.rect.right,
+                                                        details.rect.bottom),
+                                                    [
                                                       Theme.of(context)
                                                           .colorScheme
                                                           .tertiary,
@@ -787,32 +1013,11 @@ Page resource error:
                                                           .colorScheme
                                                           .tertiaryContainer,
                                                     ],
-                                                  ),
-                                                  isStrokeCapRound: true,
-                                                  dotData:
-                                                      FlDotData(show: true),
-                                                  belowBarData: BarAreaData(
-                                                    show: true,
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Theme.of(
-                                                          context,
-                                                        )
-                                                            .colorScheme
-                                                            .tertiary
-                                                            .withOpacity(0.7),
-                                                        Theme.of(
-                                                          context,
-                                                        )
-                                                            .colorScheme
-                                                            .tertiaryContainer
-                                                            .withOpacity(0.3),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                                    [0.0, 1.0],
+                                                  );
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],

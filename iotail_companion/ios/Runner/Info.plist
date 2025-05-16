@@ -51,5 +51,11 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>This app needs access to network service discovery to debug the app</string>
+		<key>NSBonjourServices</key>
+		<array>
+		    <string>_dartobservatory._tcp</string>
+		</array>
 	</dict>
 </plist>

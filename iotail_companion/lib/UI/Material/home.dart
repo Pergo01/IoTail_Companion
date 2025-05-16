@@ -239,7 +239,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           ),
           ConstrainedBox(
             constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.15),
+                maxHeight: MediaQuery.of(context).size.height * 0.2),
             child: ListView.separated(
               controller: widget.scrollController,
               padding: const EdgeInsets.symmetric(vertical: 8),
