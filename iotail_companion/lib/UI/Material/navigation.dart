@@ -532,7 +532,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           constraints: const BoxConstraints(
                             maxWidth: 60,
                           ),
-                          // offset: const Offset(0, -50),
+                          clipBehavior: Clip.hardEdge,
                           position: PopupMenuPosition.over,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(60),
@@ -622,6 +622,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                             });
                           },
                           onSelected: (int index) {
+                            if (index == -999) {
+                              return;
+                            }
                             if (index >= 0) {
                               setState(() {
                                 selectedDog = index;
@@ -663,51 +666,111 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           },
                           itemBuilder: (BuildContext context) {
                             return [
-                              if (dogPicture.isNotEmpty)
-                                for (int i = dogPicture.length; i > 0; i--)
-                                  PopupMenuItem<int>(
-                                    value: i - 1,
-                                    child: Animate(
-                                      effects: [
-                                        SlideEffect(
-                                            begin: const Offset(0, 1),
-                                            end: const Offset(0, 0),
-                                            duration: duration,
-                                            curve: Curves.bounceInOut,
-                                            delay: Duration(
-                                                milliseconds:
-                                                    (dogPicture.length - i) *
-                                                        100)),
-                                      ],
-                                      child: Container(
-                                        width: 60,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            width: 2,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
-                                        ),
-                                        child: dogPicture[i - 1] == null ||
-                                                dogPicture[i - 1]!.isEmpty
-                                            ? const CircleAvatar(
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                foregroundImage: AssetImage(
-                                                    "assets/default_cane.jpeg"),
+                              PopupMenuItem(
+                                  enabled: false,
+                                  child: SizedBox(
+                                    width: 60,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        dogPicture.isNotEmpty
+                                            ? Container(
+                                                constraints: BoxConstraints(
+                                                  maxHeight:
+                                                      dogPicture.length > 3
+                                                          ? 180
+                                                          : dogPicture.length *
+                                                              60.0,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            60)),
+                                                child: ListView.builder(
+                                                  clipBehavior: Clip.hardEdge,
+                                                  padding: EdgeInsets.zero,
+                                                  shrinkWrap: true,
+                                                  itemCount: dogPicture.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    int i = dogPicture.length -
+                                                        index -
+                                                        1;
+                                                    return InkWell(
+                                                      onTap: () {
+                                                        context.pop(i);
+                                                      },
+                                                      child: Animate(
+                                                        effects: [
+                                                          SlideEffect(
+                                                            begin: const Offset(
+                                                                0, 1),
+                                                            end: const Offset(
+                                                                0, 0),
+                                                            duration: duration,
+                                                            curve: Curves
+                                                                .bounceInOut,
+                                                            delay: Duration(
+                                                                milliseconds:
+                                                                    index *
+                                                                        100),
+                                                          ),
+                                                        ],
+                                                        child: Container(
+                                                          width: 60,
+                                                          height: 60,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            border: Border.all(
+                                                              width: 2,
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                            ),
+                                                          ),
+                                                          child: dogPicture[
+                                                                          i] ==
+                                                                      null ||
+                                                                  dogPicture[i]!
+                                                                      .isEmpty
+                                                              ? const CircleAvatar(
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .transparent,
+                                                                  foregroundImage:
+                                                                      AssetImage(
+                                                                          "assets/default_cane.jpeg"),
+                                                                )
+                                                              : CircleAvatar(
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .transparent,
+                                                                  foregroundImage:
+                                                                      Image.memory(
+                                                                              dogPicture[i]!)
+                                                                          .image,
+                                                                ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
                                               )
-                                            : CircleAvatar(
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                foregroundImage: Image.memory(
-                                                        dogPicture[i - 1]!)
-                                                    .image,
-                                              ),
-                                      ),
+                                            : const SizedBox.shrink(),
+                                        if (dogPicture.isNotEmpty)
+                                          Divider(
+                                              height: 8,
+                                              thickness: 1,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimaryContainer),
+                                      ],
                                     ),
-                                  ),
+                                  )),
                               PopupMenuItem<int>(
                                 value: -1,
                                 child: Container(
@@ -801,6 +864,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                         setState(() {
                           selectedDog = index;
                         });
+                        _scrollToSelectedDog(index);
                       },
                       scrollController: _scrollController,
                       onDogUpdated: () {
