@@ -919,6 +919,13 @@
             </list>
           </value>
         </entry>
+        <entry key="showcaseview">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/showcaseview-4.0.1/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="sign_in_button">
           <value>
             <list>
@@ -1337,6 +1344,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/quiver-3.2.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/rive-0.13.20/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/rive_common-0.4.15/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/showcaseview-4.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sign_in_button-3.2.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/slide_countdown-2.0.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/source_span-1.10.1/lib" />

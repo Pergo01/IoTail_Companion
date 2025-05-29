@@ -222,8 +222,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -280,23 +278,41 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 child: Row(
                                   children: [
                                     Container(
-                                      decoration: const BoxDecoration(
-                                          shape: BoxShape.rectangle,
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(5))),
-                                      clipBehavior: Clip.hardEdge,
-                                      child: widget.user.dogs[index].picture ==
-                                                  null ||
-                                              widget.user.dogs[index].picture!
-                                                  .isEmpty
-                                          ? Image.asset(
-                                              "assets/default_cane.jpeg")
-                                          : Image.memory(
-                                              widget.user.dogs[index].picture!,
-                                              height: 100,
-                                              width: 100,
-                                              fit: BoxFit.cover,
-                                            ),
+                                      width: 120,
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline
+                                              .withOpacity(0.5),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            11), // Leggermente più piccolo del container
+                                        child:
+                                            widget.user.dogs[index].picture ==
+                                                        null ||
+                                                    widget.user.dogs[index]
+                                                        .picture!.isEmpty
+                                                ? Image.asset(
+                                                    "assets/default_cane.jpeg",
+                                                    fit: BoxFit.cover,
+                                                    width: 120,
+                                                    height: 120,
+                                                  )
+                                                : Image.memory(
+                                                    widget.user.dogs[index]
+                                                        .picture!,
+                                                    fit: BoxFit.cover,
+                                                    width: 120,
+                                                    height: 120,
+                                                  ),
+                                      ),
                                     ),
                                     const SizedBox(
                                       width: 8,

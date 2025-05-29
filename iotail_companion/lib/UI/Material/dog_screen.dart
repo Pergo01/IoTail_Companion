@@ -357,9 +357,9 @@ class _DogScreenState extends State<DogScreen> {
                           clipBehavior: Clip.hardEdge,
                           child: _pickedImage == null || _pickedImage!.isEmpty
                               ? Image.asset("assets/default_cane.jpeg",
-                                  height: 150, width: 150, fit: BoxFit.fill)
+                                  height: 150, width: 150, fit: BoxFit.cover)
                               : Image.memory(_pickedImage!,
-                                  height: 150, width: 150, fit: BoxFit.fill)),
+                                  height: 150, width: 150, fit: BoxFit.cover)),
                       GestureDetector(
                         onTap: () => _showBottomSheet(context),
                         child: CircleAvatar(

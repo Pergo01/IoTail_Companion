@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'firebase_options.dart';
 
 import 'package:iotail_companion/UI/Material/login.dart';
@@ -102,17 +103,92 @@ class MyApp extends StatelessWidget {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    return MaterialApp.router(
-      title: 'IoTail',
-      theme: ThemeData(
-        colorScheme: lightColorScheme,
-        useMaterial3: true,
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+    return ShowCaseWidget(
+      builder: (context) => MaterialApp.router(
+        title: 'IoTail',
+        theme: ThemeData(
+          colorScheme: lightColorScheme,
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: darkColorScheme,
+          useMaterial3: true,
+        ),
+        routerConfig: materialRouter,
       ),
-      darkTheme: ThemeData(
-        colorScheme: darkColorScheme,
-        useMaterial3: true,
+      globalFloatingActionWidget: (showcaseContext) {
+        return FloatingActionWidget(
+          bottom: MediaQuery.paddingOf(context).bottom,
+          left: 24,
+          child: TextButton(
+              onPressed: () {
+                ShowCaseWidget.of(showcaseContext).dismiss();
+              },
+              child: Text(
+                "Skip",
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: isDarkTheme
+                        ? darkColorScheme.primary
+                        : lightColorScheme.primary),
+              )),
+        );
+      },
+      hideFloatingActionWidgetForShowcase: [],
+      globalTooltipActionConfig: const TooltipActionConfig(
+        alignment: MainAxisAlignment.end,
+        actionGap: 10,
+        gapBetweenContentAndAction: 10,
+        position: TooltipActionPosition.outside,
       ),
-      routerConfig: materialRouter,
+      globalTooltipActions: [
+        TooltipActionButton(
+          type: TooltipDefaultActionType.previous,
+          leadIcon: const ActionButtonIcon(
+            icon: Icon(
+              Icons.arrow_back_ios,
+              size: 16,
+            ), // Icon
+          ), // ActionButtonIcon
+          name: "Previous",
+          textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: isDarkTheme
+                  ? darkColorScheme.primary
+                  : lightColorScheme.primary),
+          hideActionWidgetForShowcase: [homePageKey], // hide on first showcase
+        ),
+        TooltipActionButton(
+            type: TooltipDefaultActionType.next,
+            name: "Next",
+            textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: isDarkTheme
+                    ? darkColorScheme.onPrimaryContainer
+                    : lightColorScheme.onPrimaryContainer),
+            hideActionWidgetForShowcase: [
+              mapNavBarButtonKey
+            ], // hide on last showcase
+            backgroundColor: isDarkTheme
+                ? darkColorScheme.primaryContainer
+                : lightColorScheme.primaryContainer),
+      ],
+
+      /// called every time each coach mark started
+      onStart: (index, key) {
+        print("TAGGS : onStart $index Skey");
+      },
+
+      /// called every time each coach mark completed
+      onComplete: (index, key) {
+        print("TAGGS : onComplete $index Skey");
+      },
+
+      /// called every group of coach mark completed onFinish
+      onFinish: () {
+        print("TAGGS: onFinish");
+      },
+      blurValue: 0,
+      disableBarrierInteraction: true,
     );
   }
 }

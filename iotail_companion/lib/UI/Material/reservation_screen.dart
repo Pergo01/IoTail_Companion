@@ -91,7 +91,8 @@ Page resource error:
           },
         ),
       )
-      ..loadRequest(Uri.parse('http://${widget.ip}:8090/camera_0'));
+      ..loadRequest(Uri.parse('http://${widget.ip}:8090/camera_0'))
+          .then((value) async => await webController.enableZoom(false));
   }
 
   @override
@@ -198,8 +199,23 @@ Page resource error:
                                           decoration: BoxDecoration(
                                               borderRadius:
                                                   BorderRadius.circular(6)),
-                                          child: WebViewWidget(
-                                            controller: webController,
+                                          child: SizedBox(
+                                            width: double.infinity,
+                                            height: double.infinity,
+                                            child: FittedBox(
+                                              fit: BoxFit.contain,
+                                              clipBehavior: Clip.hardEdge,
+                                              child: SizedBox(
+                                                width: MediaQuery.of(context)
+                                                    .size
+                                                    .width,
+                                                height:
+                                                    200, // Stessa altezza del container genitore
+                                                child: WebViewWidget(
+                                                  controller: webController,
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         );
                                       }
