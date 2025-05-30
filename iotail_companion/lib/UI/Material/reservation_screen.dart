@@ -6,7 +6,7 @@ import 'package:holdable_button/holdable_button.dart';
 import 'package:holdable_button/utils/utils.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:slide_countdown/slide_countdown.dart';
 
@@ -35,7 +35,7 @@ class ReservationScreen extends StatefulWidget {
 
 class _ReservationScreenState extends State<ReservationScreen> {
   bool showCamera = false;
-  late final WebViewController webController;
+  InAppWebViewController? webController;
   late Future<bool> isCameraReady;
   late Future<List<double>> tempHumid;
   late Future<Map> kennelMeasurements;
@@ -43,8 +43,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
   Future<bool> waitForCamera() async {
     bool camera = false;
     await Future.delayed(Duration(seconds: 4), () {
-      webController.reload();
-      webController.enableZoom(false);
+      webController?.reload();
     }).then((val) => camera = true);
     return camera;
   }
@@ -55,8 +54,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   Future<Map> getKennelMeasurements() async {
-    // int initTime = max(widget.reservation.activationTime!,
-    //     (DateTime.now().millisecondsSinceEpoch / 1000).round() - 600);
     Map data = await requests.getKennelmeasurements(widget.ip,
         widget.reservation.kennelID, widget.reservation.activationTime!);
     return data;
@@ -67,32 +64,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
     super.initState();
     tempHumid = getTemperatureHumidity();
     kennelMeasurements = getKennelMeasurements();
-    webController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            debugPrint('WebView is loading (progress : $progress%)');
-          },
-          onPageStarted: (String url) {
-            debugPrint('Page started loading: $url');
-          },
-          onPageFinished: (String url) {
-            debugPrint('Page finished loading: $url');
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('''
-Page resource error:
-  code: ${error.errorCode}
-  description: ${error.description}
-  errorType: ${error.errorType}
-  isForMainFrame: ${error.isForMainFrame}
-            ''');
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('http://${widget.ip}:8090/camera_0'))
-          .then((value) async => await webController.enableZoom(false));
   }
 
   @override
@@ -129,7 +100,9 @@ Page resource error:
             padding: const EdgeInsets.all(8.0),
             child: RefreshIndicator(
               onRefresh: () async {
-                webController.reload();
+                if (webController != null && showCamera) {
+                  await webController!.reload();
+                }
                 setState(() {
                   tempHumid = getTemperatureHumidity();
                   kennelMeasurements = getKennelMeasurements();
@@ -179,52 +152,61 @@ Page resource error:
                         ),
                         Stack(alignment: Alignment.center, children: [
                           Container(
-                            height: 200,
-                            width: MediaQuery.of(context).size.width,
-                            clipBehavior: Clip.hardEdge,
-                            decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(8)),
-                            // Set a fixed height for the WebView
-                            child: showCamera
-                                ? FutureBuilder(
-                                    future: isCameraReady,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Container(
-                                          clipBehavior: Clip.hardEdge,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(6)),
-                                          child: SizedBox(
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            child: FittedBox(
-                                              fit: BoxFit.contain,
-                                              clipBehavior: Clip.hardEdge,
-                                              child: SizedBox(
-                                                width: MediaQuery.of(context)
-                                                    .size
-                                                    .width,
-                                                height:
-                                                    200, // Stessa altezza del container genitore
-                                                child: WebViewWidget(
-                                                  controller: webController,
-                                                ),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width,
+                              clipBehavior: Clip.hardEdge,
+                              decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: showCamera
+                                  ? FutureBuilder(
+                                      future: isCameraReady,
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<bool> snapshot) {
+                                        if (snapshot.hasData) {
+                                          return ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            child: InAppWebView(
+                                              initialUrlRequest: URLRequest(
+                                                url: WebUri(
+                                                    'http://${widget.ip}:8090/camera_0'),
                                               ),
+                                              initialSettings:
+                                                  InAppWebViewSettings(
+                                                      // Impostazioni invariate
+                                                      ),
+                                              onWebViewCreated: (controller) {
+                                                webController = controller;
+                                                // Non c'è bisogno di addJavaScriptHandler qui
+                                              },
+                                              onLoadStop: (controller, url) {
+                                                controller.evaluateJavascript(
+                                                    source: '''
+                                                    document.querySelector('meta[name="viewport"]').setAttribute('content',
+                                                    'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                                                    document.body.style.overflow = 'hidden';
+                                                    document.documentElement.style.overflow = 'hidden';
+                                                    document.body.style.margin = '0';
+                                                    document.body.style.padding = '0';
+                                                  ''');
+                                                setState(() {
+                                                  showCamera =
+                                                      true; // Imposta come pronta quando il caricamento è terminato
+                                                });
+                                              },
                                             ),
-                                          ),
-                                        );
-                                      }
-                                      return Center(
-                                          child: CircularProgressIndicator());
-                                    },
-                                  )
-                                : Container(),
-                          ),
+                                          );
+                                        }
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      },
+                                    )
+                                  : Container()),
                           if (!showCamera)
                             ElevatedButton(
                                 style: ButtonStyle(
@@ -274,6 +256,7 @@ Page resource error:
                                   icon: Icon(Icons.close)),
                             )
                         ]),
+                        // Resto del codice...
                         Divider(
                           thickness: 2,
                           color: Theme.of(context).colorScheme.primary,

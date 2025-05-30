@@ -535,6 +535,7 @@ Future<Map> getKennelmeasurements(
     "temperature": [],
     "humidity": [],
   };
+  var mintemp = double.infinity;
   for (var feed in feeds) {
     debugPrint("${feed["entry_id"]}");
     if (feed["entry_id"] == 112) {
@@ -543,20 +544,19 @@ Future<Map> getKennelmeasurements(
     if (int.parse(feed["field4"]) == kennelID) {
       if (feed["field1"] != null) {
         double? temp = double.tryParse(feed["field1"]);
+        if (temp != null && temp < mintemp) {
+          mintemp = temp;
+        }
         if (temp != null) {
-          kennelMeasurements["temperature"].add({
-            "timestamp": DateTime.parse(feed["created_at"]),
-            "value": double.parse(feed["field1"])
-          });
+          kennelMeasurements["temperature"].add(
+              {"timestamp": DateTime.parse(feed["created_at"]), "value": temp});
         }
       }
       if (feed["field2"] != null) {
         double? hum = double.tryParse(feed["field2"]);
         if (hum != null) {
-          kennelMeasurements["humidity"].add({
-            "timestamp": DateTime.parse(feed["created_at"]),
-            "value": double.parse(feed["field2"])
-          });
+          kennelMeasurements["humidity"].add(
+              {"timestamp": DateTime.parse(feed["created_at"]), "value": hum});
         }
       }
     }

@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 /*/Flutter
+iotail_companion/assets/settings.json
 
 # IntelliJ related
 *.iml
