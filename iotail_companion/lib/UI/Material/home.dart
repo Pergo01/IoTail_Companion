@@ -9,7 +9,6 @@ import 'package:holdable_button/utils/utils.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:slide_countdown/slide_countdown.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/breed.dart';
@@ -57,7 +56,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         encryptedSharedPreferences: true,
       );
 
-  late WebViewController webController;
   bool editMode = false;
   late AnimationController _animationController;
   late Animation<double> _animation;

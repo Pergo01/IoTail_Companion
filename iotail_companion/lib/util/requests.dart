@@ -166,7 +166,8 @@ Future<Map<String, dynamic>> deleteProfilePicture(
   return tmp;
 }
 
-Future<Map> deleteUser(String ip, String token, String userID) async {
+Future<Map<String, dynamic>> deleteUser(
+    String ip, String token, String userID) async {
   final headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer $token',

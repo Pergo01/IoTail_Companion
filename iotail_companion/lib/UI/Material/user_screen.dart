@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
+
+final saveButtonKey = GlobalKey();
 
 class UserScreen extends StatefulWidget {
   final User user;
@@ -38,6 +41,14 @@ class _UserScreenState extends State<UserScreen> {
         encryptedSharedPreferences: true,
       );
 
+  void _showCoachMark() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([
+        saveButtonKey,
+      ]);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +60,7 @@ class _UserScreenState extends State<UserScreen> {
     _emailController = TextEditingController(text: _email);
     _phone = widget.user.phoneNumber;
     _phoneController = TextEditingController(text: _phone);
+    _showCoachMark();
   }
 
   @override
@@ -194,9 +206,8 @@ class _UserScreenState extends State<UserScreen> {
             TextButton(
               onPressed: () async {
                 context.pop();
-                Map<String, dynamic> message =
-                    await requests.deleteProfilePicture(
-                        widget.ip, widget.token, widget.user.userID);
+                Map<String, dynamic> message = await requests.deleteUser(
+                    widget.ip, widget.token, widget.user.userID);
                 if (message["message"].contains("Failed")) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(message["message"]),
@@ -259,6 +270,8 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -421,48 +434,90 @@ class _UserScreenState extends State<UserScreen> {
                 ),
                 Column(
                   children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        Map tmp = {
-                          "name": _name,
-                          "email": _email,
-                          "phoneNumber": _phone,
-                          "profilePicture": _imagePath,
-                        };
-                        final response = await requests.editUser(
-                            widget.ip, widget.token, widget.user.userID, tmp);
-                        if (response["message"].toString().contains("Failed")) {
+                    Showcase(
+                      key: saveButtonKey,
+                      titleAlignment: Alignment.centerLeft,
+                      title: "Save Changes",
+                      titleTextStyle: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                      descriptionAlignment: Alignment.centerLeft,
+                      description:
+                          "Remember to save your changes before going back to homescreen.",
+                      descTextStyle: Theme.of(context).textTheme.bodyMedium,
+                      tooltipBackgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
+                      targetBorderRadius: BorderRadius.circular(30),
+                      tooltipActions: [
+                        TooltipActionButton(
+                            type: TooltipDefaultActionType.next,
+                            name: "Finish",
+                            textStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                    color: isDarkTheme
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer),
+                            backgroundColor: isDarkTheme
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                            onTap: () {
+                              ShowCaseWidget.of(context).dismiss();
+                            }),
+                      ],
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Map tmp = {
+                            "name": _name,
+                            "email": _email,
+                            "phoneNumber": _phone,
+                            "profilePicture": _imagePath,
+                          };
+                          final response = await requests.editUser(
+                              widget.ip, widget.token, widget.user.userID, tmp);
+                          if (response["message"]
+                              .toString()
+                              .contains("Failed")) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(response["message"]),
+                            ));
+                            return;
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(response["message"]),
+                            content: Text("User edited successfully"),
                           ));
-                          return;
-                        }
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("User edited successfully"),
-                        ));
-                        storage.write(
-                            key: "email", value: _emailController.text);
-                        widget.onEdit();
-                      },
-                      style: ButtonStyle(
-                        elevation: WidgetStateProperty.all(8),
-                        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                        backgroundColor: WidgetStateProperty.all(
-                            Theme.of(context).colorScheme.primaryContainer),
-                        // side: WidgetStateProperty.all(
-                        //     BorderSide(color: Colors.red)),
-                        minimumSize:
-                            WidgetStateProperty.all(Size(double.infinity, 50)),
-                        padding: WidgetStateProperty.all(EdgeInsets.all(8)),
-                      ),
-                      child: Text(
-                        "SAVE CHANGES",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer),
+                          storage.write(
+                              key: "email", value: _emailController.text);
+                          widget.onEdit();
+                        },
+                        style: ButtonStyle(
+                          elevation: WidgetStateProperty.all(8),
+                          shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          )),
+                          backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.primaryContainer),
+                          // side: WidgetStateProperty.all(
+                          //     BorderSide(color: Colors.red)),
+                          minimumSize: WidgetStateProperty.all(
+                              Size(double.infinity, 50)),
+                          padding: WidgetStateProperty.all(EdgeInsets.all(8)),
+                        ),
+                        child: Text(
+                          "SAVE CHANGES",
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer),
+                        ),
                       ),
                     ),
                     SizedBox(

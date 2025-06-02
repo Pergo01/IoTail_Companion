@@ -66,7 +66,15 @@ class _SplashScreenState extends State<SplashScreen>
               future: token,
               builder: (context, tokenSnapshot) {
                 if (tokenSnapshot.hasError) {
-                  return Center(child: Text('Error: ${tokenSnapshot.error}'));
+                  return Scaffold(
+                    body: Center(child: Text('Error: ${tokenSnapshot.error}')),
+                    floatingActionButton: FloatingActionButton(
+                      onPressed: () async {
+                        refreshToken(ip_val);
+                      },
+                      child: Icon(Icons.refresh),
+                    ),
+                  );
                 } else if (tokenSnapshot.hasData) {
                   String token_val = tokenSnapshot.data!;
                   Future.delayed(const Duration(seconds: 6), () {

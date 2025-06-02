@@ -191,7 +191,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           menuController.open();
         }
       });
-    // _showCoachMark();
+    _showCoachMark();
   }
 
   @override
@@ -211,7 +211,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   }
 
   void _showCoachMark() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ShowCaseWidget.of(context).startShowCase([
         homePageKey,
         menuButtonKey,
@@ -552,6 +552,16 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           tooltipBackgroundColor:
                               Theme.of(context).colorScheme.primaryContainer,
                           targetBorderRadius: BorderRadius.circular(30),
+                          disposeOnTap: false,
+                          onTargetClick: () {
+                            if (currentPageIndex == 1) {
+                              setState(() {
+                                controller.reverse();
+                                currentPageIndex = 0;
+                              });
+                            }
+                            ShowCaseWidget.of(context).next();
+                          },
                           tooltipActions: [
                             TooltipActionButton(
                                 type: TooltipDefaultActionType.previous,
@@ -584,7 +594,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 }),
                             TooltipActionButton(
                                 type: TooltipDefaultActionType.next,
-                                name: "Next",
+                                name: "Finish",
                                 textStyle: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
@@ -596,9 +606,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                             : Theme.of(context)
                                                 .colorScheme
                                                 .onPrimaryContainer),
-                                hideActionWidgetForShowcase: [
-                                  mapNavBarButtonKey
-                                ], // hide on last showcase
                                 backgroundColor: isDarkTheme
                                     ? Theme.of(context)
                                         .colorScheme
@@ -606,7 +613,15 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                     : Theme.of(context)
                                         .colorScheme
                                         .primaryContainer,
-                                onTap: ShowCaseWidget.of(context).next),
+                                onTap: () {
+                                  if (currentPageIndex == 1) {
+                                    setState(() {
+                                      controller.reverse();
+                                      currentPageIndex = 0;
+                                    });
+                                  }
+                                  ShowCaseWidget.of(context).next();
+                                }),
                           ],
                           child: IconButton(
                             iconSize: 24,
@@ -709,35 +724,38 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                             .primary,
                                       ),
                                     ),
-                                    child: IconButton(
-                                      iconSize: 24,
-                                      onPressed: () {
-                                        context.push("/Dog", extra: {
-                                          "dog": Dog(
-                                            dogID: "",
-                                            name: "",
-                                            breedID: -1,
-                                            age: 0,
-                                            sex: 0,
-                                            size: "",
-                                            weight: 0,
-                                            coatType: "",
-                                            allergies: [],
-                                          ),
-                                          "breeds":
-                                              snapshot.data![3] as List<Breed>,
-                                          "userID": widget.userID,
-                                          "ip": widget.ip,
-                                          "token": widget.token,
-                                          "onEdit": () async {
-                                            setState(() {
-                                              user = getUser();
-                                            });
-                                          }
-                                        });
-                                      },
-                                      icon:
-                                          const Icon(Icons.add_circle_outline),
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.transparent,
+                                      child: IconButton(
+                                        iconSize: 24,
+                                        onPressed: () {
+                                          context.push("/Dog", extra: {
+                                            "dog": Dog(
+                                              dogID: "",
+                                              name: "",
+                                              breedID: -1,
+                                              age: 0,
+                                              sex: 0,
+                                              size: "",
+                                              weight: 0,
+                                              coatType: "",
+                                              allergies: [],
+                                            ),
+                                            "breeds": snapshot.data![3]
+                                                as List<Breed>,
+                                            "userID": widget.userID,
+                                            "ip": widget.ip,
+                                            "token": widget.token,
+                                            "onEdit": () async {
+                                              setState(() {
+                                                user = getUser();
+                                              });
+                                            }
+                                          });
+                                        },
+                                        icon: const Icon(
+                                            Icons.add_circle_outline),
+                                      ),
                                     ),
                                   ),
                             onCanceled: () {
@@ -950,12 +968,18 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           disposeOnTap: true,
                           onTargetClick: () {
                             if (currentPageIndex == 0) {
+                              // Prima completa la transizione
                               setState(() {
-                                controller.forward();
-                                currentPageIndex = 1;
+                                controller.forward().then((_) {
+                                  currentPageIndex = 1;
+                                  // Solo dopo la transizione completa, avanza nello showcase
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    ShowCaseWidget.of(context).next();
+                                  });
+                                });
                               });
                             }
-                            ShowCaseWidget.of(context).next();
                           },
                           tooltipActions: [
                             TooltipActionButton(
@@ -978,9 +1002,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                           : Theme.of(context)
                                               .colorScheme
                                               .primary),
-                              hideActionWidgetForShowcase: [
-                                homePageKey
-                              ], // hide on first showcase
                             ),
                             TooltipActionButton(
                                 type: TooltipDefaultActionType.next,
@@ -1005,12 +1026,20 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                         .primaryContainer,
                                 onTap: () {
                                   if (currentPageIndex == 0) {
+                                    // Prima completa la transizione
                                     setState(() {
-                                      controller.forward();
-                                      currentPageIndex = 1;
+                                      controller.forward().then((_) {
+                                        currentPageIndex = 1;
+                                        // Solo dopo la transizione completa, avanza nello showcase
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          ShowCaseWidget.of(context).next();
+                                        });
+                                      });
                                     });
+                                  } else {
+                                    ShowCaseWidget.of(context).next();
                                   }
-                                  ShowCaseWidget.of(context).next();
                                 }),
                           ],
                           child: IconButton(

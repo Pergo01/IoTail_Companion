@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iotail_companion/UI/Material/home.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -135,7 +136,7 @@ class MyApp extends StatelessWidget {
               )),
         );
       },
-      hideFloatingActionWidgetForShowcase: [],
+      hideFloatingActionWidgetForShowcase: [saveButtonKey],
       globalTooltipActionConfig: const TooltipActionConfig(
         alignment: MainAxisAlignment.end,
         actionGap: 10,
@@ -156,7 +157,10 @@ class MyApp extends StatelessWidget {
               color: isDarkTheme
                   ? darkColorScheme.primary
                   : lightColorScheme.primary),
-          hideActionWidgetForShowcase: [homePageKey], // hide on first showcase
+          hideActionWidgetForShowcase: [
+            homePageKey,
+            saveButtonKey,
+          ], // hide on first showcase
         ),
         TooltipActionButton(
             type: TooltipDefaultActionType.next,
@@ -166,28 +170,29 @@ class MyApp extends StatelessWidget {
                     ? darkColorScheme.onPrimaryContainer
                     : lightColorScheme.onPrimaryContainer),
             hideActionWidgetForShowcase: [
-              mapNavBarButtonKey
+              mapNavBarButtonKey,
+              saveButtonKey
             ], // hide on last showcase
             backgroundColor: isDarkTheme
                 ? darkColorScheme.primaryContainer
                 : lightColorScheme.primaryContainer),
       ],
 
-      /// called every time each coach mark started
-      onStart: (index, key) {
-        print("TAGGS : onStart $index Skey");
-      },
-
-      /// called every time each coach mark completed
-      onComplete: (index, key) {
-        print("TAGGS : onComplete $index Skey");
-      },
-
-      /// called every group of coach mark completed onFinish
-      onFinish: () {
-        print("TAGGS: onFinish");
-      },
-      blurValue: 0,
+      // /// called every time each coach mark started
+      // onStart: (index, key) {
+      //   print("TAGGS : onStart $index Skey");
+      // },
+      //
+      // /// called every time each coach mark completed
+      // onComplete: (index, key) {
+      //   print("TAGGS : onComplete $index Skey");
+      // },
+      //
+      // /// called every group of coach mark completed onFinish
+      // onFinish: () {
+      //   print("TAGGS: onFinish");
+      // },
+      blurValue: 5,
       disableBarrierInteraction: true,
     );
   }
