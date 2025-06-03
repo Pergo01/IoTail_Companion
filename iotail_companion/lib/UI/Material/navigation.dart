@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
-import 'dart:typed_data';
 import 'package:showcaseview/showcaseview.dart';
 
 import 'package:iotail_companion/util/dataMarker.dart';
@@ -188,7 +187,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           menuController.open();
         }
       });
-    // Rimuovi la chiamata a _showCoachMark() da qui
+    _checkAndShowTutorial();
   }
 
   void _showDogTutorial() {
@@ -209,15 +208,11 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       final user = await this.user;
       final reservations = await prenotazioni;
 
-      print(
-          "DEBUG: Checking tutorial state - hasDogs: ${user.dogs.isNotEmpty}, hasReservations: ${reservations.isNotEmpty}");
-
       _currentTutorialState = await TutorialManager.getCurrentTutorialState(
+        userID: widget.userID!,
         hasDogs: user.dogs.isNotEmpty,
         hasReservations: reservations.isNotEmpty,
       );
-
-      print("DEBUG: Current tutorial state: $_currentTutorialState");
 
       if (_currentTutorialState == TutorialState.navigation) {
         _showNavigationTutorial();
@@ -262,6 +257,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
     final reservations = await prenotazioni;
 
     final nextState = await TutorialManager.getCurrentTutorialState(
+      userID: widget.userID!,
       hasDogs: user.dogs.isNotEmpty,
       hasReservations: reservations.isNotEmpty,
     );
@@ -490,6 +486,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       markersList =
                           _getMarkersList(storesList, user, reservations);
                     });
+                    _checkNextTutorial();
                     context.pop();
                   },
                   child: Text("Unlock")),
@@ -500,7 +497,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   }
 
   // Aggiungi questo metodo nella classe _NavigationState per debug
-  void _resetTutorials() async {
+  Future<void> _resetTutorials() async {
     await TutorialManager.resetAllTutorials();
     _tutorialCheckDone = false;
     _checkAndShowTutorial();
@@ -516,9 +513,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       future: Future.wait([user, prenotazioni, stores, breeds, MQTTClient]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          // Chiamata al check del tutorial dopo che i dati sono caricati
-          _checkAndShowTutorial();
-
           dogPicture = [];
           markersList = _getMarkersList(
               snapshot.data![2] as List<Store>,

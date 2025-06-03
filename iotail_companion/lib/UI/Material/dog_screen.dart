@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:iotail_companion/util/dog.dart';
 import 'package:iotail_companion/util/breed.dart';
@@ -32,6 +33,11 @@ class DogScreen extends StatefulWidget {
 }
 
 class _DogScreenState extends State<DogScreen> {
+  late FlutterSecureStorage storage;
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
+
   Uint8List? _pickedImage;
   late String _name;
   late String _breed;
@@ -64,16 +70,21 @@ class _DogScreenState extends State<DogScreen> {
 
   void _showCoachMark() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      ShowCaseWidget.of(context).startShowCase([
-        dogSaveButtonKey,
-      ]);
+      storage.read(key: "dogEditTutorialComplete").then((value) {
+        if (value != 'completed') {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          ShowCaseWidget.of(context).startShowCase([
+            dogSaveButtonKey,
+          ]);
+        }
+      });
     });
   }
 
   @override
   void initState() {
     super.initState();
+    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
     _pickedImage = widget.dog.picture;
     _name = widget.dog.name;
     _nameController =
@@ -1013,6 +1024,9 @@ class _DogScreenState extends State<DogScreen> {
                                   duration: Duration(milliseconds: 500),
                                   curve: Curves.easeInOut);
                             });
+                            storage.write(
+                                key: "dogEditTutorialComplete",
+                                value: "completed");
                           }),
                     ],
                     child: ElevatedButton(

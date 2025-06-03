@@ -7,6 +7,7 @@ import 'package:showcaseview/showcaseview.dart';
 
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
+import 'package:iotail_companion/util/tutorial_manager.dart';
 
 final saveButtonKey = GlobalKey();
 
@@ -40,12 +41,17 @@ class _UserScreenState extends State<UserScreen> {
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );
+  final TutorialManager tutorialManager = TutorialManager();
 
   void _showCoachMark() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ShowCaseWidget.of(context).startShowCase([
-        saveButtonKey,
-      ]);
+      storage.read(key: "userEditTutorialComplete").then((value) {
+        if (value != 'completed') {
+          ShowCaseWidget.of(context).startShowCase([
+            saveButtonKey,
+          ]);
+        }
+      });
     });
   }
 
@@ -220,6 +226,9 @@ class _UserScreenState extends State<UserScreen> {
                   storage.delete(key: "password");
                   storage.delete(key: "userID");
                   storage.delete(key: "token");
+                  storage.delete(key: "dogEditTutorialComplete");
+                  storage.delete(key: "userEditTutorialComplete");
+                  await TutorialManager.resetUserSession();
                   context.go("/Login", extra: widget.ip);
                 }
               },
@@ -462,6 +471,9 @@ class _UserScreenState extends State<UserScreen> {
                                 Theme.of(context).colorScheme.primaryContainer,
                             onTap: () {
                               ShowCaseWidget.of(context).dismiss();
+                              storage.write(
+                                  key: "userEditTutorialComplete",
+                                  value: "completed");
                             }),
                       ],
                       child: ElevatedButton(
@@ -532,6 +544,9 @@ class _UserScreenState extends State<UserScreen> {
                         storage.delete(key: "email");
                         storage.delete(key: "password");
                         storage.delete(key: "userID");
+                        storage.delete(key: "token");
+                        storage.delete(key: "dogEditTutorialComplete");
+                        storage.delete(key: "userEditTutorialComplete");
                         context.go("/Login", extra: widget.ip);
                       },
                       style: ButtonStyle(

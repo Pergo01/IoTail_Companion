@@ -184,12 +184,12 @@ class MyApp extends StatelessWidget {
                 : lightColorScheme.primaryContainer),
       ],
 
-      // /// called every time each coach mark started
+      /// called every time each coach mark started
       // onStart: (index, key) {
       //   print("TAGGS : onStart $index Skey");
       // },
       //
-      // /// called every time each coach mark completed
+      /// called every time each coach mark completed
       // onComplete: (index, key) {
       //   print("TAGGS : onComplete $index Skey");
       // },
@@ -197,6 +197,7 @@ class MyApp extends StatelessWidget {
       /// called every group of coach mark completed onFinish
       onFinish: () async {
         print("Tutorial finished");
+        // Salva il completamento del tutorial corrente
         await TutorialManager.handleTutorialCompletion();
       },
       blurValue: 5,

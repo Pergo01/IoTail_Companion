@@ -222,8 +222,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -569,7 +567,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     color: Colors.red,
                                                     width: 2),
                                                 borderRadius:
-                                                    BorderRadius.circular(10)),
+                                                    BorderRadius.circular(12)),
                                             child: HoldableButton(
                                               loadingType:
                                                   LoadingType.fillingLoading,
