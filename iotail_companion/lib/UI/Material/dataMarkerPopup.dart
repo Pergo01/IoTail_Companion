@@ -53,6 +53,13 @@ class DataMarkerPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
+                style: IconButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      width: 1,
+                    )),
                 onPressed: () =>
                     isSuitable ? _showReservationDialog(context) : null,
                 icon: Icon(

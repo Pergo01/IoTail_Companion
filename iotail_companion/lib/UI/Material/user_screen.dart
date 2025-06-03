@@ -270,8 +270,6 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -457,18 +455,11 @@ class _UserScreenState extends State<UserScreen> {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                    color: isDarkTheme
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer),
-                            backgroundColor: isDarkTheme
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primaryContainer,
                             onTap: () {
                               ShowCaseWidget.of(context).dismiss();
                             }),

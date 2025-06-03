@@ -16,14 +16,8 @@ import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/dog.dart';
 import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/reservation.dart';
-
-final homePageKey = GlobalKey();
-final menuButtonKey = GlobalKey();
-final mapNavBarButtonKey = GlobalKey();
-final userEditButtonKey = GlobalKey();
-final unlockKennelFABKey = GlobalKey();
-final mapPageKey = GlobalKey();
-final homePageButtonKey = GlobalKey();
+import 'package:iotail_companion/util/tutorial_manager.dart';
+import 'package:iotail_companion/util/tutorial_keys.dart';
 
 class Navigation extends StatefulWidget {
   final String? ip;
@@ -56,6 +50,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
   late Future<List<Reservation>> prenotazioni;
   late Future<List<Breed>> breeds;
   late Future<MqttServerClient> MQTTClient;
+
+  TutorialState _currentTutorialState = TutorialState.completed;
+  bool _tutorialCheckDone = false;
 
   Future<User> getUser() async {
     final Map<String, dynamic> data =
@@ -191,7 +188,105 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
           menuController.open();
         }
       });
-    _showCoachMark();
+    // Rimuovi la chiamata a _showCoachMark() da qui
+  }
+
+  void _showDogTutorial() {
+    TutorialManager.setCurrentTutorial('dog', onCompleted: () {
+      _checkNextTutorial();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([
+        dogCardKey,
+      ]);
+    });
+  }
+
+  Future<void> _checkAndShowTutorial() async {
+    if (!_tutorialCheckDone) {
+      _tutorialCheckDone = true;
+
+      final user = await this.user;
+      final reservations = await prenotazioni;
+
+      print(
+          "DEBUG: Checking tutorial state - hasDogs: ${user.dogs.isNotEmpty}, hasReservations: ${reservations.isNotEmpty}");
+
+      _currentTutorialState = await TutorialManager.getCurrentTutorialState(
+        hasDogs: user.dogs.isNotEmpty,
+        hasReservations: reservations.isNotEmpty,
+      );
+
+      print("DEBUG: Current tutorial state: $_currentTutorialState");
+
+      if (_currentTutorialState == TutorialState.navigation) {
+        _showNavigationTutorial();
+      } else if (_currentTutorialState == TutorialState.dog) {
+        _showDogTutorial();
+      } else if (_currentTutorialState == TutorialState.reservation) {
+        _showReservationTutorial();
+      }
+    }
+  }
+
+  void _showNavigationTutorial() {
+    TutorialManager.setCurrentTutorial('navigation', onCompleted: () {
+      _checkNextTutorial();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([
+        homePageKey,
+        menuNavBarButtonKey,
+        userEditButtonKey,
+        unlockKennelFABKey,
+        mapNavBarButtonKey,
+        mapPageKey,
+        homePageNavBarButtonKey
+      ]);
+    });
+  }
+
+  void _showReservationTutorial() {
+    TutorialManager.setCurrentTutorial('reservation', onCompleted: () {
+      _checkNextTutorial();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([
+        reservationCardKey,
+      ]);
+    });
+  }
+
+  void _checkNextTutorial() async {
+    final user = await this.user;
+    final reservations = await prenotazioni;
+
+    final nextState = await TutorialManager.getCurrentTutorialState(
+      hasDogs: user.dogs.isNotEmpty,
+      hasReservations: reservations.isNotEmpty,
+    );
+
+    if (nextState != _currentTutorialState &&
+        nextState != TutorialState.completed) {
+      _currentTutorialState = nextState;
+
+      if (_currentTutorialState == TutorialState.dog) {
+        _showDogTutorial();
+      } else if (_currentTutorialState == TutorialState.reservation) {
+        if (currentPageIndex == 1) {
+          setState(() {
+            controller.reverse().then((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showReservationTutorial();
+              });
+            });
+            currentPageIndex = 0;
+          });
+        } else {
+          _showReservationTutorial();
+        }
+      }
+    }
   }
 
   @override
@@ -208,20 +303,6 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
-  }
-
-  void _showCoachMark() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ShowCaseWidget.of(context).startShowCase([
-        homePageKey,
-        menuButtonKey,
-        userEditButtonKey,
-        unlockKennelFABKey,
-        mapNavBarButtonKey,
-        mapPageKey,
-        homePageButtonKey
-      ]);
-    });
   }
 
   // Helper function to check if a store has a suitable kennel
@@ -418,6 +499,13 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
         });
   }
 
+  // Aggiungi questo metodo nella classe _NavigationState per debug
+  void _resetTutorials() async {
+    await TutorialManager.resetAllTutorials();
+    _tutorialCheckDone = false;
+    _checkAndShowTutorial();
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -428,6 +516,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
       future: Future.wait([user, prenotazioni, stores, breeds, MQTTClient]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          // Chiamata al check del tutorial dopo che i dati sono caricati
+          _checkAndShowTutorial();
+
           dogPicture = [];
           markersList = _getMarkersList(
               snapshot.data![2] as List<Store>,
@@ -458,6 +549,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                 ),
               ),
               actions: [
+                IconButton(
+                    onPressed: _resetTutorials, icon: Icon(Icons.help_outline)),
                 Showcase(
                   key: userEditButtonKey,
                   titleAlignment: Alignment.centerLeft,
@@ -538,7 +631,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Showcase(
-                          key: homePageButtonKey,
+                          key: homePageNavBarButtonKey,
+                          disableBarrierInteraction: true,
                           titleAlignment: Alignment.centerLeft,
                           title: "Home screen",
                           titleTextStyle: Theme.of(context)
@@ -546,8 +640,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                               .bodyMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                           descriptionAlignment: Alignment.centerLeft,
-                          description:
-                              "Now, let's go back to the home screen. It's time to add your first dog.",
+                          description: (snapshot.data![0] as User).dogs.isEmpty
+                              ? "Now, let's go back to the home screen. It's time to add your first dog."
+                              : "Now, let's go back to the home screen.",
                           descTextStyle: Theme.of(context).textTheme.bodyMedium,
                           tooltipBackgroundColor:
                               Theme.of(context).colorScheme.primaryContainer,
@@ -565,10 +660,12 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           tooltipActions: [
                             TooltipActionButton(
                                 type: TooltipDefaultActionType.previous,
-                                leadIcon: const ActionButtonIcon(
+                                leadIcon: ActionButtonIcon(
                                   icon: Icon(
                                     Icons.arrow_back_ios,
                                     size: 16,
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
                                   ), // Icon
                                 ), // ActionButtonIcon
                                 name: "Previous",
@@ -576,13 +673,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                        color: isDarkTheme
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .primary),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary),
                                 onTap: () {
                                   if (currentPageIndex == 0) {
                                     setState(() {
@@ -599,28 +692,24 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                        color: isDarkTheme
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer),
-                                backgroundColor: isDarkTheme
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer),
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
                                 onTap: () {
                                   if (currentPageIndex == 1) {
                                     setState(() {
-                                      controller.reverse();
+                                      controller.reverse().then((_) {
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          ShowCaseWidget.of(context).next();
+                                        });
+                                      });
                                       currentPageIndex = 0;
                                     });
                                   }
-                                  ShowCaseWidget.of(context).next();
                                 }),
                           ],
                           child: IconButton(
@@ -655,7 +744,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           ),
                         ),
                         Showcase(
-                          key: menuButtonKey,
+                          key: menuNavBarButtonKey,
+                          disableBarrierInteraction: true,
                           titleAlignment: Alignment.centerLeft,
                           title: "Manage dogs",
                           titleTextStyle: Theme.of(context)
@@ -750,6 +840,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                               setState(() {
                                                 user = getUser();
                                               });
+                                              // Controlla se mostrare il tutorial sui cani
+                                              _checkNextTutorial();
                                             }
                                           });
                                         },
@@ -952,6 +1044,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                         ),
                         Showcase(
                           key: mapNavBarButtonKey,
+                          disableBarrierInteraction: true,
                           titleAlignment: Alignment.centerLeft,
                           title: "Map button",
                           titleTextStyle: Theme.of(context)
@@ -971,23 +1064,25 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                               // Prima completa la transizione
                               setState(() {
                                 controller.forward().then((_) {
-                                  currentPageIndex = 1;
                                   // Solo dopo la transizione completa, avanza nello showcase
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
                                     ShowCaseWidget.of(context).next();
                                   });
                                 });
+                                currentPageIndex = 1;
                               });
                             }
                           },
                           tooltipActions: [
                             TooltipActionButton(
                               type: TooltipDefaultActionType.previous,
-                              leadIcon: const ActionButtonIcon(
+                              leadIcon: ActionButtonIcon(
                                 icon: Icon(
                                   Icons.arrow_back_ios,
                                   size: 16,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
                                 ), // Icon
                               ), // ActionButtonIcon
                               name: "Previous",
@@ -995,13 +1090,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                   .textTheme
                                   .bodyMedium
                                   ?.copyWith(
-                                      color: isDarkTheme
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .primary),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary),
                             ),
                             TooltipActionButton(
                                 type: TooltipDefaultActionType.next,
@@ -1010,32 +1101,24 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                        color: isDarkTheme
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer),
-                                backgroundColor: isDarkTheme
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer),
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
                                 onTap: () {
                                   if (currentPageIndex == 0) {
                                     // Prima completa la transizione
                                     setState(() {
                                       controller.forward().then((_) {
-                                        currentPageIndex = 1;
                                         // Solo dopo la transizione completa, avanza nello showcase
                                         WidgetsBinding.instance
                                             .addPostFrameCallback((_) {
                                           ShowCaseWidget.of(context).next();
                                         });
                                       });
+                                      currentPageIndex = 1;
                                     });
                                   } else {
                                     ShowCaseWidget.of(context).next();
@@ -1137,6 +1220,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 .map((dog) => dog.picture)
                                 .toList();
                           });
+                          // Controlla se mostrare il tutorial sui cani
+                          _checkNextTutorial();
                         },
                         onReservationsUpdated: () {
                           setState(() {
@@ -1147,6 +1232,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 snapshot.data![0] as User,
                                 snapshot.data![1] as List<Reservation>);
                           });
+                          // Controlla se mostrare il tutorial sulle prenotazioni
+                          _checkNextTutorial();
                         },
                         user: snapshot.data![0] as User,
                         breeds: snapshot.data![3] as List<Breed>,
@@ -1173,17 +1260,18 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           ?.copyWith(fontWeight: FontWeight.bold),
                       descriptionAlignment: Alignment.centerLeft,
                       description:
-                          "This is the map screen. Here, you can see all the stores that have available kennels.",
+                          "This is the map screen. Here, you can see all the stores that have available kennels. Tap on a paw to reserve a kennel through the dedicated button.",
                       descTextStyle: Theme.of(context).textTheme.bodyMedium,
                       tooltipBackgroundColor:
                           Theme.of(context).colorScheme.primaryContainer,
                       tooltipActions: [
                         TooltipActionButton(
                             type: TooltipDefaultActionType.previous,
-                            leadIcon: const ActionButtonIcon(
+                            leadIcon: ActionButtonIcon(
                               icon: Icon(
                                 Icons.arrow_back_ios,
                                 size: 16,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ), // Icon
                             ), // ActionButtonIcon
                             name: "Previous",
@@ -1191,11 +1279,9 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                    color: isDarkTheme
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primary),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
                             onTap: () {
                               if (currentPageIndex == 1) {
                                 setState(() {
@@ -1212,21 +1298,14 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                    color: isDarkTheme
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer),
                             hideActionWidgetForShowcase: [
                               mapNavBarButtonKey
                             ], // hide on last showcase
-                            backgroundColor: isDarkTheme
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primaryContainer,
                             onTap: ShowCaseWidget.of(context).next),
                       ],
                       child: OSMMap(
@@ -1258,6 +1337,8 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                                 snapshot.data![0] as User,
                                 snapshot.data![1] as List<Reservation>);
                           });
+                          // Controlla se mostrare il tutorial sulle prenotazioni
+                          _checkNextTutorial();
                         },
                         onRefreshKennels: () {
                           setState(() {

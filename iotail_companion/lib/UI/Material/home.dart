@@ -9,12 +9,14 @@ import 'package:holdable_button/utils/utils.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:slide_countdown/slide_countdown.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import 'package:iotail_companion/util/user.dart';
 import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 import 'package:iotail_companion/util/reservation.dart';
 import 'package:iotail_companion/util/store.dart';
+import 'package:iotail_companion/util/tutorial_keys.dart';
 
 class Home extends StatefulWidget {
   final Function(int) onDogSelected;
@@ -220,6 +222,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -240,60 +244,100 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
                 return InkWell(
-                  radius: 5,
-                  onTap: () {
-                    widget.onDogSelected(index);
-                  },
-                  onLongPress: _toggleEditMode,
-                  child: AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset:
-                            Offset(0, editMode ? _animation.value * 100 : 0),
-                        child: Transform.rotate(
-                          angle: editMode ? _animation.value : 0,
-                          child: child,
-                        ),
-                      );
+                    radius: 5,
+                    onTap: () {
+                      widget.onDogSelected(index);
                     },
-                    child: Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        Card(
-                          elevation: widget.selectedDog == index ? 5 : 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: widget.selectedDog == index ? 3 : 1),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: SizedBox(
-                                width: 300,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
+                    onLongPress: _toggleEditMode,
+                    child: AnimatedBuilder(
+                      animation: _animation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset:
+                              Offset(0, editMode ? _animation.value * 100 : 0),
+                          child: Transform.rotate(
+                            angle: editMode ? _animation.value : 0,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          Showcase(
+                            key: index == 0
+                                ? dogCardKey
+                                : GlobalKey(), // Solo la prima card ha il tutorial
+                            disableBarrierInteraction: true,
+                            title: "Your dog card",
+                            titleAlignment: Alignment.centerLeft,
+                            titleTextStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                            descriptionAlignment: Alignment.centerLeft,
+                            description:
+                                "This is your dog's information card. Tap to select it, or long press to enter edit mode.",
+                            descTextStyle:
+                                Theme.of(context).textTheme.bodyMedium,
+                            tooltipBackgroundColor:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            tooltipActions: [
+                              TooltipActionButton(
+                                  type: TooltipDefaultActionType.next,
+                                  name: "Finish",
+                                  textStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                           color: Theme.of(context)
                                               .colorScheme
-                                              .outline
-                                              .withOpacity(0.5),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            11), // Leggermente più piccolo del container
-                                        child:
-                                            widget.user.dogs[index].picture ==
+                                              .onPrimaryContainer),
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  onTap: () {
+                                    ShowCaseWidget.of(context).next();
+                                  }),
+                            ],
+                            targetBorderRadius: BorderRadius.circular(15),
+                            child: Card(
+                              elevation: widget.selectedDog == index ? 5 : 1,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      width:
+                                          widget.selectedDog == index ? 3 : 1),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 300,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 120,
+                                          height: 120,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outline
+                                                  .withOpacity(0.5),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                                11), // Leggermente più piccolo del container
+                                            child: widget.user.dogs[index]
+                                                            .picture ==
                                                         null ||
                                                     widget.user.dogs[index]
                                                         .picture!.isEmpty
@@ -310,79 +354,75 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     width: 120,
                                                     height: 120,
                                                   ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 8,
-                                    ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              widget.user.dogs
-                                                  .elementAt(index)
-                                                  .name,
-                                              style: const TextStyle(
-                                                  fontSize: 40,
-                                                  fontWeight: FontWeight.bold)),
-                                          Text(
-                                            widget.breeds
-                                                .firstWhere((breed) =>
-                                                    breed.breedID ==
-                                                    widget.user.dogs
-                                                        .elementAt(index)
-                                                        .breedID)
-                                                .name,
-                                            style:
-                                                const TextStyle(fontSize: 20),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        const SizedBox(
+                                          width: 8,
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                  widget.user.dogs
+                                                      .elementAt(index)
+                                                      .name,
+                                                  style: const TextStyle(
+                                                      fontSize: 40,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              Text(
+                                                widget.breeds
+                                                    .firstWhere((breed) =>
+                                                        breed.breedID ==
+                                                        widget.user.dogs
+                                                            .elementAt(index)
+                                                            .breedID)
+                                                    .name,
+                                                style: const TextStyle(
+                                                    fontSize: 20),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        if (editMode)
-                          IconButton(
-                              style: ButtonStyle(
-                                  // backgroundColor: WidgetStateProperty.all(
-                                  //     Colors.yellow.shade600),
-                                  shape:
-                                      WidgetStateProperty.all(CircleBorder())),
-                              // color: Colors.white,
-                              onPressed: () async {
-                                String? token =
-                                    await storage.read(key: "token");
-                                context.push(
-                                  "/Dog",
-                                  extra: {
-                                    "dog": widget.user.dogs.elementAt(index),
-                                    "breeds": widget.breeds,
-                                    "userID": widget.user.userID,
-                                    "ip": ip,
-                                    "token": token,
-                                    "onEdit": () {
-                                      widget.onDogUpdated();
-                                    }
-                                  },
-                                );
-                                editMode = false;
-                              },
-                              icon: const Icon(Icons.edit)),
-                      ],
-                    ),
-                  ),
-                );
+                          if (editMode)
+                            IconButton(
+                                style: ButtonStyle(
+                                    shape: WidgetStateProperty.all(
+                                        CircleBorder())),
+                                onPressed: () async {
+                                  String? token =
+                                      await storage.read(key: "token");
+                                  context.push(
+                                    "/Dog",
+                                    extra: {
+                                      "dog": widget.user.dogs.elementAt(index),
+                                      "breeds": widget.breeds,
+                                      "userID": widget.user.userID,
+                                      "ip": ip,
+                                      "token": token,
+                                      "onEdit": () {
+                                        widget.onDogUpdated();
+                                      }
+                                    },
+                                  );
+                                  editMode = false;
+                                },
+                                icon: const Icon(Icons.edit)),
+                        ],
+                      ),
+                    ));
               },
               separatorBuilder: (BuildContext context, int index) {
-                return const SizedBox(
-                  width: 8,
-                );
+                return const SizedBox(width: 8);
               },
             ),
           ),
@@ -433,167 +473,214 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     child: Stack(
                       alignment: Alignment.topRight,
                       children: [
-                        Card(
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: widget.reservations.elementAt(index).active
-                                  ? 3
-                                  : 1,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                      "Dog: ${widget.user.dogs.firstWhere((dog) => dog.dogID == widget.reservations.elementAt(index).dogID).name}",
-                                      style: const TextStyle(fontSize: 40)),
-                                  Text(
-                                      "${widget.shops.firstWhere((shop) => shop.id == widget.reservations.elementAt(index).storeID).name}, kennel: ${widget.reservations.elementAt(index).kennelID.toString().padLeft(3, '0')}",
-                                      style: const TextStyle(fontSize: 20)),
-                                  if (!widget.reservations
-                                      .elementAt(index)
-                                      .active)
-                                    SlideCountdown(
-                                      duration: remainingTime,
-                                      slideDirection: SlideDirection.up,
-                                      separator: ":",
-                                      separatorStyle: TextStyle(fontSize: 20),
-                                      decoration: BoxDecoration(
+                        Showcase(
+                          key: index == 0
+                              ? reservationCardKey
+                              : GlobalKey(), // Solo la prima reservation ha il tutorial
+                          disableBarrierInteraction: true,
+                          title: "Dog reservation",
+                          titleAlignment: Alignment.centerLeft,
+                          titleTextStyle: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          descriptionAlignment: Alignment.centerLeft,
+                          description: !widget.reservations
+                                  .elementAt(index)
+                                  .active
+                              ? "This is your reservation. You can activate it with the dedicated button or cancel it with the button or by swiping from right to left. When a reservation is active, you can check details by pressing the top right button."
+                              : "This is your active reservation. You can check details by pressing the top right button.",
+                          descTextStyle: Theme.of(context).textTheme.bodyMedium,
+                          tooltipBackgroundColor:
+                              Theme.of(context).colorScheme.primaryContainer,
+                          tooltipActions: [
+                            TooltipActionButton(
+                                type: TooltipDefaultActionType.next,
+                                name: "Finish",
+                                textStyle: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .surface,
+                                            .onPrimaryContainer),
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                onTap: () {
+                                  ShowCaseWidget.of(context).next();
+                                }),
+                          ],
+                          targetBorderRadius: BorderRadius.circular(18),
+                          child: Card(
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width:
+                                    widget.reservations.elementAt(index).active
+                                        ? 3
+                                        : 1,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        "Dog: ${widget.user.dogs.firstWhere((dog) => dog.dogID == widget.reservations.elementAt(index).dogID).name}",
+                                        style: const TextStyle(fontSize: 40)),
+                                    Text(
+                                        "${widget.shops.firstWhere((shop) => shop.id == widget.reservations.elementAt(index).storeID).name}, kennel: ${widget.reservations.elementAt(index).kennelID.toString().padLeft(3, '0')}",
+                                        style: const TextStyle(fontSize: 20)),
+                                    if (!widget.reservations
+                                        .elementAt(index)
+                                        .active)
+                                      SlideCountdown(
+                                        duration: remainingTime,
+                                        slideDirection: SlideDirection.up,
+                                        separator: ":",
+                                        separatorStyle: TextStyle(fontSize: 20),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                        ),
+                                        style: const TextStyle(fontSize: 20),
+                                        onDone: () async {
+                                          Future.delayed(
+                                              const Duration(seconds: 5), () {
+                                            widget.onReservationsUpdated();
+                                          });
+                                        },
                                       ),
-                                      style: const TextStyle(fontSize: 20),
-                                      onDone: () async {
-                                        Future.delayed(
-                                            const Duration(seconds: 5), () {
-                                          widget.onReservationsUpdated();
-                                        });
-                                      },
-                                    ),
-                                  widget.reservations.elementAt(index).active
-                                      ? Container(
-                                          margin: const EdgeInsets.only(top: 8),
-                                          decoration: BoxDecoration(
-                                              border: Border.all(
-                                                  color: Colors.red, width: 2),
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          child: HoldableButton(
-                                            loadingType:
-                                                LoadingType.fillingLoading,
-                                            buttonColor: Theme.of(context)
-                                                .colorScheme
-                                                .surface,
-                                            loadingColor: Colors.red,
-                                            duration: 5,
-                                            radius: 10,
-                                            beginFillingPoint:
-                                                Alignment.centerLeft,
-                                            endFillingPoint:
-                                                Alignment.centerRight,
-                                            resetAfterFinish: true,
-                                            onConfirm: () async {
-                                              final String? token =
-                                                  await storage.read(
-                                                      key: "token");
-                                              Map response = await requests
-                                                  .cancel_reservation(
-                                                      ip!,
-                                                      token!,
-                                                      widget.reservations
-                                                          .elementAt(index)
-                                                          .reservationID);
-                                              if (response["message"]
-                                                  .contains("Failed")) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                        response["message"]),
-                                                    duration: const Duration(
-                                                        seconds: 3),
-                                                  ),
-                                                );
-                                              } else {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: const Text(
-                                                        "Reservation cancel successful"),
-                                                    duration: const Duration(
-                                                        seconds: 3),
-                                                  ),
-                                                );
-                                                widget.onReservationsUpdated();
-                                              }
-                                            },
-                                            strokeWidth: 1,
-                                            hasVibrate: true,
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
-                                            height: 50,
-                                            child: const Text(
-                                              "HOLD TO CONFIRM TERMINATION",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
+                                    widget.reservations.elementAt(index).active
+                                        ? Container(
+                                            margin:
+                                                const EdgeInsets.only(top: 8),
+                                            decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Colors.red,
+                                                    width: 2),
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            child: HoldableButton(
+                                              loadingType:
+                                                  LoadingType.fillingLoading,
+                                              buttonColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
+                                              loadingColor: Colors.red,
+                                              duration: 5,
+                                              radius: 10,
+                                              beginFillingPoint:
+                                                  Alignment.centerLeft,
+                                              endFillingPoint:
+                                                  Alignment.centerRight,
+                                              resetAfterFinish: true,
+                                              onConfirm: () async {
+                                                final String? token =
+                                                    await storage.read(
+                                                        key: "token");
+                                                Map response = await requests
+                                                    .cancel_reservation(
+                                                        ip!,
+                                                        token!,
+                                                        widget.reservations
+                                                            .elementAt(index)
+                                                            .reservationID);
+                                                if (response["message"]
+                                                    .contains("Failed")) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                          response["message"]),
+                                                      duration: const Duration(
+                                                          seconds: 3),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: const Text(
+                                                          "Reservation cancel successful"),
+                                                      duration: const Duration(
+                                                          seconds: 3),
+                                                    ),
+                                                  );
+                                                  widget
+                                                      .onReservationsUpdated();
+                                                }
+                                              },
+                                              strokeWidth: 1,
+                                              hasVibrate: true,
+                                              width: MediaQuery.of(context)
+                                                  .size
+                                                  .width,
+                                              height: 50,
+                                              child: const Text(
+                                                "HOLD TO CONFIRM TERMINATION",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
                                             ),
-                                          ),
-                                        )
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            if (!widget.reservations.elementAt(index).active)
-                                              TextButton(
+                                          )
+                                        : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              if (!widget.reservations
+                                                  .elementAt(index)
+                                                  .active)
+                                                TextButton(
+                                                    style: ButtonStyle(
+                                                        backgroundColor:
+                                                            WidgetStateProperty.all(
+                                                                Colors.green),
+                                                        shape: WidgetStateProperty.all(
+                                                            RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                        5)))),
+                                                    onPressed: () =>
+                                                        _showReservationActivationDialog(
+                                                            context,
+                                                            widget.reservations
+                                                                .elementAt(index)),
+                                                    child: const Text("Activate", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                                              IconButton(
                                                   style: ButtonStyle(
                                                       backgroundColor:
-                                                          WidgetStateProperty.all(
-                                                              Colors.green),
+                                                          WidgetStateProperty
+                                                              .all(Colors.red),
                                                       shape: WidgetStateProperty.all(
                                                           RoundedRectangleBorder(
                                                               borderRadius:
-                                                                  BorderRadius.circular(
-                                                                      5)))),
-                                                  onPressed: () => _showReservationActivationDialog(
-                                                      context,
-                                                      widget.reservations
-                                                          .elementAt(index)),
-                                                  child: const Text("Activate",
-                                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                                            IconButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        WidgetStateProperty.all(
-                                                            Colors.red),
-                                                    shape: WidgetStateProperty.all(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5)))),
-                                                color: Colors.white,
-                                                onPressed: () =>
-                                                    _showReservationCancelConfirmation(
-                                                        context,
-                                                        widget.reservations
-                                                            .elementAt(index)),
-                                                icon: const Icon(Icons.delete)),
-                                          ],
-                                        )
-                                ],
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          5)))),
+                                                  color: Colors.white,
+                                                  onPressed: () =>
+                                                      _showReservationCancelConfirmation(
+                                                          context,
+                                                          widget.reservations
+                                                              .elementAt(index)),
+                                                  icon: const Icon(Icons.delete)),
+                                            ],
+                                          )
+                                  ],
+                                ),
                               ),
                             ),
                           ),

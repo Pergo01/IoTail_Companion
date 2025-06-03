@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
                     body: Center(child: Text('Error: ${tokenSnapshot.error}')),
                     floatingActionButton: FloatingActionButton(
                       onPressed: () async {
-                        refreshToken(ip_val);
+                        token = refreshToken(ip_val);
                       },
                       child: Icon(Icons.refresh),
                     ),

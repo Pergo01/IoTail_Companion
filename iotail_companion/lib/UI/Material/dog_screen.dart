@@ -2,10 +2,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import 'package:iotail_companion/util/dog.dart';
 import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
+
+final dogSaveButtonKey = GlobalKey();
 
 class DogScreen extends StatefulWidget {
   final Dog dog;
@@ -40,13 +43,14 @@ class _DogScreenState extends State<DogScreen> {
   late String _coatType;
   late List<String> _allergies;
   String? _imagePath;
+  final ScrollController _scrollController = ScrollController();
   late final TextEditingController _nameController;
   late final SearchController _breedSearchController;
   late final TextEditingController _ageController;
-  final ExpansionTileController _sexController = ExpansionTileController();
-  final ExpansionTileController _sizeController = ExpansionTileController();
+  final ExpansibleController _sexController = ExpansibleController();
+  final ExpansibleController _sizeController = ExpansibleController();
   late final TextEditingController _weightController;
-  final ExpansionTileController _coatTypeController = ExpansionTileController();
+  final ExpansibleController _coatTypeController = ExpansibleController();
   late final TextEditingController _allergiesController;
   // Mixed Breed fields
   late double _maxIdealTemperature;
@@ -57,6 +61,15 @@ class _DogScreenState extends State<DogScreen> {
   late TextEditingController _minIdealTemperatureController;
   late TextEditingController _maxIdealHumidityController;
   late TextEditingController _minIdealHumidityController;
+
+  void _showCoachMark() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      ShowCaseWidget.of(context).startShowCase([
+        dogSaveButtonKey,
+      ]);
+    });
+  }
 
   @override
   void initState() {
@@ -102,6 +115,9 @@ class _DogScreenState extends State<DogScreen> {
         text: _maxIdealHumidity != 0.0 ? _maxIdealHumidity.toString() : null);
     _minIdealHumidityController = TextEditingController(
         text: _minIdealHumidity != 0.0 ? _minIdealHumidity.toString() : null);
+    if (widget.dog.dogID != "") {
+      _showCoachMark();
+    }
   }
 
   @override
@@ -338,6 +354,7 @@ class _DogScreenState extends State<DogScreen> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 children: [
                   Stack(
@@ -959,83 +976,124 @@ class _DogScreenState extends State<DogScreen> {
                         ),
                       ),
                     ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (_breedID == -1) {
+                  Showcase(
+                    key:
+                        widget.dog.dogID != "" ? dogSaveButtonKey : GlobalKey(),
+                    titleAlignment: Alignment.centerLeft,
+                    title: "Save Changes",
+                    titleTextStyle: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                    descriptionAlignment: Alignment.centerLeft,
+                    description:
+                        "Remember to save your changes before going back to homescreen.",
+                    descTextStyle: Theme.of(context).textTheme.bodyMedium,
+                    tooltipBackgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    targetBorderRadius: BorderRadius.circular(30),
+                    tooltipActions: [
+                      TooltipActionButton(
+                          type: TooltipDefaultActionType.next,
+                          name: "Finish",
+                          textStyle: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primaryContainer,
+                          onTap: () {
+                            ShowCaseWidget.of(context).dismiss();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _scrollController.animateTo(
+                                  _scrollController.position.minScrollExtent,
+                                  duration: Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut);
+                            });
+                          }),
+                    ],
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_breedID == -1) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Please select a breed"),
+                          ));
+                          return;
+                        }
+                        Map tmp = _breedID != 0
+                            ? {
+                                "dogID": widget.dog.dogID,
+                                "name": _name,
+                                "breedID": _breedID,
+                                "age": _age,
+                                "sex": _sex == "Male" ? 0 : 1,
+                                "size": _size,
+                                "weight": _weight,
+                                "coatType": _coatType,
+                                "allergies": _allergies,
+                                "Picture": _imagePath,
+                              }
+                            : {
+                                "dogID": widget.dog.dogID,
+                                "name": _name,
+                                "breedID": _breedID,
+                                "age": _age,
+                                "sex": _sex == "Male" ? 0 : 1,
+                                "size": _size,
+                                "weight": _weight,
+                                "coatType": _coatType,
+                                "minIdealTemperature": _minIdealTemperature,
+                                "maxIdealTemperature": _maxIdealTemperature,
+                                "minIdealHumidity": _minIdealHumidity,
+                                "maxIdealHumidity": _maxIdealHumidity,
+                                "allergies": _allergies,
+                                "Picture": _imagePath,
+                              };
+                        final response = widget.dog.dogID == ""
+                            ? await requests.addDog(
+                                widget.ip, widget.token, widget.userID, tmp)
+                            : await requests.editDog(
+                                widget.ip, widget.token, widget.userID, tmp);
+                        if (response["message"].toString().contains("Failed")) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(response["message"]),
+                          ));
+                          return;
+                        }
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Please select a breed"),
+                          content: widget.dog.dogID == ""
+                              ? Text("Dog added successfully")
+                              : Text("Dog updated successfully"),
                         ));
-                        return;
-                      }
-                      Map tmp = _breedID != 0
-                          ? {
-                              "dogID": widget.dog.dogID,
-                              "name": _name,
-                              "breedID": _breedID,
-                              "age": _age,
-                              "sex": _sex == "Male" ? 0 : 1,
-                              "size": _size,
-                              "weight": _weight,
-                              "coatType": _coatType,
-                              "allergies": _allergies,
-                              "Picture": _imagePath,
-                            }
-                          : {
-                              "dogID": widget.dog.dogID,
-                              "name": _name,
-                              "breedID": _breedID,
-                              "age": _age,
-                              "sex": _sex == "Male" ? 0 : 1,
-                              "size": _size,
-                              "weight": _weight,
-                              "coatType": _coatType,
-                              "minIdealTemperature": _minIdealTemperature,
-                              "maxIdealTemperature": _maxIdealTemperature,
-                              "minIdealHumidity": _minIdealHumidity,
-                              "maxIdealHumidity": _maxIdealHumidity,
-                              "allergies": _allergies,
-                              "Picture": _imagePath,
-                            };
-                      final response = widget.dog.dogID == ""
-                          ? await requests.addDog(
-                              widget.ip, widget.token, widget.userID, tmp)
-                          : await requests.editDog(
-                              widget.ip, widget.token, widget.userID, tmp);
-                      if (response["message"].toString().contains("Failed")) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(response["message"]),
-                        ));
-                        return;
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: widget.dog.dogID == ""
-                            ? Text("Dog added successfully")
-                            : Text("Dog updated successfully"),
-                      ));
-                      if (widget.dog.dogID == "") {
-                        context.pop();
-                        setState(() {});
-                      }
-                      widget.onEdit();
-                    },
-                    style: ButtonStyle(
-                      elevation: WidgetStateProperty.all(8),
-                      shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      )),
-                      backgroundColor: WidgetStateProperty.all(
-                          Theme.of(context).colorScheme.primaryContainer),
-                      // side: WidgetStateProperty.all(
-                      //     BorderSide(color: Colors.red)),
-                      minimumSize:
-                          WidgetStateProperty.all(Size(double.infinity, 50)),
-                      padding: WidgetStateProperty.all(EdgeInsets.all(8)),
-                    ),
-                    child: Text(
-                      widget.dog.dogID == "" ? "ADD DOG" : "SAVE CHANGES",
-                      style: TextStyle(
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer),
+                        if (widget.dog.dogID == "") {
+                          context.pop();
+                          setState(() {});
+                        }
+                        widget.onEdit();
+                      },
+                      style: ButtonStyle(
+                        elevation: WidgetStateProperty.all(8),
+                        shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        )),
+                        backgroundColor: WidgetStateProperty.all(
+                            Theme.of(context).colorScheme.primaryContainer),
+                        // side: WidgetStateProperty.all(
+                        //     BorderSide(color: Colors.red)),
+                        minimumSize:
+                            WidgetStateProperty.all(Size(double.infinity, 50)),
+                        padding: WidgetStateProperty.all(EdgeInsets.all(8)),
+                      ),
+                      child: Text(
+                        widget.dog.dogID == "" ? "ADD DOG" : "SAVE CHANGES",
+                        style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer),
+                      ),
                     ),
                   ),
                   SizedBox(

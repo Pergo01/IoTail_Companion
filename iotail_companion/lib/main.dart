@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iotail_companion/UI/Material/home.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,6 +15,8 @@ import 'package:iotail_companion/UI/Material/dog_screen.dart';
 import 'package:iotail_companion/UI/Material/user_screen.dart';
 import 'package:iotail_companion/util/firebase_api.dart';
 import 'package:iotail_companion/UI/Material/reservation_screen.dart';
+import 'package:iotail_companion/util/tutorial_keys.dart';
+import 'package:iotail_companion/util/tutorial_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -146,21 +147,26 @@ class MyApp extends StatelessWidget {
       globalTooltipActions: [
         TooltipActionButton(
           type: TooltipDefaultActionType.previous,
-          leadIcon: const ActionButtonIcon(
+          leadIcon: ActionButtonIcon(
             icon: Icon(
               Icons.arrow_back_ios,
               size: 16,
+              color: isDarkTheme
+                  ? darkColorScheme.onPrimary
+                  : lightColorScheme.onPrimary,
             ), // Icon
           ), // ActionButtonIcon
           name: "Previous",
           textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: isDarkTheme
-                  ? darkColorScheme.primary
-                  : lightColorScheme.primary),
+                  ? darkColorScheme.onPrimary
+                  : lightColorScheme.onPrimary),
           hideActionWidgetForShowcase: [
             homePageKey,
             saveButtonKey,
           ], // hide on first showcase
+          backgroundColor:
+              isDarkTheme ? darkColorScheme.primary : lightColorScheme.primary,
         ),
         TooltipActionButton(
             type: TooltipDefaultActionType.next,
@@ -188,10 +194,11 @@ class MyApp extends StatelessWidget {
       //   print("TAGGS : onComplete $index Skey");
       // },
       //
-      // /// called every group of coach mark completed onFinish
-      // onFinish: () {
-      //   print("TAGGS: onFinish");
-      // },
+      /// called every group of coach mark completed onFinish
+      onFinish: () async {
+        print("Tutorial finished");
+        await TutorialManager.handleTutorialCompletion();
+      },
       blurValue: 5,
       disableBarrierInteraction: true,
     );
