@@ -138,24 +138,32 @@ class MyApp extends StatelessWidget {
           child: TextButton(
               onPressed: () async {
                 // Completely stops all the tutorials and marks them as completed
-                ShowCaseWidget.of(showcaseContext).dismiss();
-                TutorialManager.markDogTutorialCompleted();
-                TutorialManager.markDogTutorialCompleted();
-                TutorialManager.markReservationTutorialCompleted();
-                await FlutterSecureStorage(
+                ShowCaseWidget.of(showcaseContext)
+                    .dismiss(); // Dismiss the showcase
+                TutorialManager
+                    .markDogTutorialCompleted(); // Mark the dog tutorial as completed
+                TutorialManager
+                    .markDogTutorialCompleted(); // Mark the user tutorial as completed
+                TutorialManager
+                    .markReservationTutorialCompleted(); // Mark the reservation tutorial as completed
+                final storage = FlutterSecureStorage(
                     aOptions: const AndroidOptions(
                   encryptedSharedPreferences: true,
-                )).write(key: "userEditTutorialComplete", value: "completed");
-                await FlutterSecureStorage(
-                    aOptions: const AndroidOptions(
-                  encryptedSharedPreferences: true,
-                )).write(key: "dogEditTutorialComplete", value: "completed");
-                final userID = await FlutterSecureStorage(
-                    aOptions: const AndroidOptions(
-                  encryptedSharedPreferences: true,
-                )).read(key: "userID");
-                await TutorialManager.markCurrentSession(userID!);
-                await TutorialManager.markFirstLaunchComplete();
+                )); // Initialize secure storage with Android options
+                storage.write(
+                    key: "userEditTutorialComplete",
+                    value:
+                        "completed"); // Write the user edit tutorial completion status
+                storage.write(
+                    key: "dogEditTutorialComplete",
+                    value:
+                        "completed"); // Write the dog edit tutorial completion status
+                final userID = await storage.read(
+                    key: "userID"); // Read the user ID from secure storage
+                TutorialManager.markCurrentSession(
+                    userID!); // Mark the current session as completed
+                TutorialManager
+                    .markFirstLaunchComplete(); // Mark the first launch as completed
               },
               child: Text(
                 "Skip",
