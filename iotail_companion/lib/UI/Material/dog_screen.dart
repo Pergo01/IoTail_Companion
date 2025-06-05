@@ -9,15 +9,18 @@ import 'package:iotail_companion/util/dog.dart';
 import 'package:iotail_companion/util/breed.dart';
 import 'package:iotail_companion/util/requests.dart' as requests;
 
-final dogSaveButtonKey = GlobalKey();
+final dogSaveButtonKey =
+    GlobalKey(); // Key for the save button showcase tutorial
 
+/// The screen that allows the user to add, edit, or delete a dog.
 class DogScreen extends StatefulWidget {
-  final Dog dog;
-  final List<Breed> breeds;
-  final String userID;
-  final String ip;
-  final String token;
-  final VoidCallback onEdit;
+  final Dog dog; // Dog object containing all the dog details
+  final List<Breed> breeds; // List of breeds to choose from
+  final String userID; // User ID for API requests
+  final String ip; // IP address of the server
+  final String token; // Authentication token for API requests
+  final VoidCallback
+      onEdit; // Callback function to refresh the dog list after adding, editing, or deleting a dog
 
   const DogScreen(
       {super.key,
@@ -33,11 +36,13 @@ class DogScreen extends StatefulWidget {
 }
 
 class _DogScreenState extends State<DogScreen> {
-  late FlutterSecureStorage storage;
+  late FlutterSecureStorage
+      storage; // Declaring secure storage variable for persistently storing data or writing precedently stored data. This allows to persist information after the app is closed.
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
-      );
+      ); // Options for Android secure storage
 
+  // Variables to hold the dog details
   Uint8List? _pickedImage;
   late String _name;
   late String _breed;
@@ -49,6 +54,8 @@ class _DogScreenState extends State<DogScreen> {
   late String _coatType;
   late List<String> _allergies;
   String? _imagePath;
+
+  // Controllers for the text fields, search bar and expandable tiles
   final ScrollController _scrollController = ScrollController();
   late final TextEditingController _nameController;
   late final SearchController _breedSearchController;
@@ -58,6 +65,7 @@ class _DogScreenState extends State<DogScreen> {
   late final TextEditingController _weightController;
   final ExpansibleController _coatTypeController = ExpansibleController();
   late final TextEditingController _allergiesController;
+
   // Mixed Breed fields
   late double _maxIdealTemperature;
   late double _minIdealTemperature;
@@ -68,14 +76,17 @@ class _DogScreenState extends State<DogScreen> {
   late TextEditingController _maxIdealHumidityController;
   late TextEditingController _minIdealHumidityController;
 
+  /// Function to show the tutorial for the save button only when the screen is first opened.
   void _showCoachMark() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       storage.read(key: "dogEditTutorialComplete").then((value) {
+        // Wait for the value and then check if it is 'completed'
         if (value != 'completed') {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          _scrollController.jumpTo(_scrollController.position
+              .maxScrollExtent); // Scroll to the bottom of the screen to show the save button
           ShowCaseWidget.of(context).startShowCase([
             dogSaveButtonKey,
-          ]);
+          ]); // Start the showcase tutorial for the save button
         }
       });
     });
@@ -84,8 +95,12 @@ class _DogScreenState extends State<DogScreen> {
   @override
   void initState() {
     super.initState();
-    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-    _pickedImage = widget.dog.picture;
+    storage = FlutterSecureStorage(
+        aOptions:
+            _getAndroidOptions()); // Initialize secure storage with Android options
+    // Initialize the variables and the textfield/search controllers with the dog details coming from the home screen
+    _pickedImage = widget
+        .dog.picture; // If the dog has a picture, set it to the picked image
     _name = widget.dog.name;
     _nameController =
         TextEditingController(text: widget.dog.name != "" ? _name : null);
@@ -126,7 +141,9 @@ class _DogScreenState extends State<DogScreen> {
         text: _maxIdealHumidity != 0.0 ? _maxIdealHumidity.toString() : null);
     _minIdealHumidityController = TextEditingController(
         text: _minIdealHumidity != 0.0 ? _minIdealHumidity.toString() : null);
+
     if (widget.dog.dogID != "") {
+      // If a dog is being added, do not show the tutorial
       _showCoachMark();
     }
   }
@@ -134,6 +151,7 @@ class _DogScreenState extends State<DogScreen> {
   @override
   void dispose() {
     super.dispose();
+    // Dispose of the controllers to free up resources
     _nameController.dispose();
     _breedSearchController.dispose();
     _ageController.dispose();
@@ -141,6 +159,7 @@ class _DogScreenState extends State<DogScreen> {
     _allergiesController.dispose();
   }
 
+  /// Function to take an image from the camera
   Future<void> _captureImageFromCamera() async {
     final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.camera,
@@ -152,6 +171,7 @@ class _DogScreenState extends State<DogScreen> {
     }
   }
 
+  /// Function to pick an image from the gallery
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.gallery,
@@ -163,6 +183,7 @@ class _DogScreenState extends State<DogScreen> {
     }
   }
 
+  /// Show a bottom sheet with options to capture an image from the camera, pick an image from the gallery, or delete the current dog picture.
   void _showBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -181,33 +202,37 @@ class _DogScreenState extends State<DogScreen> {
                 'Profile Image',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 10), // Space between title and options
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Option button for camera
                   _buildOptionButton(
                     icon: Icons.camera_alt,
                     label: 'Camera',
                     onTap: () {
-                      context.pop();
-                      _captureImageFromCamera();
+                      context.pop(); // Close the bottom sheet
+                      _captureImageFromCamera(); // Capture image from camera
                     },
                   ),
+                  // Option button for gallery
                   _buildOptionButton(
                     icon: Icons.photo_library,
                     label: 'Library',
                     onTap: () {
-                      context.pop();
-                      _pickImageFromGallery();
+                      context.pop(); // Close the bottom sheet
+                      _pickImageFromGallery(); // Pick image from gallery
                     },
                   ),
+                  // Option button for deleting the current dog picture to show only if a picture is already picked or already exists
                   if (_pickedImage != null && _pickedImage!.isNotEmpty)
                     _buildOptionButton(
                       icon: Icons.delete,
                       label: 'Cancel',
                       onTap: () {
-                        context.pop();
-                        _showDogPictureDeleteConfirmDialog(context);
+                        context.pop(); // Close the bottom sheet
+                        _showDogPictureDeleteConfirmDialog(
+                            context); // Show confirmation dialog to delete the dog picture
                       },
                     ),
                 ],
@@ -219,6 +244,7 @@ class _DogScreenState extends State<DogScreen> {
     );
   }
 
+  /// Dialog to confirm the deletion of the dog's picture.
   void _showDogPictureDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -228,16 +254,23 @@ class _DogScreenState extends State<DogScreen> {
           title: Text('Delete Dog image'),
           content: Text('Are you sure you want to delete the dog\'s image?'),
           actions: [
+            // Button for confirming the deletion of the dog's picture
             TextButton(
               onPressed: () async {
-                context.pop();
+                context.pop(); // Close the dialog
                 Map<String, dynamic> message = await requests.deleteDogPicture(
-                    widget.ip, widget.token, widget.userID, widget.dog.dogID);
+                    widget.ip,
+                    widget.token,
+                    widget.userID,
+                    widget.dog
+                        .dogID); // Make API request to delete the dog picture
                 if (message["message"].contains("Failed")) {
+                  // If the request failed, show an error message
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(message["message"]),
                   ));
                 } else {
+                  // If the request was successful, show a success message and update the state
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text("Dog image deleted successfully"),
                   ));
@@ -245,14 +278,15 @@ class _DogScreenState extends State<DogScreen> {
                   setState(() {
                     _pickedImage = null;
                   });
-                  widget.onEdit();
+                  widget
+                      .onEdit(); // Call the onEdit callback to refresh the dog list in the home screen and then the navigation
                 }
               },
               child: Text('YES'),
             ),
             TextButton(
               onPressed: () {
-                context.pop();
+                context.pop(); // Close the dialog without doing anything
               },
               child: Text('NO'),
             ),
@@ -262,6 +296,7 @@ class _DogScreenState extends State<DogScreen> {
     );
   }
 
+  /// Show a dialog to confirm the deletion of the dog.
   void _showDogDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -273,26 +308,32 @@ class _DogScreenState extends State<DogScreen> {
           actions: [
             TextButton(
               onPressed: () async {
-                context.pop();
+                context.pop(); // Close the dialog
                 Map<String, dynamic> message = await requests.deleteDog(
-                    widget.ip, widget.token, widget.userID, widget.dog.dogID);
+                    widget.ip,
+                    widget.token,
+                    widget.userID,
+                    widget.dog.dogID); // Make API request to delete the dog
                 if (message["message"].contains("Failed")) {
+                  // If the request failed, show an error message
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(message["message"]),
                   ));
                 } else {
+                  // If the request was successful, show a success message and update the state
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text("Dog deleted successfully"),
                   ));
-                  context.pop();
-                  widget.onEdit();
+                  context.pop(); // Go back to the home screen
+                  widget
+                      .onEdit(); // Call the onEdit callback to refresh the dog list in the home screen and then the navigation
                 }
               },
               child: Text('YES'),
             ),
             TextButton(
               onPressed: () {
-                context.pop();
+                context.pop(); // Close the dialog without doing anything
               },
               child: Text('NO'),
             ),
@@ -302,6 +343,7 @@ class _DogScreenState extends State<DogScreen> {
     );
   }
 
+  /// Build a button with an icon, label and onTap callback for the bottom sheet options.
   Widget _buildOptionButton({
     required IconData icon,
     required String label,
@@ -349,7 +391,8 @@ class _DogScreenState extends State<DogScreen> {
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-          ).createShader(bounds),
+          ).createShader(
+              bounds), // Gradient for the title text from top left to bottom right
           child: const Text(
             'IoTail',
             style: TextStyle(
@@ -371,6 +414,7 @@ class _DogScreenState extends State<DogScreen> {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
+                      // Display the dog's picture or a default image if no picture is picked
                       Container(
                           margin: EdgeInsets.only(top: 8),
                           decoration: BoxDecoration(
@@ -384,10 +428,17 @@ class _DogScreenState extends State<DogScreen> {
                           ),
                           clipBehavior: Clip.hardEdge,
                           child: _pickedImage == null || _pickedImage!.isEmpty
-                              ? Image.asset("assets/default_cane.jpeg",
-                                  height: 150, width: 150, fit: BoxFit.cover)
-                              : Image.memory(_pickedImage!,
-                                  height: 150, width: 150, fit: BoxFit.cover)),
+                              ? Image.asset(
+                                  "assets/default_cane.jpeg", // Default image if no picture is picked
+                                  height: 150,
+                                  width: 150,
+                                  fit: BoxFit.cover)
+                              : Image.memory(
+                                  _pickedImage!, // Display the picked image or the existing image
+                                  height: 150,
+                                  width: 150,
+                                  fit: BoxFit.cover)),
+                      // Button to open the bottom sheet for image options
                       GestureDetector(
                         onTap: () => _showBottomSheet(context),
                         child: CircleAvatar(
@@ -403,7 +454,10 @@ class _DogScreenState extends State<DogScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(
+                      height:
+                          16), // Space between the image and the text fields
+                  // Text fields for editing dog details
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
@@ -843,7 +897,8 @@ class _DogScreenState extends State<DogScreen> {
                       ),
                     ),
                   ),
-                  if (_breedID == 0)
+                  if (_breedID ==
+                      0) // If the breed is "Mixed Breed", show additional field for min ideal temperature
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
@@ -879,7 +934,8 @@ class _DogScreenState extends State<DogScreen> {
                         ),
                       ),
                     ),
-                  if (_breedID == 0)
+                  if (_breedID ==
+                      0) // If the breed is "Mixed Breed", show additional field for max ideal temperature
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
@@ -915,7 +971,8 @@ class _DogScreenState extends State<DogScreen> {
                         ),
                       ),
                     ),
-                  if (_breedID == 0)
+                  if (_breedID ==
+                      0) // If the breed is "Mixed Breed", show additional field for min ideal humidity
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
@@ -951,7 +1008,8 @@ class _DogScreenState extends State<DogScreen> {
                         ),
                       ),
                     ),
-                  if (_breedID == 0)
+                  if (_breedID ==
+                      0) // If the breed is "Mixed Breed", show additional field for max ideal humidity
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
@@ -987,6 +1045,7 @@ class _DogScreenState extends State<DogScreen> {
                         ),
                       ),
                     ),
+                  // Save button with showcase tutorial if the dog is being edited
                   Showcase(
                     key:
                         widget.dog.dogID != "" ? dogSaveButtonKey : GlobalKey(),
@@ -1002,7 +1061,7 @@ class _DogScreenState extends State<DogScreen> {
                     descTextStyle: Theme.of(context).textTheme.bodyMedium,
                     tooltipBackgroundColor:
                         Theme.of(context).colorScheme.primaryContainer,
-                    targetBorderRadius: BorderRadius.circular(30),
+                    targetBorderRadius: BorderRadius.circular(10),
                     tooltipActions: [
                       TooltipActionButton(
                           type: TooltipDefaultActionType.next,
@@ -1017,8 +1076,10 @@ class _DogScreenState extends State<DogScreen> {
                           backgroundColor:
                               Theme.of(context).colorScheme.primaryContainer,
                           onTap: () {
-                            ShowCaseWidget.of(context).dismiss();
+                            ShowCaseWidget.of(context)
+                                .dismiss(); // Dismiss the showcase
                             WidgetsBinding.instance.addPostFrameCallback((_) {
+                              // Scroll to the top of the screen only after the frame is built (i.e. after the showcase is dismissed)
                               _scrollController.animateTo(
                                   _scrollController.position.minScrollExtent,
                                   duration: Duration(milliseconds: 500),
@@ -1026,7 +1087,8 @@ class _DogScreenState extends State<DogScreen> {
                             });
                             storage.write(
                                 key: "dogEditTutorialComplete",
-                                value: "completed");
+                                value:
+                                    "completed"); // Mark this tutorial as completed
                           }),
                     ],
                     child: ElevatedButton(
@@ -1034,10 +1096,11 @@ class _DogScreenState extends State<DogScreen> {
                         if (_breedID == -1) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text("Please select a breed"),
-                          ));
+                          )); // Show error if no breed is selected
                           return;
                         }
-                        Map tmp = _breedID != 0
+                        Map tmp = _breedID !=
+                                0 // If the breed is not "Mixed Breed" do not include ideal temperature and humidity fields
                             ? {
                                 "dogID": widget.dog.dogID,
                                 "name": _name,
@@ -1068,25 +1131,33 @@ class _DogScreenState extends State<DogScreen> {
                               };
                         final response = widget.dog.dogID == ""
                             ? await requests.addDog(
-                                widget.ip, widget.token, widget.userID, tmp)
+                                widget.ip,
+                                widget.token,
+                                widget.userID,
+                                tmp) // if dogID is empty, add a new dog
                             : await requests.editDog(
-                                widget.ip, widget.token, widget.userID, tmp);
+                                widget.ip,
+                                widget.token,
+                                widget.userID,
+                                tmp); // if dogID is not empty, edit the existing dog
                         if (response["message"].toString().contains("Failed")) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text(response["message"]),
-                          ));
+                          )); // Show error if the request failed
                           return;
                         }
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: widget.dog.dogID == ""
                               ? Text("Dog added successfully")
                               : Text("Dog updated successfully"),
-                        ));
+                        )); // Show success message
                         if (widget.dog.dogID == "") {
-                          context.pop();
-                          setState(() {});
+                          context.pop(); // Pop the screen if a new dog is added
+                          setState(
+                              () {}); // Refresh the state to show the new dog in the list
                         }
-                        widget.onEdit();
+                        widget
+                            .onEdit(); // Call the onEdit callback to refresh the dog list in the homescreen
                       },
                       style: ButtonStyle(
                         elevation: WidgetStateProperty.all(8),
@@ -1112,8 +1183,9 @@ class _DogScreenState extends State<DogScreen> {
                   ),
                   SizedBox(
                     height: 8,
-                  ),
-                  if (widget.dog.dogID != "")
+                  ), // Space between save and delete buttons
+                  if (widget.dog.dogID !=
+                      "") // Show delete button only if editing an existing dog
                     ElevatedButton(
                       onPressed: () => _showDogDeleteConfirmDialog(context),
                       style: ButtonStyle(

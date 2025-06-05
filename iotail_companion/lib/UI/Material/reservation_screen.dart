@@ -832,7 +832,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                               border: Border.all(color: Colors.red, width: 2),
-                              borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(12)),
                           child: HoldableButton(
                             loadingType: LoadingType.fillingLoading,
                             buttonColor: Theme.of(context).colorScheme.surface,

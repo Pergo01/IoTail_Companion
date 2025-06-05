@@ -1,11 +1,13 @@
 import 'kennel.dart';
 import 'package:latlong2/latlong.dart';
 
+/// Store class to represent a store with its name, ID, location, and kennels
 class Store {
-  final String name;
-  final int id;
-  final LatLng location;
-  final List<Kennel> kennels;
+  final String name; // Name of the store
+  final int id; // Unique ID for the store
+  final LatLng
+      location; // Location of the store represented as latitude and longitude
+  final List<Kennel> kennels; // List of kennels available in the store
 
   Store(
       {required this.name,
@@ -13,6 +15,7 @@ class Store {
       required this.location,
       required this.kennels});
 
+  /// Converts a JSON object to a Store instance
   factory Store.fromJson(Map<String, dynamic> json) {
     List<Kennel> kennels = [];
     for (var kennel in json["Kennels"]) {

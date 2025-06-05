@@ -1,13 +1,16 @@
+/// Breed class to represent a dog breed with various attributes
 class Breed {
-  int breedID;
-  String name;
-  double? maxIdealTemperature;
-  double? minIdealTemperature;
-  double? maxIdealHumidity;
-  double? minIdealHumidity;
-  double? avgSize;
-  double? avgWeight;
-  String? coatType;
+  int breedID; // Unique identifier for the breed
+  String name; // Name of the breed
+
+  // All the following attributes are not present in a mixed breed, so they are nullable
+  double? maxIdealTemperature; // Maximum ideal temperature for the breed
+  double? minIdealTemperature; // Minimum ideal temperature for the breed
+  double? maxIdealHumidity; // Maximum ideal humidity for the breed
+  double? minIdealHumidity; // Minimum ideal humidity for the breed
+  double? avgSize; // Average size of the breed
+  double? avgWeight; // Average weight of the breed
+  String? coatType; // Type of coat the breed has (e.g., short, long, curly)
 
   Breed({
     required this.breedID,
@@ -21,6 +24,7 @@ class Breed {
     this.coatType,
   });
 
+  /// Converts a JSON map to a Breed object
   factory Breed.fromJson(Map<String, dynamic> json) {
     return Breed(
       breedID: json['BreedID'],

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// A widget that displays a popup with information about a shop.
 class DataMarkerPopup extends StatelessWidget {
+  final String name; // Name to show in the popup
+  final bool
+      isSuitable; // Boolean to check if the dog is suitable for the kennels inside the store
+  final VoidCallback
+      onReserve; // Callback function when the user sends the confirmation to reserve a kennel in that shop
+
   const DataMarkerPopup(
       {super.key,
       required this.name,
       required this.isSuitable,
       required this.onReserve});
-  final String name; // Name to show in the popup
-  final bool
-      isSuitable; // Boolean to check if the dog is suitable for the kennels inside the store
-  final VoidCallback onReserve;
 
+  /// Shows a dialog to confirm the reservation of the kennel.
   void _showReservationDialog(context) {
     showDialog(
         context: context,
@@ -24,12 +28,13 @@ class DataMarkerPopup extends StatelessWidget {
               actionsAlignment: MainAxisAlignment.spaceEvenly,
               actions: [
                 TextButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context
+                        .pop(), // Close the dialog without taking any action
                     child: const Text("Cancel")),
                 TextButton(
                     onPressed: () {
-                      onReserve();
-                      context.pop();
+                      onReserve(); // Call the callback function to reserve the kennel
+                      context.pop(); // Close the dialog
                     },
                     child: const Text("Yes")),
               ],
@@ -52,6 +57,7 @@ class DataMarkerPopup extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Button to show the reservation dialog
             IconButton(
                 style: IconButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -60,18 +66,19 @@ class DataMarkerPopup extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                       width: 1,
                     )),
-                onPressed: () =>
-                    isSuitable ? _showReservationDialog(context) : null,
+                onPressed: () => isSuitable
+                    ? _showReservationDialog(context)
+                    : null, // Show the dialog only if the dog is suitable for the shop
                 icon: Icon(
-                  isSuitable ? Icons.calendar_month : Icons.event_busy,
+                  isSuitable
+                      ? Icons.calendar_month
+                      : Icons
+                          .event_busy, // Show a calendar icon if the dog is suitable for the shop, otherwise show a busy icon
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 )),
-            // const SizedBox(
-            //   width: 5,
-            // ),
+            // Flexible widget to allow the text to take up the remaining space
             Flexible(
               child: Column(
-                // Add a column to show the data
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,

@@ -13,11 +13,16 @@ import 'package:latlong2/latlong.dart';
 import 'package:iotail_companion/UI/Material/dataMarkerPopup.dart';
 import 'package:iotail_companion/util/dataMarker.dart';
 
+/// A widget that displays a map with markers and allows interaction with them.
 class OSMMap extends StatefulWidget {
-  final List<DataMarker> markerslist;
-  final Function(DataMarker) onPrepareReservation;
-  final VoidCallback onSubmitReservation;
-  final VoidCallback onRefreshKennels;
+  final List<DataMarker> markerslist; // List of markers to display on the map
+  final Function(DataMarker)
+      onPrepareReservation; // Callback when a marker is tapped to prepare a reservation
+  final VoidCallback
+      onSubmitReservation; // Callback when a reservation is submitted
+  final VoidCallback
+      onRefreshKennels; // Callback to refresh the list of kennels
+
   const OSMMap(
       {super.key,
       required this.markerslist,
@@ -30,35 +35,45 @@ class OSMMap extends StatefulWidget {
 }
 
 class _OSMMapState extends State<OSMMap> {
-  final PopupController _popupController = PopupController();
+  final PopupController _popupController =
+      PopupController(); // Controller for managing popups on the map
 
-  late AlignOnUpdate _alignPositionOnUpdate;
-  late final StreamController<double?> _alignPositionStreamController;
-  late FlutterSecureStorage storage;
+  late AlignOnUpdate
+      _alignPositionOnUpdate; // Determines how the position alignment updates
+  late final StreamController<double?>
+      _alignPositionStreamController; // Stream controller for position alignment updates
+  late FlutterSecureStorage
+      storage; // Declaring secure storage variable for persistently storing data or writing precedently stored data. This allows to persist information after the app is closed.
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
-      );
+      ); // Options for Android secure storage
 
-  final MapController mapController = MapController();
+  final MapController mapController =
+      MapController(); // Controller for managing the map's state
 
   @override
   void initState() {
     super.initState();
-    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-    _alignPositionOnUpdate = AlignOnUpdate.once;
-    _alignPositionStreamController = StreamController<double?>();
+    storage = FlutterSecureStorage(
+        aOptions:
+            _getAndroidOptions()); // Initialize secure storage with Android options
+    _alignPositionOnUpdate =
+        AlignOnUpdate.once; // Set the initial alignment update behavior to once
+    _alignPositionStreamController = StreamController<
+        double?>(); // Initialize the stream controller for position alignment updates
   }
 
   @override
   void dispose() {
-    _alignPositionStreamController.close();
+    _alignPositionStreamController
+        .close(); // Close the stream controller when the widget is disposed
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final isDarkTheme = MediaQuery.of(context).platformBrightness ==
+        Brightness.dark; // Check if the current theme is dark
 
     return Center(
       child: PopupScope(
@@ -75,7 +90,7 @@ class _OSMMapState extends State<OSMMap> {
               TileLayer(
                 urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 tileBuilder: isDarkTheme ? darkModeTileBuilder : null,
-              ),
+              ), // Tile layer for displaying OpenStreetMap tiles
               CurrentLocationLayer(
                 alignPositionStream: _alignPositionStreamController.stream,
                 alignPositionOnUpdate: _alignPositionOnUpdate,
@@ -98,7 +113,7 @@ class _OSMMapState extends State<OSMMap> {
                   accuracyCircleColor:
                       Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 ),
-              ),
+              ), // Layer for displaying the current location marker
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                   spiderfyCluster: false,
@@ -131,16 +146,6 @@ class _OSMMapState extends State<OSMMap> {
                   popupOptions: PopupOptions(
                     popupSnap: PopupSnap.markerTop,
                     popupAnimation: const PopupAnimation.fade(),
-                    /* markerTapBehavior: MarkerTapBehavior.custom(
-                          (popupSpec, popupState, popupController) {
-                            if (popupState.selectedPopupSpecs
-                                .contains(popupSpec)) {
-                              popupController.hideAllPopups();
-                            } else {
-                              popupController.showPopupsOnlyForSpecs([popupSpec]);
-                            }
-                          },
-                        ), */
                     popupController: _popupController,
                     popupBuilder: (context, marker) {
                       if (marker is DataMarker) {
@@ -164,7 +169,7 @@ class _OSMMapState extends State<OSMMap> {
                       }
                       return const SizedBox();
                     },
-                  ),
+                  ), // Options for popups on markers
                   builder: (context, markers) {
                     return Container(
                       decoration: BoxDecoration(
@@ -172,15 +177,17 @@ class _OSMMapState extends State<OSMMap> {
                           color: Theme.of(context).colorScheme.tertiary),
                       child: Center(
                         child: Text(
-                          markers.length.toString(),
+                          markers.length
+                              .toString(), // Display the number of markers in the cluster
                           style: TextStyle(
                               color: Theme.of(context).colorScheme.onTertiary),
                         ),
                       ),
-                    );
+                    ); // Custom builder for cluster markers
                   },
                 ),
               ),
+              // Bottom right button to center the map on the current position
               Align(
                 alignment: Alignment.bottomRight,
                 child: Padding(
@@ -191,9 +198,10 @@ class _OSMMapState extends State<OSMMap> {
                     shape: const CircleBorder(),
                     onPressed: () {
                       setState(
-                        () => _alignPositionOnUpdate = AlignOnUpdate.once,
+                        () => _alignPositionOnUpdate = AlignOnUpdate
+                            .once, // Align the position to the current location
                       );
-                      _alignPositionStreamController.add(16.5);
+                      _alignPositionStreamController.add(16.5); // Zoom out
                     },
                     child: Icon(
                       Icons.my_location,
@@ -202,6 +210,7 @@ class _OSMMapState extends State<OSMMap> {
                   ),
                 ),
               ),
+              // Bottom left button to refresh the list of available kennels
               Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
@@ -221,7 +230,7 @@ class _OSMMapState extends State<OSMMap> {
               const MapCompass.cupertino(
                 hideIfRotatedNorth:
                     true, // Hide the compass if the map is rotated north
-              ), // Add a compass to the map
+              ), // Add a compass to the map to indicate the direction and reset the map orientation if tapped
             ]),
       ),
     );

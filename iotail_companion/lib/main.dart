@@ -5,8 +5,8 @@ import 'package:rive/rive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'firebase_options.dart';
 
+import 'package:iotail_companion/firebase_options.dart';
 import 'package:iotail_companion/UI/Material/login.dart';
 import 'package:iotail_companion/UI/Material/splash_screen.dart';
 import 'package:iotail_companion/UI/Material/navigation.dart';
@@ -19,20 +19,27 @@ import 'package:iotail_companion/util/tutorial_keys.dart';
 import 'package:iotail_companion/util/tutorial_manager.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await RiveFile.initialize();
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensure Flutter bindings are initialized
+  await RiveFile.initialize(); // Initialize Rive for animations in Login screen
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await FirebaseApi.instance.initialize();
+  ); // Initialize Firebase with the default options for the current platform
+  await FirebaseApi.instance.initialize(); // Initialize Firebase API
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
-      );
-  await FlutterSecureStorage(aOptions: _getAndroidOptions())
-      .write(key: "ip", value: "192.168.0.243");
+      ); // Define Android options for secure storage
+  await FlutterSecureStorage(
+          aOptions:
+              _getAndroidOptions()) // Initialize Flutter Secure Storage with Android options
+      .write(
+          key: "ip",
+          value:
+              "192.168.0.90"); // Write a default IP address to secure storage. THIS IS THE IP OF THE SERVER (RASPBERRY PI), CHANGE IT TO YOURS. Use 10.0.2.2 if you are using an android emulator and the server is running on the same machine or localhost for the iOS emulator.
   runApp(const MyApp());
 }
 
+// This is the main router configuration for the application using GoRouter
 final materialRouter = GoRouter(initialLocation: "/", routes: [
   GoRoute(
       name: "Login",
@@ -42,11 +49,12 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
         return LoginWithRive(
           ip: ip,
         );
-      }),
+      }), // Route for the login screen
   GoRoute(
       name: "SplashScreen",
       path: "/",
-      builder: (build, context) => const SplashScreen()),
+      builder: (build, context) =>
+          const SplashScreen()), // Route for the splash screen
   GoRoute(
       name: "Navigation",
       path: "/Navigation",
@@ -54,7 +62,7 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
         Map extra = context.extra as Map;
         return Navigation(
             ip: extra["ip"], token: extra["token"], userID: extra["userID"]);
-      }),
+      }), // Route for the main navigation screen
   GoRoute(
       name: "UserScreen",
       path: "/User",
@@ -66,7 +74,7 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
           token: extra["token"],
           onEdit: extra["onEdit"],
         );
-      }),
+      }), // Route for the user profile screen
   GoRoute(
       name: "DogScreen",
       path: "/Dog",
@@ -80,7 +88,7 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
           breeds: extra["breeds"],
           onEdit: extra["onEdit"],
         );
-      }),
+      }), // Route for the dog profile screen
   GoRoute(
       name: "ReservationScreen",
       path: "/ReservationScreen",
@@ -93,20 +101,21 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
           client: extra["client"], // Pass the client
           onReservationCancel: extra["onReservationCancel"],
         );
-      }),
+      }), // Route for the reservation screen
 ]);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-    ]);
-    final isDarkTheme =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+    ]); // Lock the app to portrait mode
+    final isDarkTheme = MediaQuery.of(context).platformBrightness ==
+        Brightness.dark; // Check if the current theme is dark
+
+    // Wrap the app with ShowCaseWidget to enable tutorial features
     return ShowCaseWidget(
       builder: (context) => MaterialApp.router(
         title: 'IoTail',
@@ -119,7 +128,9 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         routerConfig: materialRouter,
-      ),
+      ), // This is the main MaterialApp configuration, with themes and router for the different screens
+
+      // This is the configuration for the "Skip" button in the tutorial
       globalFloatingActionWidget: (showcaseContext) {
         return FloatingActionWidget(
           bottom: MediaQuery.paddingOf(context).bottom,
@@ -137,14 +148,21 @@ class MyApp extends StatelessWidget {
               )),
         );
       },
-      hideFloatingActionWidgetForShowcase: [saveButtonKey],
+
+      // This section specifies where the "Skip" button should be hidden during the tutorial
+      hideFloatingActionWidgetForShowcase: [saveButtonKey, dogSaveButtonKey],
+
+      // This is the configuration for the "Next" and "Previous" buttons in the tutorial
       globalTooltipActionConfig: const TooltipActionConfig(
         alignment: MainAxisAlignment.end,
         actionGap: 10,
         gapBetweenContentAndAction: 10,
         position: TooltipActionPosition.outside,
       ),
+
+      // This is the list of "standard" button actions that will be available during the tutorial
       globalTooltipActions: [
+        // Previous button
         TooltipActionButton(
           type: TooltipDefaultActionType.previous,
           leadIcon: ActionButtonIcon(
@@ -161,13 +179,19 @@ class MyApp extends StatelessWidget {
               color: isDarkTheme
                   ? darkColorScheme.onPrimary
                   : lightColorScheme.onPrimary),
+          // Specify where the "Previous" button should be hidden during the tutorial
           hideActionWidgetForShowcase: [
             homePageKey,
+            dogCardKey,
+            reservationCardKey,
             saveButtonKey,
-          ], // hide on first showcase
+            dogSaveButtonKey,
+          ], // hide on first tutorial popup
           backgroundColor:
               isDarkTheme ? darkColorScheme.primary : lightColorScheme.primary,
         ),
+
+        // Next button
         TooltipActionButton(
             type: TooltipDefaultActionType.next,
             name: "Next",
@@ -176,8 +200,7 @@ class MyApp extends StatelessWidget {
                     ? darkColorScheme.onPrimaryContainer
                     : lightColorScheme.onPrimaryContainer),
             hideActionWidgetForShowcase: [
-              mapNavBarButtonKey,
-              saveButtonKey
+              homePageNavBarButtonKey
             ], // hide on last showcase
             backgroundColor: isDarkTheme
                 ? darkColorScheme.primaryContainer
@@ -197,10 +220,12 @@ class MyApp extends StatelessWidget {
       /// called every group of coach mark completed onFinish
       onFinish: () async {
         print("Tutorial finished");
-        // Salva il completamento del tutorial corrente
+        // Save the tutorial completion state to secure storage
         await TutorialManager.handleTutorialCompletion();
       },
+      // This is the blur effect applied to the background during the tutorial
       blurValue: 5,
+      // This is the configuration for the barrier that prevents interaction with the background during the tutorial
       disableBarrierInteraction: true,
     );
   }

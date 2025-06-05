@@ -18,17 +18,19 @@ import 'package:iotail_companion/util/reservation.dart';
 import 'package:iotail_companion/util/store.dart';
 import 'package:iotail_companion/util/tutorial_keys.dart';
 
+// Home widget to display the user's dogs and reservations
 class Home extends StatefulWidget {
-  final Function(int) onDogSelected;
-  final int selectedDog;
-  final User user;
-  final List<Reservation> reservations;
-  final List<Breed> breeds;
-  final List<Store> shops;
-  final ScrollController scrollController;
-  final VoidCallback onDogUpdated;
-  final VoidCallback onReservationsUpdated;
-  final MqttServerClient client;
+  final Function(int) onDogSelected; // Callback to handle dog selection
+  final int selectedDog; // Index of the currently selected dog
+  final User user; // User data containing the list of dogs
+  final List<Reservation> reservations; // List of reservations for the user
+  final List<Breed> breeds; // List of breeds available
+  final List<Store> shops; // List of shops available
+  final ScrollController scrollController; // Scroll controller for the dog list
+  final VoidCallback onDogUpdated; // Callback to handle dog updates
+  final VoidCallback
+      onReservationsUpdated; // Callback to handle reservation updates
+  final MqttServerClient client; // MQTT client for communication
 
   const Home(
       {super.key,
@@ -51,21 +53,25 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   late String? ip;
   late String name;
   late String phone;
-  late FlutterSecureStorage storage;
+  late FlutterSecureStorage
+      storage; // Declaring secure storage variable for persistently storing data or writing precedently stored data. This allows to persist information after the app is closed.
   final TextEditingController _unlockCodeController = TextEditingController();
 
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
-      );
+      ); // Using encrypted shared preferences for secure storage on Android
 
-  bool editMode = false;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  bool editMode = false; // Flag to indicate if the dogs are in edit mode
+  late AnimationController
+      _animationController; // Animation controller for the dog cards
+  late Animation<double> _animation; // Animation for the dog cards
 
+  /// Retrieves the IP address from the storage.
   Future<void> setup() async {
     ip = await storage.read(key: "ip");
   }
 
+  /// Shows a confirmation dialog for canceling a reservation.
   Future<bool> _showReservationCancelConfirmation(
       BuildContext context, Reservation reservation) async {
     return await showDialog(
@@ -86,26 +92,33 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           ),
           TextButton(
             onPressed: () async {
-              final String? token = await storage.read(key: "token");
+              final String? token = await storage.read(
+                  key: "token"); // Retrieve the token from the storage
               Map response = await requests.cancel_reservation(
-                  ip!, token!, reservation.reservationID);
+                  ip!,
+                  token!,
+                  reservation
+                      .reservationID); // Call the cancel reservation API with the IP, token, and reservation ID
               if (response["message"].contains("Failed")) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(response["message"]),
                     duration: const Duration(seconds: 3),
                   ),
-                );
-                context.pop(false);
+                ); // Show a snackbar with the error message if the cancellation failed
+                context.pop(
+                    false); // Close the dialog without confirming the cancellation
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text("Reservation cancel successful"),
                     duration: const Duration(seconds: 3),
                   ),
-                );
-                widget.onReservationsUpdated();
-                context.pop(true);
+                ); // Show a snackbar with a success message if the cancellation was successful
+                widget
+                    .onReservationsUpdated(); // Call the callback to update the reservations list
+                context
+                    .pop(true); // Close the dialog and confirm the cancellation
               }
             },
             child: const Text("Yes"),
@@ -115,6 +128,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  /// Shows a dialog to confirm the activation of a reservation.
   Future<void> _showReservationActivationDialog(
       BuildContext context, Reservation reservation) async {
     return await showDialog(
@@ -140,6 +154,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
+          // Cancel button to clear the input and close the dialog
           TextButton(
             onPressed: () {
               _unlockCodeController.clear();
@@ -147,32 +162,38 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             },
             child: const Text("Cancel"),
           ),
+          // Confirm button to activate the reservation
           TextButton(
             onPressed: () async {
-              final String? token = await storage.read(key: "token");
+              final String? token = await storage.read(
+                  key: "token"); // Retrieve the token from the storage
               Map response = await requests.activate_reservation(
                   ip!,
                   token!,
                   reservation.reservationID,
-                  int.tryParse(_unlockCodeController.text) ?? -1);
-              _unlockCodeController.clear();
+                  int.tryParse(_unlockCodeController.text) ??
+                      -1); // Call the activate reservation API with the IP, token, reservation ID, and unlock code
+              _unlockCodeController
+                  .clear(); // Clear the input field after the request
               if (response["message"].contains("Failed")) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(response["message"]),
                     duration: const Duration(seconds: 3),
                   ),
-                );
-                context.pop();
+                ); // Show a snackbar with the error message if the activation failed
+                context
+                    .pop(); // Close the dialog without confirming the activation
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text("Reservation activation successful"),
                     duration: const Duration(seconds: 3),
                   ),
-                );
-                widget.onReservationsUpdated();
-                context.pop();
+                ); // Show a snackbar with a success message if the activation was successful
+                widget
+                    .onReservationsUpdated(); // Call the callback to update the reservations list
+                context.pop(); // Close the dialog and confirm the activation
               }
             },
             child: const Text("Confirm"),
@@ -184,8 +205,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-    setup();
+    storage = FlutterSecureStorage(
+        aOptions:
+            _getAndroidOptions()); // Initialize secure storage with Android options
+    setup(); // Call the setup method to retrieve the IP address
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 150),
@@ -193,29 +216,30 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     _animation = Tween<double>(
       begin: -0.01, // Small rotation to left
       end: 0.01, // Small rotation to right
-    ).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+    ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves
+            .easeInOut)); // Create an animation that rotates the dog cards slightly back and forth
     super.initState();
   }
 
   @override
-  void didUpdateWidget(Home oldwidget) {
-    super.didUpdateWidget(oldwidget);
-  }
-
-  @override
   void dispose() {
-    _animationController.dispose();
+    _animationController
+        .dispose(); // Dispose of the animation controller to free up resources
     super.dispose();
   }
 
+  /// Toggles the edit mode for the dog cards.
   void _toggleEditMode() {
     setState(() {
-      editMode = !editMode;
+      editMode = !editMode; // Toggle the edit mode flag
       if (editMode) {
-        _animationController.repeat(reverse: true);
+        _animationController.repeat(
+            reverse: true); // Start the animation when entering edit mode
       } else {
-        _animationController.stop();
+        _animationController
+            .stop(); // Stop the animation when exiting edit mode
       }
     });
   }
@@ -232,6 +256,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             widget.user.dogs.isEmpty ? "Add a dog." : "Dogs:",
             style: TextStyle(fontSize: 40),
           ),
+          // Horizontal list of dog cards to display the user's dogs
           ConstrainedBox(
             constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.2),
@@ -265,8 +290,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           Showcase(
                             key: index == 0
                                 ? dogCardKey
-                                : GlobalKey(), // Solo la prima card ha il tutorial
-                            disableBarrierInteraction: true,
+                                : GlobalKey(), // Only the first dog card has the tutorial
+                            disableBarrierInteraction:
+                                true, // Disable interaction with the rest of the screen while the tooltip is shown
                             title: "Your dog card",
                             titleAlignment: Alignment.centerLeft,
                             titleTextStyle: Theme.of(context)
@@ -295,20 +321,24 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       .colorScheme
                                       .primaryContainer,
                                   onTap: () {
-                                    ShowCaseWidget.of(context).next();
+                                    ShowCaseWidget.of(context)
+                                        .next(); // Move to the next tooltip
                                   }),
                             ],
                             targetBorderRadius: BorderRadius.circular(15),
                             child: Card(
-                              elevation: widget.selectedDog == index ? 5 : 1,
+                              elevation: widget.selectedDog == index
+                                  ? 5
+                                  : 1, // Increase elevation for the selected dog card
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color:
                                           Theme.of(context).colorScheme.primary,
-                                      width:
-                                          widget.selectedDog == index ? 3 : 1),
+                                      width: widget.selectedDog == index
+                                          ? 3
+                                          : 1), // Highlight the selected dog card with a thicker border
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12.0),
@@ -333,7 +363,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           clipBehavior: Clip.antiAlias,
                                           child: ClipRRect(
                                             borderRadius: BorderRadius.circular(
-                                                11), // Leggermente più piccolo del container
+                                                11), // Slightly smaller radius to match the border
                                             child: widget.user.dogs[index]
                                                             .picture ==
                                                         null ||
@@ -344,19 +374,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     fit: BoxFit.cover,
                                                     width: 120,
                                                     height: 120,
-                                                  )
+                                                  ) // Default image if no picture is available
                                                 : Image.memory(
                                                     widget.user.dogs[index]
                                                         .picture!,
                                                     fit: BoxFit.cover,
                                                     width: 120,
                                                     height: 120,
-                                                  ),
+                                                  ), // Display the dog's picture if available
                                           ),
                                         ),
                                         const SizedBox(
                                           width: 8,
-                                        ),
+                                        ), // Spacing between the image and text
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -365,7 +395,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                               Text(
                                                   widget.user.dogs
                                                       .elementAt(index)
-                                                      .name,
+                                                      .name, // Display the dog's name
                                                   style: const TextStyle(
                                                       fontSize: 40,
                                                       fontWeight:
@@ -377,7 +407,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         widget.user.dogs
                                                             .elementAt(index)
                                                             .breedID)
-                                                    .name,
+                                                    .name, // Display the dog's breed name
                                                 style: const TextStyle(
                                                     fontSize: 20),
                                               ),
@@ -391,14 +421,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                          if (editMode)
+                          if (editMode) // Show edit button only in edit mode
                             IconButton(
                                 style: ButtonStyle(
                                     shape: WidgetStateProperty.all(
                                         CircleBorder())),
                                 onPressed: () async {
-                                  String? token =
-                                      await storage.read(key: "token");
+                                  String? token = await storage.read(
+                                      key:
+                                          "token"); // Retrieve the token from the storage
                                   context.push(
                                     "/Dog",
                                     extra: {
@@ -411,8 +442,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         widget.onDogUpdated();
                                       }
                                     },
-                                  );
-                                  editMode = false;
+                                  ); // Navigate to the dog edit screen with the necessary data
+                                  editMode =
+                                      false; // Exit edit mode after editing a dog
                                 },
                                 icon: const Icon(Icons.edit)),
                         ],
@@ -420,28 +452,36 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     ));
               },
               separatorBuilder: (BuildContext context, int index) {
-                return const SizedBox(width: 8);
+                return const SizedBox(width: 8); // Spacing between dog cards
               },
             ),
           ),
-          if (widget.reservations.isNotEmpty)
+          if (widget.reservations
+              .isNotEmpty) // Divider to separate the dog list from the reservations section, only if there are reservations
             Divider(
               color: Theme.of(context).colorScheme.primary,
               thickness: 2,
             ),
-          if (widget.reservations.isNotEmpty)
+          if (widget.reservations
+              .isNotEmpty) // Display the reservations section only if there are reservations
             const Text(
               "Reservations:",
               style: TextStyle(fontSize: 40),
             ),
+          // List of reservations for the user
           Expanded(
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
-                  DateTime startTime = DateTime.fromMillisecondsSinceEpoch(
-                      widget.reservations.elementAt(index).reservationTime *
-                          1000);
-                  DateTime endtime = startTime.add(Duration(minutes: 30));
-                  Duration remainingTime = endtime.difference(DateTime.now());
+                  DateTime startTime = DateTime.fromMillisecondsSinceEpoch(widget
+                          .reservations
+                          .elementAt(index)
+                          .reservationTime *
+                      1000); // Convert reservation time from seconds to milliseconds
+                  DateTime endtime = startTime.add(Duration(
+                      minutes:
+                          30)); // Assuming each reservation lasts 30 minutes
+                  Duration remainingTime = endtime.difference(DateTime
+                      .now()); // Calculate the remaining time until the reservation ends
                   return Dismissible(
                     background: Container(
                       padding: EdgeInsets.all(8),
@@ -455,10 +495,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     ),
                     direction: !widget.reservations.elementAt(index).active
                         ? DismissDirection.endToStart
-                        : DismissDirection.none,
+                        : DismissDirection
+                            .none, // Allow swiping to delete only for non-active reservations
                     onDismissed: (direction) {
                       _showReservationCancelConfirmation(
-                          context, widget.reservations.elementAt(index));
+                          context,
+                          widget.reservations.elementAt(
+                              index)); // Show confirmation dialog when swiping to delete
                     },
                     key: Key(widget.reservations
                         .elementAt(index)
@@ -466,7 +509,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         .toString()),
                     confirmDismiss: (direction) {
                       return _showReservationCancelConfirmation(
-                          context, widget.reservations.elementAt(index));
+                          context,
+                          widget.reservations.elementAt(
+                              index)); // Confirm dismissal by showing the cancellation dialog
                     },
                     child: Stack(
                       alignment: Alignment.topRight,
@@ -474,8 +519,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         Showcase(
                           key: index == 0
                               ? reservationCardKey
-                              : GlobalKey(), // Solo la prima reservation ha il tutorial
-                          disableBarrierInteraction: true,
+                              : GlobalKey(), // Only the first reservation card has the tutorial
+                          disableBarrierInteraction:
+                              true, // Disable interaction with the rest of the screen while the tooltip is shown
                           title: "Dog reservation",
                           titleAlignment: Alignment.centerLeft,
                           titleTextStyle: Theme.of(context)
@@ -485,7 +531,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           descriptionAlignment: Alignment.centerLeft,
                           description: !widget.reservations
                                   .elementAt(index)
-                                  .active
+                                  .active // Check if the reservation is active and display the appropriate description
                               ? "This is your reservation. You can activate it with the dedicated button or cancel it with the button or by swiping from right to left. When a reservation is active, you can check details by pressing the top right button."
                               : "This is your active reservation. You can check details by pressing the top right button.",
                           descTextStyle: Theme.of(context).textTheme.bodyMedium,
@@ -506,7 +552,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     .colorScheme
                                     .primaryContainer,
                                 onTap: () {
-                                  ShowCaseWidget.of(context).next();
+                                  ShowCaseWidget.of(context)
+                                      .next(); // Move to the next tooltip
                                 }),
                           ],
                           targetBorderRadius: BorderRadius.circular(18),
@@ -516,10 +563,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(15),
                               side: BorderSide(
                                 color: Theme.of(context).colorScheme.primary,
-                                width:
-                                    widget.reservations.elementAt(index).active
-                                        ? 3
-                                        : 1,
+                                width: widget.reservations
+                                        .elementAt(index)
+                                        .active
+                                    ? 3
+                                    : 1, // Highlight the active reservation with a thicker border
                               ),
                             ),
                             child: Padding(
@@ -531,15 +579,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Text displaying the dog's name
                                     Text(
                                         "Dog: ${widget.user.dogs.firstWhere((dog) => dog.dogID == widget.reservations.elementAt(index).dogID).name}",
                                         style: const TextStyle(fontSize: 40)),
+                                    // Text displaying the reservation shop and kennel information
                                     Text(
                                         "${widget.shops.firstWhere((shop) => shop.id == widget.reservations.elementAt(index).storeID).name}, kennel: ${widget.reservations.elementAt(index).kennelID.toString().padLeft(3, '0')}",
                                         style: const TextStyle(fontSize: 20)),
                                     if (!widget.reservations
                                         .elementAt(index)
-                                        .active)
+                                        .active) // Show countdown only if the reservation is not active
                                       SlideCountdown(
                                         duration: remainingTime,
                                         slideDirection: SlideDirection.up,
@@ -554,11 +604,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         onDone: () async {
                                           Future.delayed(
                                               const Duration(seconds: 5), () {
-                                            widget.onReservationsUpdated();
+                                            widget
+                                                .onReservationsUpdated(); // Refresh reservations after countdown ends (5 seconds delay to account for app-server time mismatch)
                                           });
                                         },
                                       ),
-                                    widget.reservations.elementAt(index).active
+                                    widget.reservations
+                                            .elementAt(index)
+                                            .active // if the reservation is active, show the holdable button to cancel the reservation, otherwise show the activation or cancellation buttons
                                         ? Container(
                                             margin:
                                                 const EdgeInsets.only(top: 8),
@@ -585,14 +638,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                               onConfirm: () async {
                                                 final String? token =
                                                     await storage.read(
-                                                        key: "token");
+                                                        key:
+                                                            "token"); // Retrieve the token from the storage
                                                 Map response = await requests
                                                     .cancel_reservation(
                                                         ip!,
                                                         token!,
                                                         widget.reservations
                                                             .elementAt(index)
-                                                            .reservationID);
+                                                            .reservationID); // Call the cancel reservation API with the IP, token, and reservation ID
                                                 if (response["message"]
                                                     .contains("Failed")) {
                                                   ScaffoldMessenger.of(context)
@@ -603,7 +657,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                       duration: const Duration(
                                                           seconds: 3),
                                                     ),
-                                                  );
+                                                  ); // Show a snackbar with the error message if the cancellation failed
                                                 } else {
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
@@ -613,9 +667,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                       duration: const Duration(
                                                           seconds: 3),
                                                     ),
-                                                  );
+                                                  ); // Show a snackbar with a success message if the cancellation was successful
                                                   widget
-                                                      .onReservationsUpdated();
+                                                      .onReservationsUpdated(); // Call the callback to update the reservations list
                                                 }
                                               },
                                               strokeWidth: 1,
@@ -638,30 +692,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.end,
                                             children: [
-                                              if (!widget.reservations
-                                                  .elementAt(index)
-                                                  .active)
-                                                TextButton(
-                                                    style: ButtonStyle(
-                                                        backgroundColor:
-                                                            WidgetStateProperty.all(
-                                                                Colors.green),
-                                                        shape: WidgetStateProperty.all(
-                                                            RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                        5)))),
-                                                    onPressed: () =>
-                                                        _showReservationActivationDialog(
-                                                            context,
-                                                            widget.reservations
-                                                                .elementAt(index)),
-                                                    child: const Text("Activate", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                                              // Button to activate the reservation
+                                              TextButton(
+                                                  style: ButtonStyle(
+                                                      backgroundColor: WidgetStateProperty.all(
+                                                          Colors.green),
+                                                      shape: WidgetStateProperty.all(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(
+                                                                  5)))),
+                                                  onPressed: () => _showReservationActivationDialog(
+                                                      context,
+                                                      widget.reservations.elementAt(
+                                                          index)), // Show dialog to activate the reservation
+                                                  child: const Text("Activate",
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold))),
+                                              // Button to cancel the reservation
                                               IconButton(
                                                   style: ButtonStyle(
                                                       backgroundColor:
-                                                          WidgetStateProperty
-                                                              .all(Colors.red),
+                                                          WidgetStateProperty.all(
+                                                              Colors.red),
                                                       shape: WidgetStateProperty.all(
                                                           RoundedRectangleBorder(
                                                               borderRadius:
@@ -673,7 +726,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                       _showReservationCancelConfirmation(
                                                           context,
                                                           widget.reservations
-                                                              .elementAt(index)),
+                                                              .elementAt(
+                                                                  index)), // Show confirmation dialog to cancel the reservation
                                                   icon: const Icon(Icons.delete)),
                                             ],
                                           )
@@ -683,12 +737,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-                        if (widget.reservations.elementAt(index).active)
+                        if (widget.reservations
+                            .elementAt(index)
+                            .active) // Show the button to open the reservation details only if the reservation is active
                           IconButton(
-                            onPressed: () async {
-                              int kennelID =
-                                  widget.reservations.elementAt(index).kennelID;
-                              await context.push("/ReservationScreen", extra: {
+                            onPressed: () {
+                              int kennelID = widget.reservations
+                                  .elementAt(index)
+                                  .kennelID; // Get the kennel ID from the reservation
+                              context.push("/ReservationScreen", extra: {
                                 "reservation":
                                     widget.reservations.elementAt(index),
                                 "dog": widget.user.dogs.firstWhere((dog) =>
@@ -697,22 +754,22 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 "ip": ip,
                                 "client": widget.client, // Pass the client
                                 "onReservationCancel": () async {
-                                  final String? token =
-                                      await storage.read(key: "token");
-                                  Map response =
-                                      await requests.cancel_reservation(
-                                          ip!,
-                                          token!,
-                                          widget.reservations
-                                              .elementAt(index)
-                                              .reservationID);
+                                  final String? token = await storage.read(
+                                      key:
+                                          "token"); // Retrieve the token from the storage
+                                  Map response = await requests.cancel_reservation(
+                                      ip!,
+                                      token!,
+                                      widget.reservations
+                                          .elementAt(index)
+                                          .reservationID); // Call the cancel reservation API with the IP, token, and reservation ID
                                   if (response["message"].contains("Failed")) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(response["message"]),
                                         duration: const Duration(seconds: 3),
                                       ),
-                                    );
+                                    ); // Show a snackbar with the error message if the cancellation failed
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
@@ -720,18 +777,22 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                             "Reservation cancel successful"),
                                         duration: const Duration(seconds: 3),
                                       ),
-                                    );
-                                    widget.onReservationsUpdated();
+                                    ); // Show a snackbar with a success message if the cancellation was successful
+                                    widget
+                                        .onReservationsUpdated(); // Call the callback to update the reservations list
                                   }
                                 }
-                              });
-                              final builder = MqttPayloadBuilder();
-                              builder.addString(jsonEncode({"message": "off"}));
+                              }); // Navigate to the reservation details screen with the reservation data, dog data, IP, client, and cancellation callback
+                              final builder =
+                                  MqttPayloadBuilder(); // Create a new MQTT payload builder
+                              builder.addString(jsonEncode({
+                                "message": "off"
+                              })); // Add a string payload to the builder to turn off the camera
                               widget.client.publishMessage(
                                   "IoTail/kennel$kennelID/camera",
                                   MqttQos.exactlyOnce,
-                                  builder.payload!);
-                              print('MQTT message sent to turn off the camera');
+                                  builder
+                                      .payload!); // Publish the MQTT message to turn off the camera for the specified kennel
                             },
                             icon: Icon(Icons.open_in_new),
                             color: Theme.of(context).colorScheme.primary,
@@ -743,7 +804,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 separatorBuilder: (BuildContext context, int index) {
                   return const SizedBox(
                     height: 8,
-                  );
+                  ); // Spacing between reservation cards
                 },
                 itemCount: widget.reservations.length),
           ),

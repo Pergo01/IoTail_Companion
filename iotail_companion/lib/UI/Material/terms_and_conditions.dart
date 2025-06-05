@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/gestures.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:go_router/go_router.dart';
 
+/// A widget that displays the Terms and Conditions and Privacy Policy text with links.
 class TermsAndConditionsText extends StatelessWidget {
   const TermsAndConditionsText({super.key});
 
@@ -30,7 +32,7 @@ class TermsAndConditionsText extends StatelessWidget {
               ..onTap = () {
                 _showMarkdownDialog(context, 'Terms & Conditions',
                     'assets/terms_and_conditions.md');
-              },
+              }, // Show the Terms & Conditions dialog
           ),
           TextSpan(
             text: ' and ',
@@ -50,16 +52,18 @@ class TermsAndConditionsText extends StatelessWidget {
               ..onTap = () {
                 _showMarkdownDialog(
                     context, 'Privacy Policy', 'assets/privacy_policy.md');
-              },
+              }, // Show the Privacy Policy dialog
           ),
         ],
       ),
     );
   }
 
+  /// Shows a dialog with the content of the markdown file.
   Future<void> _showMarkdownDialog(
       BuildContext context, String title, String assetPath) async {
-    final content = await rootBundle.loadString(assetPath);
+    final content = await rootBundle
+        .loadString(assetPath); // Load the markdown content from the asset file
 
     showDialog(
       context: context,
@@ -74,8 +78,9 @@ class TermsAndConditionsText extends StatelessWidget {
             ),
           ),
           actions: [
+            // Close button to dismiss the dialog
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => context.pop(),
               child: const Text('Close'),
             ),
           ],

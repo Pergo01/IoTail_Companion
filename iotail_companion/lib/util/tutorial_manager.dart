@@ -1,21 +1,26 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+/// Class to manage the tutorial states and user sessions for Navigation, Dog, and Reservation tutorials.
 class TutorialManager {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
     ),
-  );
+  ); //// Declaring secure storage variable for persistently storing data or writing precedently stored data. This allows to persist information after the app is closed.
 
   // Chiavi per le varie fasi del tutorial
-  static const String _navigationTutorialKey = 'navigation_tutorial_completed';
-  static const String _dogTutorialKey = 'dog_tutorial_completed';
+  static const String _navigationTutorialKey =
+      'navigation_tutorial_completed'; // Key for navigation tutorial completion
+  static const String _dogTutorialKey =
+      'dog_tutorial_completed'; // Key for dog tutorial completion
   static const String _reservationTutorialKey =
-      'reservation_tutorial_completed';
-  static const String _lastSessionKey = 'last_user_session';
-  static const String _firstLaunchKey = 'app_first_launch';
+      'reservation_tutorial_completed'; // Key for reservation tutorial completion
+  static const String _lastSessionKey =
+      'last_user_session'; // Key for the last user session
+  static const String _firstLaunchKey =
+      'app_first_launch'; // Key to check if it's the first launch of the app
 
-  // Getters per verificare se i tutorial sono stati completati
+  // Getters to verify if the tutorials are completed
   static Future<bool> get isNavigationTutorialCompleted async {
     try {
       final value = await _storage.read(key: _navigationTutorialKey);
@@ -26,9 +31,11 @@ class TutorialManager {
     }
   }
 
+  /// Checks if the dog tutorial is completed.
   static Future<bool> get isDogTutorialCompleted async {
     try {
-      final value = await _storage.read(key: _dogTutorialKey);
+      final value = await _storage.read(
+          key: _dogTutorialKey); // Read the value for the dog tutorial key
       return value == 'true';
     } catch (e) {
       print('Error reading dog tutorial: $e');
@@ -36,9 +43,12 @@ class TutorialManager {
     }
   }
 
+  /// Checks if the reservation tutorial is completed.
   static Future<bool> get isReservationTutorialCompleted async {
     try {
-      final value = await _storage.read(key: _reservationTutorialKey);
+      final value = await _storage.read(
+          key:
+              _reservationTutorialKey); // Read the value for the reservation tutorial key
       return value == 'true';
     } catch (e) {
       print('Error reading reservation tutorial: $e');
@@ -46,106 +56,126 @@ class TutorialManager {
     }
   }
 
-  // Metodi per marcare i tutorial come completati - ORA SONO ASYNC
+  // Methods to mark the navigation tutorial as completed
   static Future<void> markNavigationTutorialCompleted() async {
     try {
-      await _storage.write(key: _navigationTutorialKey, value: 'true');
+      await _storage.write(
+          key: _navigationTutorialKey,
+          value:
+              'true'); // Write 'true' to the navigation tutorial key to mark it as completed
     } catch (e) {
       print('Error marking navigation tutorial: $e');
     }
   }
 
+  /// Marks the dog tutorial as completed.
   static Future<void> markDogTutorialCompleted() async {
     try {
-      await _storage.write(key: _dogTutorialKey, value: 'true');
+      await _storage.write(
+          key: _dogTutorialKey,
+          value:
+              'true'); // Write 'true' to the dog tutorial key to mark it as completed
     } catch (e) {
       print('Error marking dog tutorial: $e');
     }
   }
 
+  /// Marks the reservation tutorial as completed.
   static Future<void> markReservationTutorialCompleted() async {
     try {
-      await _storage.write(key: _reservationTutorialKey, value: 'true');
+      await _storage.write(
+          key: _reservationTutorialKey,
+          value:
+              'true'); // Write 'true' to the reservation tutorial key to mark it as completed
     } catch (e) {
       print('Error marking reservation tutorial: $e');
     }
   }
 
+  /// Determines if tutorials should be shown based on the user's session and completion status.
   static Future<bool> shouldShowTutorials({
     required String userID,
     required bool hasDogs,
     required bool hasReservations,
   }) async {
-    // Controlla se è il primo avvio dell'app
+    // Check if it's the first launch of the app
     final isFirstLaunch = await _isFirstAppLaunch();
     if (isFirstLaunch) {
-      await _markCurrentSession(userID);
-      final navigationCompleted = await isNavigationTutorialCompleted;
-      final dogCompleted = await isDogTutorialCompleted;
-      final reservationCompleted = await isReservationTutorialCompleted;
+      // If it's the first launch, show all tutorials
+      await _markCurrentSession(
+          userID); // Mark the current session for the active user
+      final navigationCompleted =
+          await isNavigationTutorialCompleted; // Check if the navigation tutorial is completed
+      final dogCompleted =
+          await isDogTutorialCompleted; // Check if the dog tutorial is completed
+      final reservationCompleted =
+          await isReservationTutorialCompleted; // Check if the reservation tutorial is completed
       if (navigationCompleted && dogCompleted && reservationCompleted) {
+        // If all tutorials are completed, mark the first launch as complete
         await _markFirstLaunchComplete();
-        return false; // Non mostrare i tutorial se sono già stati completati
+        return false; // Don't show any tutorials
       }
-      return true;
+      return true; // Show tutorials since it's the first launch and not all are completed
     }
 
-    // Controlla se è una nuova sessione utente
-    final isNewSession = await _isNewUserSession(userID);
+    // Check if it's a new user session
+    final isNewSession = await _isNewUserSession(
+        userID); // Check if the current userID is different from the last session
     if (isNewSession) {
-      await _markCurrentSession(userID);
-      await _storage.delete(key: _firstLaunchKey);
-      await _storage.delete(key: _navigationTutorialKey);
-      await _storage.delete(key: _dogTutorialKey);
-      await _storage.delete(key: _reservationTutorialKey);
+      // If it's a new session, show tutorials based on the user's state
+      await _markCurrentSession(
+          userID); // Mark the current session for the active user
+      await _storage.delete(
+          key:
+              _firstLaunchKey); // Reset the first launch key since it's not the first launch anymore
+      await _storage.delete(
+          key: _navigationTutorialKey); // Reset the navigation tutorial key
+      await _storage.delete(key: _dogTutorialKey); // Reset the dog tutorial key
+      await _storage.delete(
+          key: _reservationTutorialKey); // Reset the reservation tutorial key
 
-      // Anche se è una nuova sessione, controlla se ci sono tutorial ancora da completare
-      final navigationCompleted = await isNavigationTutorialCompleted;
-      final dogCompleted = await isDogTutorialCompleted;
-      final reservationCompleted = await isReservationTutorialCompleted;
-
-      // Mostra i tutorial solo se ce ne sono ancora da completare
-      if (!navigationCompleted) {
-        return true;
-      }
-
-      if (hasDogs && !dogCompleted) {
-        return true;
-      }
-
-      if (hasReservations && dogCompleted && !reservationCompleted) {
-        return true;
-      }
+      return true; // Show tutorials since it's a new session
     }
 
     return false;
   }
 
+  /// Checks if it's the first launch of the app
   static Future<bool> _isFirstAppLaunch() async {
-    final value = await _storage.read(key: _firstLaunchKey);
+    final value = await _storage.read(
+        key: _firstLaunchKey); // Read the value for the first launch key
     return value != 'completed';
   }
 
+  /// Marks the first launch of the app as complete
   static Future<void> _markFirstLaunchComplete() async {
-    await _storage.write(key: _firstLaunchKey, value: 'completed');
+    await _storage.write(
+        key: _firstLaunchKey,
+        value:
+            'completed'); // Write 'completed' to the first launch key to mark it as complete
   }
 
+  /// Checks if the current user session is new compared to the last session
   static Future<bool> _isNewUserSession(String userID) async {
-    final lastSession = await _storage.read(key: _lastSessionKey);
+    final lastSession = await _storage.read(
+        key: _lastSessionKey); // Read the last session userID
     return lastSession != userID;
   }
 
+  /// Marks the current user session
   static Future<void> _markCurrentSession(String userID) async {
-    await _storage.write(key: _lastSessionKey, value: userID);
+    await _storage.write(
+        key: _lastSessionKey,
+        value: userID); // Write the current userID to the last session key
   }
 
-  // Metodo per determinare quale tutorial mostrare
+  // Method to get the current tutorial state based on user data
   static Future<TutorialState> getCurrentTutorialState({
     required String userID,
     required bool hasDogs,
     required bool hasReservations,
   }) async {
-    // Prima controlla se dovremmo mostrare i tutorial
+    // First, check if we should show any tutorials
     final shouldShow = await shouldShowTutorials(
       userID: userID,
       hasDogs: hasDogs,
@@ -153,82 +183,99 @@ class TutorialManager {
     );
 
     if (!shouldShow) {
-      return TutorialState.completed;
+      return TutorialState
+          .completed; // If we shouldn't show any tutorials, return completed state
     }
 
-    // Se dovremmo mostrarli, determina quale tutorial mostrare
+    // If we should show tutorials, check the completion status of each tutorial
     final navigationCompleted = await isNavigationTutorialCompleted;
     final dogCompleted = await isDogTutorialCompleted;
     final reservationCompleted = await isReservationTutorialCompleted;
 
     if (!navigationCompleted) {
-      return TutorialState.navigation;
+      return TutorialState
+          .navigation; // If navigation tutorial is not completed, return its state
     }
 
     if (hasDogs && !dogCompleted) {
-      return TutorialState.dog;
+      return TutorialState
+          .dog; // If there are dogs and the dog tutorial is not completed, return its state
     }
 
     if (hasReservations && dogCompleted && !reservationCompleted) {
-      return TutorialState.reservation;
+      return TutorialState
+          .reservation; // If there are reservations, the dog tutorial is completed, and the reservation tutorial is not completed, return its state
     }
 
-    return TutorialState.completed;
+    return TutorialState
+        .completed; // If all tutorials are completed, return completed state
   }
 
-  // Metodo per resettare tutti i tutorial (utile per test) - ORA ASYNC
+  // Methods to reset the tutorials and user session
   static Future<void> resetAllTutorials() async {
     try {
-      await _storage.delete(key: _navigationTutorialKey);
-      await _storage.delete(key: _dogTutorialKey);
-      await _storage.delete(key: _reservationTutorialKey);
-      await _storage.delete(key: _firstLaunchKey);
-      await _storage.delete(key: "dogEditTutorialComplete");
-      await _storage.delete(key: "userEditTutorialComplete");
+      await _storage.delete(
+          key: _navigationTutorialKey); // Reset the navigation tutorial key
+      await _storage.delete(key: _dogTutorialKey); // Reset the dog tutorial key
+      await _storage.delete(
+          key: _reservationTutorialKey); // Reset the reservation tutorial key
+      await _storage.delete(key: _firstLaunchKey); // Reset the first launch key
+      await _storage.delete(
+          key: "dogEditTutorialComplete"); // Reset the dog edit tutorial key
+      await _storage.delete(
+          key: "userEditTutorialComplete"); // Reset the user edit tutorial key
       print('All tutorials reset');
     } catch (e) {
       print('Error resetting tutorials: $e');
     }
   }
 
+  /// Resets the user session by deleting the last session key.
   static Future<void> resetUserSession() async {
     try {
-      await _storage.delete(key: _lastSessionKey);
+      await _storage.delete(key: _lastSessionKey); // Reset the last session key
       print('User session reset');
     } catch (e) {
       print('Error resetting user session: $e');
     }
   }
 
-  static String? _currentTutorialType;
-  static Function? _onTutorialCompleted;
+  static String? _currentTutorialType; // Current tutorial type being handled
+  static Function?
+      _onTutorialCompleted; // Callback for when a tutorial is completed
 
+  /// Sets the current tutorial type and an optional callback to be called when the tutorial is completed.
   static void setCurrentTutorial(String tutorialType, {Function? onCompleted}) {
-    _currentTutorialType = tutorialType;
-    _onTutorialCompleted = onCompleted;
+    _currentTutorialType = tutorialType; // Set the current tutorial type
+    _onTutorialCompleted = onCompleted; // Set the callback function
   }
 
+  /// Handles the completion of the current tutorial based on its type.
   static Future<void> handleTutorialCompletion() async {
     print('Handling tutorial completion for: $_currentTutorialType');
 
     if (_currentTutorialType == 'navigation') {
-      await markNavigationTutorialCompleted();
+      // Check if the current tutorial type is navigation
+      await markNavigationTutorialCompleted(); // Mark the navigation tutorial as completed
     } else if (_currentTutorialType == 'dog') {
-      await markDogTutorialCompleted();
+      // Check if the current tutorial type is dog
+      await markDogTutorialCompleted(); // Mark the dog tutorial as completed
     } else if (_currentTutorialType == 'reservation') {
-      await markReservationTutorialCompleted();
+      // Check if the current tutorial type is reservation
+      await markReservationTutorialCompleted(); // Mark the reservation tutorial as completed
     }
 
-    // Chiama il callback se presente
     if (_onTutorialCompleted != null) {
-      _onTutorialCompleted!();
+      // Check if the callback function is set
+      _onTutorialCompleted!(); // Call the callback function if it is set
     }
 
-    _currentTutorialType = null;
-    _onTutorialCompleted = null;
+    _currentTutorialType = null; // Reset the current tutorial type
+    _onTutorialCompleted = null; // Reset the callback function
   }
 }
 
+/// Different states of the tutorial process.
 enum TutorialState {
   navigation,
   dog,
