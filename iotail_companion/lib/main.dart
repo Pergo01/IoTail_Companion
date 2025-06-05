@@ -136,8 +136,26 @@ class MyApp extends StatelessWidget {
           bottom: MediaQuery.paddingOf(context).bottom,
           left: 24,
           child: TextButton(
-              onPressed: () {
+              onPressed: () async {
+                // Completely stops all the tutorials and marks them as completed
                 ShowCaseWidget.of(showcaseContext).dismiss();
+                TutorialManager.markDogTutorialCompleted();
+                TutorialManager.markDogTutorialCompleted();
+                TutorialManager.markReservationTutorialCompleted();
+                await FlutterSecureStorage(
+                    aOptions: const AndroidOptions(
+                  encryptedSharedPreferences: true,
+                )).write(key: "userEditTutorialComplete", value: "completed");
+                await FlutterSecureStorage(
+                    aOptions: const AndroidOptions(
+                  encryptedSharedPreferences: true,
+                )).write(key: "dogEditTutorialComplete", value: "completed");
+                final userID = await FlutterSecureStorage(
+                    aOptions: const AndroidOptions(
+                  encryptedSharedPreferences: true,
+                )).read(key: "userID");
+                await TutorialManager.markCurrentSession(userID!);
+                await TutorialManager.markFirstLaunchComplete();
               },
               child: Text(
                 "Skip",

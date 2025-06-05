@@ -622,12 +622,6 @@ class _UserScreenState extends State<UserScreen> {
                                 "userID"); // Delete the userID from the storage
                         storage.delete(
                             key: "token"); // Delete the token from the storage
-                        storage.delete(
-                            key:
-                                "dogEditTutorialComplete"); // Delete the dog edit tutorial completion status from the storage
-                        storage.delete(
-                            key:
-                                "userEditTutorialComplete"); // Delete the user edit tutorial completion status from the storage
                         context.go("/Login",
                             extra: widget
                                 .ip); // Navigate to the Login page, passing the IP address as an extra parameter

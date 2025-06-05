@@ -98,32 +98,12 @@ class TutorialManager {
     required bool hasDogs,
     required bool hasReservations,
   }) async {
-    // Check if it's the first launch of the app
-    final isFirstLaunch = await _isFirstAppLaunch();
-    if (isFirstLaunch) {
-      // If it's the first launch, show all tutorials
-      await _markCurrentSession(
-          userID); // Mark the current session for the active user
-      final navigationCompleted =
-          await isNavigationTutorialCompleted; // Check if the navigation tutorial is completed
-      final dogCompleted =
-          await isDogTutorialCompleted; // Check if the dog tutorial is completed
-      final reservationCompleted =
-          await isReservationTutorialCompleted; // Check if the reservation tutorial is completed
-      if (navigationCompleted && dogCompleted && reservationCompleted) {
-        // If all tutorials are completed, mark the first launch as complete
-        await _markFirstLaunchComplete();
-        return false; // Don't show any tutorials
-      }
-      return true; // Show tutorials since it's the first launch and not all are completed
-    }
-
     // Check if it's a new user session
     final isNewSession = await _isNewUserSession(
         userID); // Check if the current userID is different from the last session
     if (isNewSession) {
       // If it's a new session, show tutorials based on the user's state
-      await _markCurrentSession(
+      await markCurrentSession(
           userID); // Mark the current session for the active user
       await _storage.delete(
           key:
@@ -133,11 +113,33 @@ class TutorialManager {
       await _storage.delete(key: _dogTutorialKey); // Reset the dog tutorial key
       await _storage.delete(
           key: _reservationTutorialKey); // Reset the reservation tutorial key
+      await _storage.delete(key: "userEditTutorialComplete");
+      await _storage.delete(key: "dogEditTutorialComplete");
 
       return true; // Show tutorials since it's a new session
     }
 
-    return false;
+    // Check if it's the first launch of the app
+    final isFirstLaunch = await _isFirstAppLaunch();
+    if (isFirstLaunch) {
+      // If it's the first launch, show all tutorials
+      await markCurrentSession(
+          userID); // Mark the current session for the active user
+      final navigationCompleted =
+          await isNavigationTutorialCompleted; // Check if the navigation tutorial is completed
+      final dogCompleted =
+          await isDogTutorialCompleted; // Check if the dog tutorial is completed
+      final reservationCompleted =
+          await isReservationTutorialCompleted; // Check if the reservation tutorial is completed
+      if (navigationCompleted && dogCompleted && reservationCompleted) {
+        // If all tutorials are completed, mark the first launch as complete
+        await markFirstLaunchComplete();
+        return false; // Don't show any tutorials
+      }
+      return true; // Show tutorials since it's the first launch and not all are completed
+    }
+
+    return false; // Don't show tutorials if it's not a new session and not the first launch
   }
 
   /// Checks if it's the first launch of the app
@@ -148,7 +150,7 @@ class TutorialManager {
   }
 
   /// Marks the first launch of the app as complete
-  static Future<void> _markFirstLaunchComplete() async {
+  static Future<void> markFirstLaunchComplete() async {
     await _storage.write(
         key: _firstLaunchKey,
         value:
@@ -163,7 +165,7 @@ class TutorialManager {
   }
 
   /// Marks the current user session
-  static Future<void> _markCurrentSession(String userID) async {
+  static Future<void> markCurrentSession(String userID) async {
     await _storage.write(
         key: _lastSessionKey,
         value: userID); // Write the current userID to the last session key
