@@ -649,10 +649,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                       paddingY; // Adjust the maximum value by adding padding
                                   final firstTimestamp = temperatures
                                       .first["timestamp"]
-                                      .toDouble(); // Get the first timestamp in milliseconds since epoch
+                                      .toDouble(); // Get the first timestamp
                                   final lastTimestamp = temperatures
                                       .last["timestamp"]
-                                      .toDouble(); // Get the last timestamp in milliseconds since epoch
+                                      .toDouble(); // Get the last timestamp
                                   intervalX = (lastTimestamp > firstTimestamp)
                                       ? (lastTimestamp - firstTimestamp) / 7
                                       : 60000 *
@@ -683,10 +683,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                       paddingH; // Adjust the maximum value by adding padding
                                   final firstTimestampH = humidities
                                       .first["timestamp"]
-                                      .toDouble(); // Get the first timestamp in milliseconds since epoch for humidity
+                                      .toDouble(); // Get the first timestamp
                                   final lastTimestampH = humidities
                                       .last["timestamp"]
-                                      .toDouble(); // Get the last timestamp in milliseconds since epoch for humidity
+                                      .toDouble(); // Get the last timestamp
                                   intervalXH = (lastTimestampH >
                                           firstTimestampH)
                                       ? (lastTimestampH - firstTimestampH) / 7
@@ -818,7 +818,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 lineType:
                                                     TrackballLineType.vertical,
                                                 shouldAlwaysShow: false,
-                                                // Specifica quali serie tracciare
                                                 tooltipDisplayMode:
                                                     TrackballDisplayMode
                                                         .nearestPoint,
@@ -864,15 +863,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                             .onSurface),
                                                   );
                                                 },
-                                                // Modifiche per avvicinare le label all'asse
                                                 placeLabelsNearAxisLine: true,
-                                                labelAlignment: LabelAlignment
-                                                    .center, // Cambiato da end a center
+                                                labelAlignment:
+                                                    LabelAlignment.center,
                                                 labelPosition:
                                                     ChartDataLabelPosition
-                                                        .outside, // Aggiunta questa proprietà/ Ridotto l'offset a 0
-                                                labelRotation:
-                                                    -45, // Rimossa la rotazione
+                                                        .outside,
+                                                labelRotation: -45,
                                                 edgeLabelPlacement:
                                                     EdgeLabelPlacement.shift,
                                                 initialVisibleMaximum:
@@ -918,7 +915,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 },
                                               ),
                                               series: <CartesianSeries>[
-                                                // Prima serie: solo l'area con il gradiente
+                                                // First series: only the area with the gradient
                                                 SplineAreaSeries<Map, double>(
                                                   dataSource: temperatures,
                                                   xValueMapper: (e, _) =>
@@ -954,7 +951,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                     );
                                                   },
                                                 ),
-                                                // Seconda serie: solo la linea con il gradiente
+                                                // Second series: only the line with the gradient
                                                 SplineSeries<Map, double>(
                                                   dataSource: temperatures,
                                                   xValueMapper: (e, _) =>
@@ -1034,7 +1031,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 lineType:
                                                     TrackballLineType.vertical,
                                                 shouldAlwaysShow: false,
-                                                // Specifica quali serie tracciare
                                                 tooltipDisplayMode:
                                                     TrackballDisplayMode
                                                         .nearestPoint,
@@ -1142,7 +1138,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 },
                                               ),
                                               series: <CartesianSeries>[
-                                                // Prima serie: solo l'area con il gradiente
+                                                // First series: only the area with the gradient
                                                 SplineAreaSeries<Map, double>(
                                                   dataSource: humidities,
                                                   xValueMapper: (e, _) =>
@@ -1178,7 +1174,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                     );
                                                   },
                                                 ),
-                                                // Seconda serie: solo la linea con il gradiente
+                                                // Second series: only the line with the gradient
                                                 SplineSeries<Map, double>(
                                                   dataSource: humidities,
                                                   xValueMapper: (e, _) =>

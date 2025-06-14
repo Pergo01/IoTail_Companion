@@ -559,8 +559,8 @@ Future<Map> getKennelmeasurements(
     "start": formattedStartDate
   }; // parameters for the request
   final url = Uri.http("$ip:8084", "/measurements",
-      params); // URL for the request to the Thingspeak API
-  final response = await http.get(url, headers: headers); // post request
+      params); // URL for the request to the Thingspeak adaptor
+  final response = await http.get(url, headers: headers); // get request
   if (response.statusCode != 200) {
     return {"Error": "Failed to get kennel measurements"};
   } // throw exception if status code is not 200
