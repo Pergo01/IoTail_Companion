@@ -118,6 +118,9 @@ class TutorialManager {
       await _storage.delete(
           key:
               "dogEditTutorialComplete"); // Reset the user and dog edit tutorial keys
+      await _storage.delete(
+          key:
+              "reservationTutorialComplete"); // Reset the reservation tutorial key
 
       return true; // Show tutorials since it's a new session
     }
@@ -229,6 +232,9 @@ class TutorialManager {
           key: "dogEditTutorialComplete"); // Reset the dog edit tutorial key
       await _storage.delete(
           key: "userEditTutorialComplete"); // Reset the user edit tutorial key
+      await _storage.delete(
+          key:
+              "reservationTutorialComplete"); // Reset the reservation tutorial key
       print('All tutorials reset');
     } catch (e) {
       print('Error resetting tutorials: $e');

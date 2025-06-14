@@ -35,7 +35,7 @@ void main() async {
       .write(
           key: "ip",
           value:
-              "192.168.0.90"); // Write a default IP address to secure storage. THIS IS THE IP OF THE SERVER (RASPBERRY PI), CHANGE IT TO YOURS. Use 10.0.2.2 if you are using an android emulator and the server is running on the same machine or localhost for the iOS emulator.
+              "192.168.0.243"); // Write a default IP address to secure storage. THIS IS THE IP OF THE SERVER (RASPBERRY PI), CHANGE IT TO YOURS. Use 10.0.2.2 if you are using an android emulator and the server is running on the same machine or localhost for the iOS emulator.
   runApp(const MyApp());
 }
 
@@ -133,7 +133,7 @@ class MyApp extends StatelessWidget {
       // This is the configuration for the "Skip" button in the tutorial
       globalFloatingActionWidget: (showcaseContext) {
         return FloatingActionWidget(
-          bottom: MediaQuery.paddingOf(context).bottom,
+          bottom: 0,
           left: 24,
           child: TextButton(
               onPressed: () async {
@@ -158,6 +158,10 @@ class MyApp extends StatelessWidget {
                     key: "dogEditTutorialComplete",
                     value:
                         "completed"); // Write the dog edit tutorial completion status
+                storage.write(
+                    key: "reservationTutorialComplete",
+                    value:
+                        "completed"); // Mark the reservation tutorial as completed
                 final userID = await storage.read(
                     key: "userID"); // Read the user ID from secure storage
                 TutorialManager.markCurrentSession(
@@ -212,6 +216,7 @@ class MyApp extends StatelessWidget {
             reservationCardKey,
             saveButtonKey,
             dogSaveButtonKey,
+            reservationDetailsKey
           ], // hide on first tutorial popup
           backgroundColor:
               isDarkTheme ? darkColorScheme.primary : lightColorScheme.primary,

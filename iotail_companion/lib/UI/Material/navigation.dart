@@ -1166,7 +1166,7 @@ class _NavigationState extends State<Navigation> with TickerProviderStateMixin {
                           tooltipBackgroundColor:
                               Theme.of(context).colorScheme.primaryContainer,
                           targetBorderRadius: BorderRadius.circular(30),
-                          disposeOnTap: true,
+                          disposeOnTap: false,
                           onTargetClick: () {
                             if (currentPageIndex == 0) {
                               // If the current page is the home page, make the animation go forward to the map page
