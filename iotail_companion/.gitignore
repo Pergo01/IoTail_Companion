@@ -12,9 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 /*/Flutter
-iotail_companion/assets/settings.json
-iotail_companion/lib/firebase_options.dart
-iotail_companion/firebase.json
+assets/settings.json
+lib/firebase_options.dart
+firebase.json
 
 # IntelliJ related
 *.iml

@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen>
     final String? firebaseToken = await storage.read(
         key: "FirebaseToken"); // Reading the Firebase token from the storage.
     Map tmp = await requests.login(ip, email!, password!,
-        firebaseToken!); // Logging in with the stored email and password, and getting the token.
+        firebaseToken); // Logging in with the stored email and password, and getting the token.
     await storage.write(
         key: "token", value: tmp["token"]); // Writing the token to the storage.
     return tmp["token"]; // Returning the token.

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -29,11 +32,38 @@ class FirebaseApi {
       false; // Flag to check if local notifications are initialized
 
   Future<void> initialize() async {
+    FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler); // Set the background message handler
+
+    // Specific initialization for iOS and macOS platforms (APNS is only for paid Apple Developer accounts)
+    if (Platform.isIOS || Platform.isMacOS) {
+      // First get apns token
+      final apnsToken = await _messaging.getAPNSToken();
+      // print("APNS Token: $apnsToken");
+
+      // Wait for the APNS token to be available
+      if (apnsToken == null) {
+        // Register a listener for token refresh
+        FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+          await _completeInitialization();
+        });
+
+        // Request permission to show notifications
+        await requestPermission();
+      } else {
+        // If the APNS token is available, proceed with initialization
+        await _completeInitialization();
+      }
+    } else {
+      // On other platforms (like Android), we can directly complete initialization
+      await _completeInitialization();
+    }
+  }
+
+  Future<void> _completeInitialization() async {
     AndroidOptions _getAndroidOptions() => const AndroidOptions(
           encryptedSharedPreferences: true,
         ); // Define Android options for secure storage
-    FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler); // Set the background message handler
     await requestPermission(); // Request notification permissions from the user
     await _setupMessageHandlers(); // Setup message handlers for foreground and background messages
 

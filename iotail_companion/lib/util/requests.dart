@@ -45,7 +45,7 @@ Future<Map> confirm_registration(String ip, Map<String, String> user) async {
 
 /// Authenticate a user with the server.
 Future<Map> login(
-    String ip, String email, String password, String firebaseToken) async {
+    String ip, String email, String password, String? firebaseToken) async {
   final headers = {
     'Content-Type': 'application/json',
   }; // headers for request
