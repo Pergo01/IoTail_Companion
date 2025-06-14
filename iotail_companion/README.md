@@ -1,25 +1,27 @@
 # IoTail Companion
 
-Companion App for [IoTail](https://github.com/Pergo01/IoTail.git) IoT project
+Companion App for [IoTail](https://github.com/Pergo01/IoTail.git) IoT project.
+⚠️ Setup the IoTail backend in that repository before working on this.
 
 ## Setup
 
 1. Install Flutter from [here](https://flutter.dev/) if not present in your computer yet.
 2. Install Flutter and Dart extension in your IDE.
-3. Open the project with in your IDE.
-4. Assuming a Firebase project is already available for IoTail, setup Firebase and Firebase CLI for this app by following [this](https://firebase.google.com/docs/flutter/setup?platform=android) tutorial (choose your own OS platform).
-5. Assuming a ThingSpeak channel was already created for the IoT platform backend, create the file `settings.json` with the following structure and put it inside the assets directory:
+3. Clone this repository
+4. Open the project in your IDE.
+5. Assuming a Firebase project is already available for IoTail, setup Firebase and Firebase CLI for this app by following [this](https://firebase.google.com/docs/flutter/setup?platform=android) tutorial (choose your own OS platform).
+6. Assuming a [ThingSpeak](https://thingspeak.mathworks.com/) channel was already created for the IoT platform backend, create the file `settings.json` with the following structure and put it inside the assets directory:
     ```json
     {
-        "channel_id": your_channel_ID_number,
+        "channel_id": 1234567,
         "thingspeak_read_api_key": "your_channel_read_api_key"
     }
     ```
-6. From the app directory, either:
+7. From the app directory, either:
     - In the terminal, type `flutter pub get`
     - Open `pubspec.yaml` and press the button in the interface that says **Pub get**
-7. Run the app from the play button.
-8. To find the area of the shops on the map, go to this location (you can set it in the emulator or with a fake gps app): **44.88566825170957, 7.334846868977245**
+8. Run the app from the play button.
+9. To find the area of the shops on the map, go to this location (you can set it in the emulator or with a fake gps app): **44.88566825170957, 7.334846868977245**
 
-Push Notification features are available on apple phisical devices only if the developer account is a paid account. In emulators, they work fine. Local notifications are ok everywhere, instead.
+Push Notification features are available on Apple phisical devices only if the developer account is a paid account. In emulators, they work fine. Local notifications are ok everywhere, instead.
 
