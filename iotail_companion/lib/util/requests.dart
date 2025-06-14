@@ -533,15 +533,7 @@ Future<List<double>> getTemperatureHumidity(String ip) async {
 
 /// Get the kennel measurements from the Thingspeak API.
 Future<Map> getKennelmeasurements(
-    String ip, int kennelID, int activationTime) async {
-  String settingsString = await rootBundle
-      .loadString("assets/settings.json"); // Load the settings from the assets
-  Map<String, dynamic> settings =
-      jsonDecode(settingsString); // Decode the settings
-  final int channelID =
-      settings["channel_id"]; // Get the channel ID from the settings
-  final String readApiKey = settings[
-      "thingspeak_read_api_key"]; // Get the read API key from the settings
+    String ip, String token, int kennelID, int activationTime) async {
   final dateTimeUtc = DateTime.fromMillisecondsSinceEpoch(activationTime * 1000,
       isUtc: true); // Convert the activation time to a DateTime in UTC
   // Format DateTime in YYYY-MM-DD HH:MM:SS
@@ -558,47 +550,20 @@ Future<Map> getKennelmeasurements(
       '0'); // Get the second from the DateTime and pad it with a leading zero if necessary
   // Create the formatted start date string as required by the Thingspeak API
   final formattedStartDate = '$year-$month-$day $hour:$minute:$second';
-  final Map<String, String> params = {
-    "api_key": readApiKey,
+  final Map<String, String> headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  }; // headers for request
+  final Map<String, dynamic> params = {
+    "kennelID": kennelID.toString(),
     "start": formattedStartDate
   }; // parameters for the request
-  final url = Uri.https("api.thingspeak.com", "/channels/$channelID/feeds.json",
+  final url = Uri.http("$ip:8084", "/measurements",
       params); // URL for the request to the Thingspeak API
-  final response = await http.get(url); // post request
+  final response = await http.get(url, headers: headers); // post request
   if (response.statusCode != 200) {
     return {"Error": "Failed to get kennel measurements"};
   } // throw exception if status code is not 200
   Map<String, dynamic> tmp = jsonDecode(response.body); // decode the response
-  List<Map<String, dynamic>> feeds =
-      List<Map<String, dynamic>>.from(tmp["feeds"]); // decode the response
-  final Map<String, dynamic> kennelMeasurements = {
-    "temperature": [],
-    "humidity": [],
-  }; // create a map to store the kennel measurements
-  for (var feed in feeds) {
-    if (int.parse(feed["field4"]) == kennelID) {
-      // Check if the feed belongs to the specified kennel ID
-      if (feed["field1"] != null) {
-        // Check if the temperature field is not null
-        double? temp = double.tryParse(feed["field1"]);
-        if (temp != null) {
-          kennelMeasurements["temperature"].add({
-            "timestamp": DateTime.parse(feed["created_at"]),
-            "value": temp
-          }); // Add the temperature measurement to the temperature list
-        }
-      }
-      if (feed["field2"] != null) {
-        // Check if the humidity field is not null
-        double? hum = double.tryParse(feed["field2"]);
-        if (hum != null) {
-          kennelMeasurements["humidity"].add({
-            "timestamp": DateTime.parse(feed["created_at"]),
-            "value": hum
-          }); // Add the humidity measurement to the humidity list
-        }
-      }
-    }
-  }
-  return kennelMeasurements; // return the kennel measurements
+  return tmp; // return the kennel measurements
 }

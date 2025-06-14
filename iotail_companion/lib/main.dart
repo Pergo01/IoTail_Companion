@@ -98,6 +98,7 @@ final materialRouter = GoRouter(initialLocation: "/", routes: [
           reservation: extra["reservation"],
           dog: extra["dog"],
           ip: extra["ip"],
+          token: extra["token"],
           client: extra["client"], // Pass the client
           onReservationCancel: extra["onReservationCancel"],
         );

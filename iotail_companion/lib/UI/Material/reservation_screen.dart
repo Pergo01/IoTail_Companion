@@ -31,6 +31,7 @@ class ReservationScreen extends StatefulWidget {
       reservation; // Reservation object containing details about the reservation
   final Dog dog; // Dog object containing details about the dog
   final String ip; // IP address of the kennel system
+  final String token; // Token for authentication with the kennel system
   final MqttServerClient
       client; // MQTT client for communication with the kennel system
   final VoidCallback
@@ -41,6 +42,7 @@ class ReservationScreen extends StatefulWidget {
       required this.reservation,
       required this.dog,
       required this.ip,
+      required this.token,
       required this.client,
       required this.onReservationCancel});
 
@@ -103,7 +105,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
   /// Fetches the kennel measurements data from thingspeak.
   Future<Map> getKennelMeasurements() async {
-    Map data = await requests.getKennelmeasurements(widget.ip,
+    Map data = await requests.getKennelmeasurements(widget.ip, widget.token,
         widget.reservation.kennelID, widget.reservation.activationTime!);
     return data;
   }
@@ -637,20 +639,19 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                           : b); // Find the maximum temperature value
                                   paddingY = (maxY - minY) *
                                       0.1; // Calculate padding for the Y axis
-                                  if (paddingY < 1)
+                                  if (paddingY < 1) {
                                     paddingY =
                                         0.5; // Ensure padding is at least 0.5
+                                  }
                                   minY -=
                                       paddingY; // Adjust the minimum value by subtracting padding
                                   maxY +=
                                       paddingY; // Adjust the maximum value by adding padding
-                                  final firstTimestamp = (temperatures
-                                          .first["timestamp"] as DateTime)
-                                      .millisecondsSinceEpoch
+                                  final firstTimestamp = temperatures
+                                      .first["timestamp"]
                                       .toDouble(); // Get the first timestamp in milliseconds since epoch
-                                  final lastTimestamp = (temperatures
-                                          .last["timestamp"] as DateTime)
-                                      .millisecondsSinceEpoch
+                                  final lastTimestamp = temperatures
+                                      .last["timestamp"]
                                       .toDouble(); // Get the last timestamp in milliseconds since epoch
                                   intervalX = (lastTimestamp > firstTimestamp)
                                       ? (lastTimestamp - firstTimestamp) / 7
@@ -672,20 +673,19 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                           : b); // Find the maximum humidity value
                                   paddingH = (maxH - minH) *
                                       0.1; // Calculate padding for the Y axis
-                                  if (paddingH < 1)
+                                  if (paddingH < 1) {
                                     paddingH =
                                         1; // Ensure padding is at least 1
+                                  }
                                   minH -=
                                       paddingH; // Adjust the minimum value by subtracting padding
                                   maxH +=
                                       paddingH; // Adjust the maximum value by adding padding
-                                  final firstTimestampH = (humidities
-                                          .first["timestamp"] as DateTime)
-                                      .millisecondsSinceEpoch
+                                  final firstTimestampH = humidities
+                                      .first["timestamp"]
                                       .toDouble(); // Get the first timestamp in milliseconds since epoch for humidity
-                                  final lastTimestampH = (humidities
-                                          .last["timestamp"] as DateTime)
-                                      .millisecondsSinceEpoch
+                                  final lastTimestampH = humidities
+                                      .last["timestamp"]
                                       .toDouble(); // Get the last timestamp in milliseconds since epoch for humidity
                                   intervalXH = (lastTimestampH >
                                           firstTimestampH)
@@ -921,11 +921,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 // Prima serie: solo l'area con il gradiente
                                                 SplineAreaSeries<Map, double>(
                                                   dataSource: temperatures,
-                                                  xValueMapper: (e, _) => (e[
-                                                              'timestamp']
-                                                          as DateTime)
-                                                      .millisecondsSinceEpoch
-                                                      .toDouble(),
+                                                  xValueMapper: (e, _) =>
+                                                      e['timestamp'].toDouble(),
                                                   yValueMapper: (e, _) =>
                                                       e['value'].toDouble(),
                                                   borderColor:
@@ -960,11 +957,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 // Seconda serie: solo la linea con il gradiente
                                                 SplineSeries<Map, double>(
                                                   dataSource: temperatures,
-                                                  xValueMapper: (e, _) => (e[
-                                                              'timestamp']
-                                                          as DateTime)
-                                                      .millisecondsSinceEpoch
-                                                      .toDouble(),
+                                                  xValueMapper: (e, _) =>
+                                                      e['timestamp'].toDouble(),
                                                   yValueMapper: (e, _) =>
                                                       e['value'].toDouble(),
                                                   width: 5,
@@ -1151,11 +1145,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 // Prima serie: solo l'area con il gradiente
                                                 SplineAreaSeries<Map, double>(
                                                   dataSource: humidities,
-                                                  xValueMapper: (e, _) => (e[
-                                                              'timestamp']
-                                                          as DateTime)
-                                                      .millisecondsSinceEpoch
-                                                      .toDouble(),
+                                                  xValueMapper: (e, _) =>
+                                                      e['timestamp'].toDouble(),
                                                   yValueMapper: (e, _) =>
                                                       e['value'].toDouble(),
                                                   borderColor:
@@ -1190,11 +1181,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 // Seconda serie: solo la linea con il gradiente
                                                 SplineSeries<Map, double>(
                                                   dataSource: humidities,
-                                                  xValueMapper: (e, _) => (e[
-                                                              'timestamp']
-                                                          as DateTime)
-                                                      .millisecondsSinceEpoch
-                                                      .toDouble(),
+                                                  xValueMapper: (e, _) =>
+                                                      e['timestamp'].toDouble(),
                                                   yValueMapper: (e, _) =>
                                                       e['value'].toDouble(),
                                                   width: 5,

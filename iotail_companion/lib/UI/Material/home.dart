@@ -741,10 +741,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             .elementAt(index)
                             .active) // Show the button to open the reservation details only if the reservation is active
                           IconButton(
-                            onPressed: () {
+                            onPressed: () async {
                               int kennelID = widget.reservations
                                   .elementAt(index)
                                   .kennelID; // Get the kennel ID from the reservation
+                              final String? token = await storage.read(
+                                  key:
+                                      "token"); // Retrieve the token from the storage
                               context.push("/ReservationScreen", extra: {
                                 "reservation":
                                     widget.reservations.elementAt(index),
@@ -752,14 +755,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     dog.dogID ==
                                     widget.reservations.elementAt(index).dogID),
                                 "ip": ip,
+                                "token": token!,
                                 "client": widget.client, // Pass the client
                                 "onReservationCancel": () async {
-                                  final String? token = await storage.read(
-                                      key:
-                                          "token"); // Retrieve the token from the storage
                                   Map response = await requests.cancel_reservation(
                                       ip!,
-                                      token!,
+                                      token,
                                       widget.reservations
                                           .elementAt(index)
                                           .reservationID); // Call the cancel reservation API with the IP, token, and reservation ID
