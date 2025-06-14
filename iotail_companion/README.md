@@ -10,7 +10,9 @@ Companion App for [IoTail](https://github.com/Pergo01/IoTail.git) IoT project.
 3. Clone this repository
 4. Open the project in your IDE.
 5. Assuming a Firebase project is already available for IoTail, setup Firebase and Firebase CLI for this app by following [this](https://firebase.google.com/docs/flutter/setup?platform=android) tutorial (choose your own OS platform).
-6. Assuming a [ThingSpeak](https://thingspeak.mathworks.com/) channel was already created for the IoT platform backend, create the file `settings.json` with the following structure and put it inside the assets directory:
+6. Assuming a [ThingSpeak](https://thingspeak.mathworks.com/) channel was already created for the IoT platform backend, note the channel number and the read API key (from the "API Keys" section)
+
+6. Create the file `settings.json` with the following structure and put it inside the assets directory:
     ```json
     {
         "channel_id": 1234567,
