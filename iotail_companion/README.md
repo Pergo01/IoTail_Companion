@@ -27,3 +27,17 @@ Companion App for [IoTail](https://github.com/Pergo01/IoTail.git) IoT project.
 
 Push Notification features are available on Apple phisical devices only if the developer account is a paid account. In emulators, they work fine. Local notifications are ok everywhere, instead.
 
+## Mock users for testing
+
+There are two mock users:
+- John Doe
+    - email: john.doe@gmail.com
+    - password: 123456789
+
+    User with one dog already present
+- Johanna Doe
+    - email: johanna.doe@gmail.com
+    - password: 987654321
+
+    Completely empty user
+
