@@ -648,11 +648,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                   maxY +=
                                       paddingY; // Adjust the maximum value by adding padding
                                   final firstTimestamp = temperatures
-                                      .first["timestamp"]
-                                      .toDouble(); // Get the first timestamp
+                                          .first["timestamp"]
+                                          .toDouble() *
+                                      1000; // Get the first timestamp
                                   final lastTimestamp = temperatures
-                                      .last["timestamp"]
-                                      .toDouble(); // Get the last timestamp
+                                          .last["timestamp"]
+                                          .toDouble() *
+                                      1000; // Get the last timestamp
                                   intervalX = (lastTimestamp > firstTimestamp)
                                       ? (lastTimestamp - firstTimestamp) / 7
                                       : 60000 *
@@ -681,12 +683,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                       paddingH; // Adjust the minimum value by subtracting padding
                                   maxH +=
                                       paddingH; // Adjust the maximum value by adding padding
-                                  final firstTimestampH = humidities
-                                      .first["timestamp"]
-                                      .toDouble(); // Get the first timestamp
-                                  final lastTimestampH = humidities
-                                      .last["timestamp"]
-                                      .toDouble(); // Get the last timestamp
+                                  final firstTimestampH =
+                                      humidities.first["timestamp"].toDouble() *
+                                          1000; // Get the first timestamp
+                                  final lastTimestampH =
+                                      humidities.last["timestamp"].toDouble() *
+                                          1000; // Get the last timestamp
                                   intervalXH = (lastTimestampH >
                                           firstTimestampH)
                                       ? (lastTimestampH - firstTimestampH) / 7
@@ -852,7 +854,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                         details) {
                                                   final dateTime = DateTime
                                                       .fromMillisecondsSinceEpoch(
-                                                          details.value
+                                                          (details.value * 1000)
                                                               .toInt());
                                                   return ChartAxisLabel(
                                                     '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
@@ -872,15 +874,17 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 labelRotation: -45,
                                                 edgeLabelPlacement:
                                                     EdgeLabelPlacement.shift,
-                                                initialVisibleMaximum:
-                                                    DateTime.now()
-                                                        .millisecondsSinceEpoch
-                                                        .toDouble(),
-                                                initialVisibleMinimum: DateTime
+                                                initialVisibleMaximum: DateTime
                                                             .now()
                                                         .millisecondsSinceEpoch
-                                                        .toDouble() -
-                                                    60 * 10 * 1000,
+                                                        .toDouble() /
+                                                    1000,
+                                                initialVisibleMinimum: DateTime
+                                                                .now()
+                                                            .millisecondsSinceEpoch
+                                                            .toDouble() /
+                                                        1000 -
+                                                    60 * 10,
                                                 interval: intervalX,
                                               ),
                                               primaryYAxis: NumericAxis(
@@ -1075,7 +1079,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                         details) {
                                                   final dateTime = DateTime
                                                       .fromMillisecondsSinceEpoch(
-                                                          details.value
+                                                          (details.value * 1000)
                                                               .toInt());
                                                   return ChartAxisLabel(
                                                     '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
@@ -1095,15 +1099,17 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                                 labelRotation: -45,
                                                 edgeLabelPlacement:
                                                     EdgeLabelPlacement.shift,
-                                                initialVisibleMaximum:
-                                                    DateTime.now()
-                                                        .millisecondsSinceEpoch
-                                                        .toDouble(),
-                                                initialVisibleMinimum: DateTime
+                                                initialVisibleMaximum: DateTime
                                                             .now()
                                                         .millisecondsSinceEpoch
-                                                        .toDouble() -
-                                                    60 * 10 * 1000,
+                                                        .toDouble() /
+                                                    1000,
+                                                initialVisibleMinimum: DateTime
+                                                                .now()
+                                                            .millisecondsSinceEpoch
+                                                            .toDouble() /
+                                                        1000 -
+                                                    60 * 10,
                                                 interval: intervalXH,
                                               ),
                                               primaryYAxis: NumericAxis(
