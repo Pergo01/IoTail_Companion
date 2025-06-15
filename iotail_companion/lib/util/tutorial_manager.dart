@@ -8,7 +8,7 @@ class TutorialManager {
     ),
   ); //// Declaring secure storage variable for persistently storing data or writing precedently stored data. This allows to persist information after the app is closed.
 
-  // Chiavi per le varie fasi del tutorial
+  // Keys for different tutorial states and user sessions
   static const String _navigationTutorialKey =
       'navigation_tutorial_completed'; // Key for navigation tutorial completion
   static const String _dogTutorialKey =
